@@ -46,7 +46,7 @@ ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS anonymous_nickname TEXT;
 
 -- 插入帖子分类
 INSERT INTO post_categories (name, description, icon, color) VALUES
-  ('寻求支持', '分享你的困扰,寻求社区的帮助和建议', 'heart', 'pink'),
+  ('寻求支持', '分享你的困扰,寻求树洞的帮助和建议', 'heart', 'pink'),
   ('分享进展', '分享你的康复进展和积极变化', 'trending-up', 'green'),
   ('提问', '提出关于心理健康的问题', 'help-circle', 'blue'),
   ('提供鼓励', '给其他成员提供支持和鼓励', 'smile', 'yellow'),

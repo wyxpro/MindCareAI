@@ -207,7 +207,7 @@ export const getHealingRecords = async (userId: string, limit = 20) => {
   return Array.isArray(data) ? data : [];
 };
 
-// ==================== 社区 ====================
+// ==================== 树洞 ====================
 export const getCommunityPosts = async (limit = 20) => {
   const { data, error } = await supabase
     .from('community_posts')

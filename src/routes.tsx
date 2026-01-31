@@ -4,6 +4,9 @@ import EnhancedAssessmentPage from './pages/EnhancedAssessmentPage';
 import HealingPageNew from './pages/HealingPageNew';
 import ProfilePageRedesigned from './pages/ProfilePageRedesigned';
 import LoginPage from './pages/LoginPage';
+import PersonalInfoPage from './pages/PersonalInfoPage';
+import PrivacySettingsPage from './pages/PrivacySettingsPage';
+import SubscriptionPage from './pages/SubscriptionPage';
 import DoctorDashboardPage from './pages/doctor/DashboardPage';
 import DoctorPatientsPage from './pages/doctor/PatientsPage';
 import DoctorKnowledgePage from './pages/doctor/KnowledgePage';
@@ -43,6 +46,24 @@ const routes: RouteConfig[] = [
     name: '我的',
     path: '/profile',
     element: <ProfilePageRedesigned />,
+  },
+  {
+    name: '个人信息',
+    path: '/profile/personal',
+    element: <PersonalInfoPage />,
+    visible: false,
+  },
+  {
+    name: '隐私设置',
+    path: '/profile/privacy',
+    element: <PrivacySettingsPage />,
+    visible: false,
+  },
+  {
+    name: '会员订阅',
+    path: '/profile/subscription',
+    element: <SubscriptionPage />,
+    visible: false,
   },
   // 登录
   {

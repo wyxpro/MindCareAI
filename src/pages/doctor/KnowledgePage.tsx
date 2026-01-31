@@ -124,37 +124,38 @@ export default function KnowledgePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
         <div>
-          <h1 className="text-3xl font-bold">知识库管理</h1>
-          <p className="text-muted-foreground mt-1">管理抑郁评测量表和治疗知识</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">知识库管理</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">管理抑郁评测量表和治疗知识</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="w-4 h-4 mr-1" />
+            <Button className="w-full sm:w-auto h-11 sm:h-10 rounded-xl shadow-lg shadow-primary/10" onClick={() => handleOpenDialog()}>
+              <Plus className="w-4 h-4 mr-2" />
               添加知识
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingItem ? '编辑知识' : '添加知识'}</DialogTitle>
+          <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-2xl">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-xl">{editingItem ? '编辑知识' : '添加知识'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="title">标题</Label>
+                <Label htmlFor="title" className="text-sm font-bold">标题</Label>
                 <Input
                   id="title"
-                  placeholder="知识标题"
+                  placeholder="请输入知识标题"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">分类</Label>
+                <Label htmlFor="category" className="text-sm font-bold">分类</Label>
                 <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -166,28 +167,29 @@ export default function KnowledgePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="content">内容</Label>
+                <Label htmlFor="content" className="text-sm font-bold">内容</Label>
                 <Textarea
                   id="content"
-                  placeholder="详细内容..."
+                  placeholder="请输入详细内容..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  rows={10}
+                  className="rounded-xl min-h-[200px]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tags">标签(用逗号分隔)</Label>
+                <Label htmlFor="tags" className="text-sm font-bold">标签 (用逗号分隔)</Label>
                 <Input
                   id="tags"
                   placeholder="例如: PHQ-9, 量表, 筛查"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
 
-              <Button onClick={handleSave} className="w-full">
-                保存
+              <Button onClick={handleSave} className="w-full h-12 rounded-xl text-base font-bold">
+                保存知识
               </Button>
             </div>
           </DialogContent>
@@ -195,23 +197,24 @@ export default function KnowledgePage() {
       </div>
 
       {/* 搜索和筛选 */}
-      <div className="flex gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="flex flex-col gap-4 px-1">
+        <div className="relative group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="搜索知识..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11 rounded-xl"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
           {categories.map((cat) => (
             <Button
               key={cat.value}
               variant={selectedCategory === cat.value ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(cat.value)}
+              className="rounded-full px-4 whitespace-nowrap"
             >
               {cat.label}
             </Button>
@@ -220,37 +223,38 @@ export default function KnowledgePage() {
       </div>
 
       {/* 知识列表 */}
-      <div className="grid gap-4">
+      <div className="grid gap-4 px-1">
         {loading ? (
           <>
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 bg-muted" />
+              <Skeleton key={i} className="h-40 bg-muted rounded-2xl" />
             ))}
           </>
         ) : filteredKnowledge.length > 0 ? (
           filteredKnowledge.map((item) => (
-            <Card key={item.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-lg">{item.title}</CardTitle>
-                      <Badge variant="outline">{categories.find(c => c.value === item.category)?.label}</Badge>
+            <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden bg-card">
+              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
+                      <Badge variant="secondary" className="text-[10px] bg-muted">{categories.find(c => c.value === item.category)?.label}</Badge>
                     </div>
                     {item.tags && item.tags.length > 0 && (
-                      <div className="flex gap-1 flex-wrap">
+                      <div className="flex gap-1.5 flex-wrap">
                         {item.tags.map((tag, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
+                          <Badge key={idx} variant="outline" className="text-[10px] py-0 px-1.5 border-primary/20 text-primary">
                             {tag}
                           </Badge>
                         ))}
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
                       onClick={() => handleOpenDialog(item)}
                     >
                       <Edit className="w-4 h-4" />
@@ -258,29 +262,33 @@ export default function KnowledgePage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => handleDelete(item.id)}
                     >
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
+              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3 leading-relaxed">
                   {item.content}
                 </p>
-                <p className="text-xs text-muted-foreground mt-3">
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-4 pt-4 border-t border-muted/50">
+                  <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                   创建于 {new Date(item.created_at).toLocaleDateString('zh-CN')}
-                </p>
+                </div>
               </CardContent>
             </Card>
           ))
         ) : (
-          <Card>
-            <CardContent className="py-12">
+          <Card className="border-dashed bg-muted/20">
+            <CardContent className="py-16">
               <div className="text-center text-muted-foreground">
-                <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>暂无知识内容</p>
+                <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-8 h-8 opacity-40" />
+                </div>
+                <p className="font-medium">暂无知识内容</p>
               </div>
             </CardContent>
           </Card>

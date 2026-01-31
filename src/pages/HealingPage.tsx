@@ -124,7 +124,7 @@ export default function HealingPage() {
         <Tabs defaultValue="healing" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="healing">疗愈内容</TabsTrigger>
-            <TabsTrigger value="community">互助社区</TabsTrigger>
+            <TabsTrigger value="community">互助树洞</TabsTrigger>
           </TabsList>
 
           {/* 疗愈内容 */}
@@ -189,7 +189,7 @@ export default function HealingPage() {
             )}
           </TabsContent>
 
-          {/* 互助社区 */}
+          {/* 互助树洞 */}
           <TabsContent value="community" className="space-y-4">
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">匿名分享,温暖陪伴</p>

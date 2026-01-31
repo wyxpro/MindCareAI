@@ -35,7 +35,7 @@ HEALING & MINDSET SANCTUARY
 ### 3. Tab切换
 ```
 ┌─────────┬─────────┬─────────┐
-│  冥想   │  知识   │  社区   │
+│  冥想   │  知识   │  树洞   │
 └─────────┴─────────┴─────────┘
 ```
 - **样式**: 圆角胶囊按钮
@@ -207,7 +207,7 @@ HEALING & MINDSET SANCTUARY
 - 音量图标脉冲动画
 - 悬浮阴影效果
 
-### 4. 社区互动
+### 4. 树洞互动
 - 发布帖子
 - 点赞功能
 - 评论功能
@@ -232,7 +232,7 @@ HealingPageNew
 │       ├── CategoryTabs (分类Tab)
 │       └── ContentList (冥想列表)
 ├── KnowledgeTab (知识库)
-└── CommunityTab (社区)
+└── CommunityTab (树洞)
 ```
 
 ### 状态管理
@@ -247,7 +247,7 @@ const [currentTime, setCurrentTime] = useState(0);
 ### 数据加载
 ```typescript
 useEffect(() => {
-  loadData(); // 加载冥想内容和社区帖子
+  loadData(); // 加载冥想内容和树洞帖子
 }, [activeCategory]);
 
 useEffect(() => {

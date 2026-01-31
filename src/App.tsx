@@ -45,7 +45,7 @@ const App = () => {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </LayoutWrapper>
-            <Toaster position="top-center" />
+            <Toaster position="top-center" offset={72} visibleToasts={1} />
           </RouteGuard>
         </ErrorBoundary>
       </AuthProvider>

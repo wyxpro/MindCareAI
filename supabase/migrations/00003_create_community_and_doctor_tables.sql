@@ -1,4 +1,4 @@
--- 创建社区帖子表(匿名)
+-- 创建树洞帖子表(匿名)
 CREATE TABLE public.community_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -14,7 +14,7 @@ CREATE TABLE public.community_posts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 创建社区评论表
+-- 创建树洞评论表
 CREATE TABLE public.community_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id UUID NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,

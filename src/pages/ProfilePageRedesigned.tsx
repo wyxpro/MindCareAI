@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getProfile } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,20 +10,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updateProfile, getAssessments, getEmotionDiaries } from '@/db/api';
+import { supabase } from '@/db/supabase';
 import { toast } from 'sonner';
 import { 
   Edit, LogOut, Activity, FileText, Heart, Bell, Shield, 
   Settings, ChevronRight, User, Calendar, TrendingUp, Award,
-  Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe
+  Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe,
+  ArrowRight, ShieldCheck, Crown, Fingerprint
 } from 'lucide-react';
+import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
 
 export default function ProfilePageRedesigned() {
-  const { user, profile, signOut, refreshProfile } = useAuth();
+  const { user, profile, signOut, refreshProfile, signInWithUsername } = useAuth();
   const navigate = useNavigate();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
+  const [doctorDialogOpen, setDoctorDialogOpen] = useState(false);
+  const [doctorUsername, setDoctorUsername] = useState('');
+  const [doctorPassword, setDoctorPassword] = useState('');
+  const [doctorLoading, setDoctorLoading] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   
   // 健康数据
   const [emotionScore, setEmotionScore] = useState(75);
@@ -127,20 +136,26 @@ export default function ProfilePageRedesigned() {
       ],
     },
     {
-      title: '应用设置',
+      title: '账号管理',
       items: [
-        { icon: Bell, label: '消息通知', value: '', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
-        { icon: Moon, label: '深色模式', value: '', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
-        { icon: Lock, label: '隐私设置', value: '', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
-        { icon: Globe, label: '语言设置', value: '简体中文', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
-      ],
-    },
-    {
-      title: '帮助与反馈',
-      items: [
-        { icon: HelpCircle, label: '帮助中心', value: '', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
-        { icon: MessageSquare, label: '意见反馈', value: '', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
-        { icon: Shield, label: '关于我们', value: 'v1.0.0', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
+        { icon: User, label: '个人信息管理', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
+        { icon: Crown, label: '会员订阅管理', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
+        { icon: ShieldCheck, label: '隐私安全设置', value: '账号安全加固', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => navigate('/profile/privacy') },
+        { icon: Shield, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
+        {
+          icon: Settings,
+          label: profile?.role === 'doctor' || profile?.role === 'admin' ? '医生后台' : '医生后台登录',
+          value: '',
+          color: 'text-slate-600',
+          bgColor: 'bg-slate-50',
+          onClick: () => {
+            if (profile?.role === 'doctor' || profile?.role === 'admin') {
+              navigate('/doctor/dashboard');
+            } else {
+              setDoctorDialogOpen(true);
+            }
+          },
+        },
       ],
     },
   ];
@@ -196,59 +211,38 @@ export default function ProfilePageRedesigned() {
           </CardContent>
         </Card>
 
-        {/* 快捷操作 */}
-        <div className="grid grid-cols-2 gap-3 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        {/* 健康评估报告卡片 (长条形) */}
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <Card 
-            className="border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br from-purple-500 to-purple-600"
-            onClick={() => navigate('/record')}
+            className="border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 overflow-hidden group rounded-3xl py-3"
+            onClick={() => setReportOpen(true)}
           >
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
-                <Calendar className="w-6 h-6 text-white" />
+            <CardContent className="p-0 relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-150" />
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8 transition-transform duration-700 group-hover:scale-150" />
+              
+              <div className="p-3 flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-inner border border-white/20">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-white mb-0.5 tracking-wide">健康评估报告</h3>
+                  <p className="text-blue-100/80 text-sm leading-relaxed">
+                    查看多模态分析、AI评分及专家康复建议
+                  </p>
+                </div>
+                
+                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:translate-x-1 transition-transform border border-white/10">
+                  <ChevronRight className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <h3 className="font-semibold text-white mb-1">写日记</h3>
-              <p className="text-xs text-purple-100">记录今天的心情</p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br from-emerald-500 to-emerald-600"
-            onClick={() => navigate('/assessment')}
-          >
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-white mb-1">做评估</h3>
-              <p className="text-xs text-emerald-100">了解心理状态</p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br from-amber-500 to-amber-600"
-            onClick={() => navigate('/healing')}
-          >
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-white mb-1">疗愈中心</h3>
-              <p className="text-xs text-amber-100">放松身心</p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="border-0 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br from-rose-500 to-rose-600"
-          >
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="font-semibold text-white mb-1">健康报告</h3>
-              <p className="text-xs text-rose-100">查看数据分析</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* 快捷操作 (已移除，功能在菜单中保留) */}
+
 
         {/* 功能菜单 */}
         {menuSections.map((section, sectionIndex) => (
@@ -367,6 +361,86 @@ export default function ProfilePageRedesigned() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 医生后台登录对话框 */}
+      <Dialog open={doctorDialogOpen} onOpenChange={setDoctorDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-emerald-600" />
+              医生后台登录
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="doctor-username">用户名</Label>
+              <Input
+                id="doctor-username"
+                value={doctorUsername}
+                onChange={(e) => setDoctorUsername(e.target.value)}
+                placeholder="请输入医生账号用户名"
+                disabled={doctorLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="doctor-password">密码</Label>
+              <Input
+                id="doctor-password"
+                type="password"
+                value={doctorPassword}
+                onChange={(e) => setDoctorPassword(e.target.value)}
+                placeholder="请输入密码"
+                disabled={doctorLoading}
+              />
+            </div>
+            <p className="text-xs text-slate-500">
+              登录成功后将进入医生后台。如非医生账号，将提示失败。
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDoctorDialogOpen(false)}
+              className="flex-1"
+              disabled={doctorLoading}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!doctorUsername || !doctorPassword) {
+                  toast.error('请输入用户名和密码');
+                  return;
+                }
+                setDoctorLoading(true);
+                const { error } = await signInWithUsername(doctorUsername, doctorPassword);
+                if (error) {
+                  toast.error('登录失败: ' + error.message);
+                  setDoctorLoading(false);
+                  return;
+                }
+                await refreshProfile();
+                const { data: { session } } = await supabase.auth.getSession();
+                const latestProfile = session?.user ? await getProfile(session.user.id) : null;
+                setDoctorLoading(false);
+                setDoctorDialogOpen(false);
+                if (latestProfile?.role === 'doctor' || latestProfile?.role === 'admin') {
+                  toast.success('登录成功，正在进入医生后台');
+                  navigate('/doctor/dashboard');
+                } else {
+                  toast.error('当前账户非医生/管理员角色，无法进入医生后台');
+                }
+              }}
+              disabled={doctorLoading}
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white"
+            >
+              {doctorLoading ? '登录中...' : '登录'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <HealthReportDialog open={reportOpen} onOpenChange={setReportOpen} />
     </div>
   );
 }

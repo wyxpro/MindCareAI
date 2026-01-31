@@ -189,26 +189,7 @@ export default function HealingPageNew() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
-        {/* 顶部导航 */}
-        <div className="flex items-center justify-between animate-fade-in-down">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-glow">
-              <span className="text-white text-xl font-bold">M</span>
-            </div>
-            <span className="text-xl font-semibold text-foreground">疗愈</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hover:bg-muted">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-            </Button>
-          </div>
-        </div>
-
-        {/* 标题区域 */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <h1 className="text-3xl font-bold text-foreground mb-2">疗愈空间</h1>
-          <p className="text-muted-foreground text-sm tracking-wider">HEALING & MINDSET SANCTUARY</p>
-        </div>
+       
 
         {/* Tab切换 */}
         <div className="flex gap-3 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -240,7 +221,7 @@ export default function HealingPageNew() {
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
           >
-            社区
+            树洞
           </Button>
         </div>
 
@@ -324,34 +305,34 @@ export default function HealingPageNew() {
             </Card>
 
             {/* 统计数据 */}
-            <div className="grid grid-cols-3 gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <Card className="glass border-border shadow-sm card-hover">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center mx-auto mb-3">
-                    <Clock className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="grid grid-cols-3 gap-3 items-stretch animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <Card className="glass border-border shadow-sm card-hover py-3">
+                <CardContent className="p-3 text-center">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center mx-auto mb-2">
+                    <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">{meditationStats.totalMinutes}</div>
-                  <div className="text-sm text-muted-foreground">分钟总计</div>
+                  <div className="text-2xl font-bold text-foreground mb-1">{meditationStats.totalMinutes}</div>
+                  <div className="text-xs text-muted-foreground">分钟总计</div>
                 </CardContent>
               </Card>
-
-              <Card className="glass border-border shadow-sm card-hover">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-500/20 flex items-center justify-center mx-auto mb-3">
-                    <Heart className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+ 
+              <Card className="glass border-border shadow-sm card-hover py-3">
+                <CardContent className="p-3 text-center">
+                  <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-500/20 flex items-center justify-center mx-auto mb-2">
+                    <Heart className="w-4 h-4 text-pink-600 dark:text-pink-400" />
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">{meditationStats.totalSessions}</div>
-                  <div className="text-sm text-muted-foreground">练习天数</div>
+                  <div className="text-2xl font-bold text-foreground mb-1">{meditationStats.totalSessions}</div>
+                  <div className="text-xs text-muted-foreground">练习天数</div>
                 </CardContent>
               </Card>
-
-              <Card className="glass border-border shadow-sm card-hover">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mx-auto mb-3">
-                    <Moon className="w-6 h-6 text-green-600 dark:text-green-400" />
+ 
+              <Card className="glass border-border shadow-sm card-hover py-3">
+                <CardContent className="p-3 text-center">
+                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                    <Moon className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">4.5</div>
-                  <div className="text-sm text-muted-foreground">平均评分</div>
+                  <div className="text-2xl font-bold text-foreground mb-1">4.5</div>
+                  <div className="text-xs text-muted-foreground">平均评分</div>
                 </CardContent>
               </Card>
             </div>
@@ -436,7 +417,7 @@ export default function HealingPageNew() {
         {/* 知识Tab内容 */}
         {activeTab === 'knowledge' && <KnowledgeTab />}
 
-        {/* 社区Tab内容 */}
+        {/* 树洞Tab内容 */}
         {activeTab === 'community' && <CommunityTab />}
 
         {/* 冥想完成对话框 */}

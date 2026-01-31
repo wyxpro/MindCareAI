@@ -2,7 +2,7 @@
 
 ## 功能概述
 
-疗愈中心包含三个核心Tab:冥想、知识、社区,为用户提供全方位的心理健康支持服务。
+疗愈中心包含三个核心Tab:冥想、知识、树洞,为用户提供全方位的心理健康支持服务。
 
 ## 一、冥想Tab - 冥想与放松引导
 
@@ -301,7 +301,7 @@ incrementLikeCount(contentId: string)
 └─────────────────────────────────────┘
 ```
 
-## 三、社区Tab - 匿名社区互助
+## 三、树洞Tab - 匿名树洞互助
 
 ### 3.1 核心功能
 
@@ -391,7 +391,7 @@ CREATE TABLE post_categories (
   created_at TIMESTAMPTZ
 );
 
--- 社区帖子表(扩展)
+-- 树洞帖子表(扩展)
 ALTER TABLE community_posts ADD COLUMN category_id UUID REFERENCES post_categories(id);
 ALTER TABLE community_posts ADD COLUMN is_recovery_story BOOLEAN;
 ALTER TABLE community_posts ADD COLUMN is_featured BOOLEAN;
@@ -586,7 +586,7 @@ const anonymousNickname = generateAnonymousNickname();
 | 5. 追踪使用习惯 | ✅ | view_count统计 |
 | 6. 定期更新内容 | ✅ | 数据库支持 |
 
-### Requirement 9: 匿名社区互助
+### Requirement 9: 匿名树洞互助
 
 | 验收标准 | 实现状态 | 说明 |
 |---------|---------|------|
@@ -640,10 +640,10 @@ const anonymousNickname = generateAnonymousNickname();
    - 添加到收藏
    - 在收藏列表查看
 
-### 6.3 社区功能使用
+### 6.3 树洞功能使用
 
 1. **发布帖子**:
-   - 点击"社区"Tab
+   - 点击"树洞"Tab
    - 选择帖子分类
    - 输入内容
    - 点击"匿名发布"
@@ -674,7 +674,7 @@ const anonymousNickname = generateAnonymousNickname();
 - [ ] 支持内容评论
 - [ ] 实现学习进度
 
-### 7.3 社区功能
+### 7.3 树洞功能
 - [ ] 实现私信功能
 - [ ] 添加举报功能
 - [ ] 实现内容审核

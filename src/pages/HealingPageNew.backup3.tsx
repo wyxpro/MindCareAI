@@ -202,7 +202,7 @@ export default function HealingPageNew() {
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
           >
-            社区
+            树洞
           </Button>
         </div>
 
@@ -405,7 +405,7 @@ export default function HealingPageNew() {
           </Card>
         )}
 
-        {/* 社区Tab内容 */}
+        {/* 树洞Tab内容 */}
         {activeTab === 'community' && (
           <div className="space-y-6 animate-fade-in-up">
             {/* 发布区域 */}

@@ -4,17 +4,17 @@ import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types';
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('获取用户信息失败:', error);
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) return null;
+    return data ?? null;
+  } catch {
     return null;
   }
-  return data;
 }
 interface AuthContextType {
   user: User | null;

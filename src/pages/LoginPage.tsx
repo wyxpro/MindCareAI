@@ -1,19 +1,23 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getProfile } from '@/contexts/AuthContext';
+import { supabase } from '@/db/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { toast } from 'sonner';
-import { Heart, Loader2 } from 'lucide-react';
+import { Heart, Loader2, User, Stethoscope } from 'lucide-react';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { signInWithUsername, signUpWithUsername } = useAuth();
+  const [role, setRole] = useState<'user' | 'doctor'>('user');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -25,6 +29,10 @@ export default function LoginPage() {
       toast.error('请输入用户名和密码');
       return;
     }
+    if (role === 'doctor' && password.length < 8) {
+      toast.error('医生端密码至少需要8个字符');
+      return;
+    }
 
     setLoading(true);
     const { error } = await signInWithUsername(username, password);
@@ -33,8 +41,30 @@ export default function LoginPage() {
     if (error) {
       toast.error('登录失败: ' + error.message);
     } else {
-      toast.success('登录成功');
-      navigate(from, { replace: true });
+      // 根据角色进行跳转与校验
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        let userRole: 'user' | 'doctor' | 'admin' | undefined = undefined;
+        if (session?.user) {
+          const p = await getProfile(session.user.id);
+          userRole = p?.role;
+        }
+        if (role === 'doctor') {
+          if (userRole === 'doctor' || userRole === 'admin') {
+            toast.success('医生端登录成功');
+            navigate('/doctor/dashboard', { replace: true });
+          } else {
+            toast.error('当前账号非医生/管理员角色，无法进入医生端');
+            navigate('/profile', { replace: true });
+          }
+        } else {
+          toast.success('登录成功');
+          navigate(from, { replace: true });
+        }
+      } catch {
+        toast.success('登录成功');
+        navigate(from, { replace: true });
+      }
     }
   };
 
@@ -45,6 +75,10 @@ export default function LoginPage() {
       return;
     }
 
+    if (role === 'doctor') {
+      toast.error('医生账号由管理员开通，请联系管理员');
+      return;
+    }
     if (password.length < 6) {
       toast.error('密码至少需要6个字符');
       return;
@@ -75,6 +109,18 @@ export default function LoginPage() {
           <CardDescription>您的心理健康守护者</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* 角色选择器 */}
+          <div className="mb-4">
+            <Label className="mb-2 inline-block">登录角色</Label>
+            <ToggleGroup type="single" value={role} onValueChange={(v) => v && setRole(v as 'user' | 'doctor')} className="w-full">
+              <ToggleGroupItem value="user" className="flex-1 data-[state=on]:bg-blue-600 data-[state=on]:text-white">
+                <User className="w-4 h-4 mr-1" /> 用户端
+              </ToggleGroupItem>
+              <ToggleGroupItem value="doctor" className="flex-1 data-[state=on]:bg-emerald-600 data-[state=on]:text-white">
+                <Stethoscope className="w-4 h-4 mr-1" /> 医生端
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">登录</TabsTrigger>
@@ -87,7 +133,7 @@ export default function LoginPage() {
                   <Input
                     id="login-username"
                     type="text"
-                    placeholder="请输入用户名"
+                    placeholder={role === 'doctor' ? '请输入医生账号用户名' : '请输入用户名'}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
@@ -98,7 +144,7 @@ export default function LoginPage() {
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="请输入密码"
+                    placeholder={role === 'doctor' ? '医生端至少8位密码' : '请输入密码'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
@@ -117,7 +163,7 @@ export default function LoginPage() {
                   <Input
                     id="signup-username"
                     type="text"
-                    placeholder="请输入用户名"
+                    placeholder="请输入用户名（仅支持注册用户端账号）"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
@@ -136,7 +182,7 @@ export default function LoginPage() {
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  注册
+                  {role === 'doctor' ? '医生账号由管理员开通' : '注册'}
                 </Button>
               </form>
             </TabsContent>

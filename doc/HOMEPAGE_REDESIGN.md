@@ -158,7 +158,7 @@
 |------|------|------|--------|------|
 | 写日记 | Calendar | 蓝色 #3B82F6 | bg-blue-50 | /record |
 | 心理FM | Radio | 紫色 #A855F7 | bg-purple-50 | /healing |
-| 社区交流 | Users | 橙色 #F97316 | bg-orange-50 | /healing |
+| 树洞交流 | Users | 橙色 #F97316 | bg-orange-50 | /healing |
 | 基因报告 | FileText | 绿色 #10B981 | bg-emerald-50 | /assessment |
 
 **特点**:
