@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { multimodalFusion } from '@/db/api';
+import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 
 interface FusionReportProps {
   scaleData: any;
@@ -204,9 +205,9 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
                     <span className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce delay-200" />
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-4">
-                    {fusionResult?.integrated_report || '分析中...'}
-                  </p>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-h-24 overflow-y-auto">
+                    <MarkdownRenderer content={fusionResult?.integrated_report || '分析中...'} />
+                  </div>
                 )}
               </div>
             </div>
@@ -233,7 +234,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
           <div className="mt-4">
             <AnimatePresence mode="wait">
               {/* 总览 Tab */}
-              <TabsContent value="overview" className="space-y-4 m-0 focus-visible:ring-0">
+              <TabsContent key="overview" value="overview" className="space-y-4 m-0 focus-visible:ring-0">
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -301,30 +302,30 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
                       <div className="flex items-center gap-2 font-bold text-sm">
                         <Activity className="w-4 h-4 text-emerald-400" /> 行动建议
                       </div>
-                      <p className="text-xs leading-relaxed text-slate-300">
-                        {fusionResult?.recommendation || '加载中...'}
-                      </p>
+                      <div className="text-xs leading-relaxed text-slate-300">
+                        <MarkdownRenderer content={fusionResult?.recommendation || '加载中...'} />
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
               </TabsContent>
 
               {/* 量表详情 Tab */}
-              <TabsContent value="scale" className="m-0 focus-visible:ring-0">
+              <TabsContent key="scale" value="scale" className="m-0 focus-visible:ring-0">
                 <Card className="border-none shadow-none bg-transparent space-y-4">
                   <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl space-y-3 shadow-sm">
                     <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                       <ClipboardList className="w-5 h-5 text-blue-500" /> 详细评估
                     </h3>
                     <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {scaleData?.aiResponse || '暂无详细分析'}
+                      <MarkdownRenderer content={scaleData?.aiResponse || '暂无详细分析'} />
                     </div>
                   </div>
                 </Card>
               </TabsContent>
 
               {/* 语音详情 Tab */}
-              <TabsContent value="voice" className="m-0 focus-visible:ring-0">
+              <TabsContent key="voice" value="voice" className="m-0 focus-visible:ring-0">
                 <Card className="border-none shadow-none bg-transparent space-y-4">
                   <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl space-y-4 shadow-sm">
                     <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -347,16 +348,16 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
 
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-400">情绪分析</label>
-                      <p className="text-sm text-slate-600 dark:text-slate-300">
-                        {voiceData?.emotionAnalysis || '无'}
-                      </p>
+                      <div className="text-sm text-slate-600 dark:text-slate-300">
+                        <MarkdownRenderer content={voiceData?.emotionAnalysis || '无'} />
+                      </div>
                     </div>
                   </div>
                 </Card>
               </TabsContent>
 
               {/* 表情详情 Tab */}
-              <TabsContent value="expression" className="m-0 focus-visible:ring-0">
+              <TabsContent key="expression" value="expression" className="m-0 focus-visible:ring-0">
                 <Card className="border-none shadow-none bg-transparent space-y-4">
                   <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl space-y-6 shadow-sm">
                     <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -369,7 +370,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
                     </div>
 
                     <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-2xl text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
-                      {expressionData?.emotionAnalysis || '未检测到明显情绪特征'}
+                      <MarkdownRenderer content={expressionData?.emotionAnalysis || '未检测到明显情绪特征'} />
                     </div>
 
                     {expressionData?.uploadedImageUrl && (
@@ -396,7 +397,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
             <Share2 className="w-5 h-5 text-slate-400" />
           </Button>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
