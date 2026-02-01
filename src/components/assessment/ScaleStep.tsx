@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ragRetrieval } from '@/db/api';
@@ -63,7 +63,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       toast.error('请至少选择一个量表');
       return;
     }
-    
+
     const total = SCALES.filter(s => selectedScales.includes(s.id)).reduce((acc, s) => acc + s.total, 0);
     setTotalQuestions(total);
     setStarted(true);
@@ -86,13 +86,13 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
     try {
       const response = await ragRetrieval(
-        inputText, 
+        inputText,
         messages.map(m => ({ role: m.role, content: m.content })),
         selectedScales.join(',')
       );
 
       const aiContent = response?.choices?.[0]?.delta?.content || '抱歉，我现在无法回应，请稍后再试。';
-      
+
       // 模拟问题进度增加
       if (currentQuestionIndex < totalQuestions) {
         setCurrentQuestionIndex(prev => prev + 1);
@@ -127,11 +127,11 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     // 模拟评分
     const mockScore = Math.floor(Math.random() * 27);
     setScore(mockScore);
-    
+
     let level: 'low' | 'medium' | 'high' = 'low';
     if (mockScore >= 20) level = 'high';
     else if (mockScore >= 10) level = 'medium';
-    
+
     setRiskLevel(level);
     setShowReport(true);
 
@@ -155,16 +155,16 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
               key={scale.id}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                setSelectedScales(prev => 
-                  prev.includes(scale.id) 
+                setSelectedScales(prev =>
+                  prev.includes(scale.id)
                     ? prev.filter(id => id !== scale.id)
                     : [...prev, scale.id]
                 );
               }}
               className={`
                 p-5 rounded-3xl border-2 transition-all cursor-pointer relative overflow-hidden
-                ${selectedScales.includes(scale.id) 
-                  ? 'border-primary bg-primary/5 dark:bg-primary/10' 
+                ${selectedScales.includes(scale.id)
+                  ? 'border-primary bg-primary/5 dark:bg-primary/10'
                   : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900'}
               `}
             >
@@ -187,7 +187,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
           ))}
         </div>
 
-        <Button 
+        <Button
           onClick={startAssessment}
           className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
         >
@@ -223,8 +223,8 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
               >
                 <div className={`
                   max-w-[85%] p-4 rounded-3xl text-sm font-medium leading-relaxed
-                  ${msg.role === 'user' 
-                    ? 'bg-primary text-white shadow-lg shadow-primary/10 rounded-tr-none' 
+                  ${msg.role === 'user'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/10 rounded-tr-none'
                     : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-800 rounded-tl-none'}
                 `}>
                   {msg.content}
@@ -256,10 +256,10 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
             placeholder="请在此输入您的回答..."
             className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 ring-primary transition-all outline-none"
           />
-          <Button 
+          <Button
             onClick={handleSend}
             disabled={!inputText.trim() || loading}
-            size="icon" 
+            size="icon"
             className="rounded-2xl w-12 h-12 shadow-lg shadow-primary/20"
           >
             <Send className="w-5 h-5" />
@@ -270,6 +270,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       {/* 报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
         <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none">
+          <DialogTitle className="sr-only">评估完成报告</DialogTitle>
           <div className="bg-gradient-to-br from-primary to-primary-foreground p-8 text-center text-white space-y-4">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-md">
               <ClipboardList className="w-10 h-10" />
@@ -288,10 +289,9 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
               </div>
               <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl text-center space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Risk</span>
-                <p className={`text-lg font-black ${
-                  riskLevel === 'high' ? 'text-rose-500' : 
+                <p className={`text-lg font-black ${riskLevel === 'high' ? 'text-rose-500' :
                   riskLevel === 'medium' ? 'text-amber-500' : 'text-emerald-500'
-                }`}>
+                  }`}>
                   {riskLevel === 'high' ? '高风险' : riskLevel === 'medium' ? '中风险' : '低风险'}
                 </p>
               </div>
@@ -302,9 +302,9 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
                 <Info className="w-4 h-4 text-primary" /> AI 建议
               </h3>
               <p className="text-sm text-slate-500 leading-relaxed">
-                您的得分反映出{riskLevel === 'high' ? '显著的抑郁倾向，建议尽快咨询专业医生进行干预。' : 
-                riskLevel === 'medium' ? '存在一定的心理压力，可以通过运动、社交和充足睡眠来调节。' : 
-                '心理状态相对健康，请继续保持积极的生活方式。'}
+                您的得分反映出{riskLevel === 'high' ? '显著的抑郁倾向，建议尽快咨询专业医生进行干预。' :
+                  riskLevel === 'medium' ? '存在一定的心理压力，可以通过运动、社交和充足睡眠来调节。' :
+                    '心理状态相对健康，请继续保持积极的生活方式。'}
               </p>
             </div>
 
@@ -317,7 +317,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
                   <Printer className="w-4 h-4 mr-2" /> 打印
                 </Button>
               </div>
-              <Button 
+              <Button
                 onClick={() => {
                   setShowReport(false);
                   onComplete({ score, riskLevel });

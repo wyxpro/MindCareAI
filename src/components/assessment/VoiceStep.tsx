@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { audioEmotionAnalysis } from '@/db/api';
 
@@ -38,11 +38,11 @@ function parseAnalysisResult(analysis: string): {
 
   // 判断情绪类型
   if (text.includes('积极') || text.includes('正面') || text.includes('乐观') ||
-      text.includes('开心') || text.includes('愉悦') || text.includes('平静') && !text.includes('焦虑')) {
+    text.includes('开心') || text.includes('愉悦') || text.includes('平静') && !text.includes('焦虑')) {
     return { emotionType: 'positive' };
   }
   if (text.includes('消极') || text.includes('负面') || text.includes('焦虑') ||
-      text.includes('抑郁') || text.includes('压力') || text.includes('悲伤')) {
+    text.includes('抑郁') || text.includes('压力') || text.includes('悲伤')) {
     return { emotionType: 'negative' };
   }
   return { emotionType: 'neutral' };
@@ -381,11 +381,11 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       {/* 报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
         <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none">
-          <div className={`bg-gradient-to-br p-8 text-center text-white space-y-4 ${
-            emotionType === 'positive' ? 'from-emerald-500 to-teal-600' :
+          <DialogTitle className="sr-only">语音情绪分析报告</DialogTitle>
+          <div className={`bg-gradient-to-br p-8 text-center text-white space-y-4 ${emotionType === 'positive' ? 'from-emerald-500 to-teal-600' :
             emotionType === 'negative' ? 'from-rose-500 to-pink-600' :
-            'from-indigo-600 to-purple-600'
-          }`}>
+              'from-indigo-600 to-purple-600'
+            }`}>
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-md">
               <Sparkles className="w-10 h-10" />
             </div>
@@ -426,11 +426,10 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
               </div>
               <div className="space-y-1">
                 <p className="text-slate-400 text-xs">情绪状态</p>
-                <p className={`font-bold ${
-                  emotionType === 'positive' ? 'text-emerald-600 dark:text-emerald-400' :
+                <p className={`font-bold ${emotionType === 'positive' ? 'text-emerald-600 dark:text-emerald-400' :
                   emotionType === 'negative' ? 'text-rose-600 dark:text-rose-400' :
-                  'text-indigo-600 dark:text-indigo-400'
-                }`}>
+                    'text-indigo-600 dark:text-indigo-400'
+                  }`}>
                   {emotionTypeLabel}
                 </p>
               </div>
