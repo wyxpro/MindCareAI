@@ -39,7 +39,7 @@ export class AiService {
   constructor(
     private readonly configService: ConfigService,
     private readonly stepFunFilesService: StepFunFilesService,
-  ) {}
+  ) { }
   private readonly logger = new Logger(AiService.name);
 
   private buildChatPayload(
@@ -138,9 +138,9 @@ export class AiService {
         const response = await axios.post(aiConfig.stepfunApiUrl, payload, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${aiConfig.apiKey} `,
+            Authorization: `Bearer ${aiConfig.apiKey}`,
             ...(aiConfig.stepfunApiUrl.includes("gateway")
-              ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey} ` }
+              ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey}` }
               : {}),
           },
         });
@@ -160,7 +160,7 @@ export class AiService {
     this.logger.log(`Using banked AI response(model: ${payload.model})`);
     const responseText =
       this.bankedResponses[
-        Math.floor(Math.random() * this.bankedResponses.length)
+      Math.floor(Math.random() * this.bankedResponses.length)
       ];
     if (shouldStream) {
       return this.generateMockStream(responseText);
@@ -292,12 +292,12 @@ export class AiService {
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${aiConfig.apiKey} `,
+              Authorization: `Bearer ${aiConfig.apiKey}`,
               // 如果是 gateway URL，可能需要使用 X-Gateway-Authorization
               ...((
                 aiConfig.multimodalApiUrl || aiConfig.stepfunApiUrl
               ).includes("gateway")
-                ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey} ` }
+                ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey}` }
                 : {}),
             },
           },
@@ -472,8 +472,8 @@ export class AiService {
         form.append("language", language);
       }
       form.append("file", file.buffer, {
-        filename: file.originalname || `audio.${format} `,
-        contentType: file.mimetype || `audio / ${format} `,
+        filename: file.originalname || `audio.${format}`,
+        contentType: file.mimetype || `audio/${format}`,
       });
 
       try {
@@ -483,9 +483,9 @@ export class AiService {
         const response = await axios.post(url, form, {
           headers: {
             ...form.getHeaders(),
-            Authorization: `Bearer ${aiConfig.apiKey} `,
+            Authorization: `Bearer ${aiConfig.apiKey}`,
             ...(url.includes("gateway")
-              ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey} ` }
+              ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey}` }
               : {}),
           },
         });
@@ -518,12 +518,12 @@ export class AiService {
     const aiConfig = this.configService.get<any>("ai");
     const history = Array.isArray(ragRetrievalDto.conversation_history)
       ? ragRetrievalDto.conversation_history.map((item) => ({
-          role: item.role,
-          content:
-            typeof item.content === "string"
-              ? item.content
-              : JSON.stringify(item.content),
-        }))
+        role: item.role,
+        content:
+          typeof item.content === "string"
+            ? item.content
+            : JSON.stringify(item.content),
+      }))
       : [];
 
     const systemPrompt = [
@@ -553,9 +553,9 @@ export class AiService {
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${aiConfig.apiKey} `,
+              Authorization: `Bearer ${aiConfig.apiKey}`,
               ...(aiConfig.stepfunApiUrl.includes("gateway")
-                ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey} ` }
+                ? { "X-Gateway-Authorization": `Bearer ${aiConfig.apiKey}` }
                 : {}),
             },
           },
@@ -617,9 +617,9 @@ export class AiService {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey} `,
+            Authorization: `Bearer ${apiKey}`,
             ...(url.includes("gateway")
-              ? { "X-Gateway-Authorization": `Bearer ${apiKey} ` }
+              ? { "X-Gateway-Authorization": `Bearer ${apiKey}` }
               : {}),
           },
           responseType: "stream",
@@ -880,7 +880,7 @@ export class AiService {
           break;
       }
 
-      return `data:${mimeType}; base64, ${fileBuffer.toString("base64")} `;
+      return `data:${mimeType};base64,${fileBuffer.toString("base64")}`;
     } catch (error) {
       this.logger.error(`❌ 转换 URL to base64 失败: ${error.message} `);
       return null;
