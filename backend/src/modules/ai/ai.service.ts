@@ -457,7 +457,7 @@ export class AiService {
 
       const startedAt = Date.now();
       const baseUrl = this.getStepfunBaseUrl(aiConfig.stepfunApiUrl);
-      const url = `${baseUrl} /audio/transcriptions`;
+      const url = `${baseUrl}/audio/transcriptions`;
       const format = options?.format || this.inferAudioFormat(file) || "wav";
       const language = options?.language || "zh";
 
@@ -695,15 +695,19 @@ export class AiService {
 
   private inferAudioFormat(
     file: Express.Multer.File,
-  ): "wav" | "m4a" | undefined {
+  ): "wav" | "m4a" | "webm" | "opus" | undefined {
     if (!file) return undefined;
     const name = file.originalname || "";
     if (name.endsWith(".m4a")) return "m4a";
     if (name.endsWith(".wav")) return "wav";
-    if (file.mimetype === "audio/mp4" || file.mimetype === "audio/m4a")
+    if (name.endsWith(".webm")) return "webm";
+    if (name.endsWith(".opus")) return "opus";
+    if (file.mimetype.includes("audio/mp4") || file.mimetype.includes("audio/m4a"))
       return "m4a";
-    if (file.mimetype === "audio/wav" || file.mimetype === "audio/wave")
+    if (file.mimetype.includes("audio/wav") || file.mimetype.includes("audio/wave"))
       return "wav";
+    if (file.mimetype.includes("audio/webm")) return "webm";
+    if (file.mimetype.includes("audio/ogg") || file.mimetype.includes("audio/opus")) return "opus";
     return undefined;
   }
 
