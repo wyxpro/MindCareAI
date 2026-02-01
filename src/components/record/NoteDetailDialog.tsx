@@ -8,7 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, X, Check, Loader2 } from 'lucide-react';
+import { Edit, Trash2, X, Check, Loader2, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import type { EmotionDiary, EmotionLevel } from '@/types';
 
@@ -151,7 +151,7 @@ export default function NoteDetailDialog({
           {diary.image_urls && diary.image_urls.length > 0 && (
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                <ImageIcon className="w-4 h-4" />
+                <Image className="w-4 h-4" />
                 图片 ({diary.image_urls.length})
               </h4>
               <div className="grid grid-cols-2 gap-3">
@@ -165,7 +165,7 @@ export default function NoteDetailDialog({
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-colors duration-200 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 dark:bg-slate-800/90 rounded-full p-2">
-                        <ImageIcon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                        <Image className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                       </div>
                     </div>
                   </div>

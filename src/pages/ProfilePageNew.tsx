@@ -35,7 +35,10 @@ export default function ProfilePageNew() {
   }, [profile, user]);
 
   const loadHealthData = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error('请先登录');
+      return;
+    }
     try {
       const [assessments, diaries] = await Promise.all([
         getAssessments(user.id, 100),
@@ -44,6 +47,7 @@ export default function ProfilePageNew() {
       setAssessmentCount(assessments.length);
     } catch (error) {
       console.error('加载健康数据失败:', error);
+      toast.error('加载健康数据失败，请重试');
     }
   };
 
@@ -53,7 +57,10 @@ export default function ProfilePageNew() {
   };
 
   const handleUpdateProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error('请先登录');
+      return;
+    }
     try {
       await updateProfile(user.id, {
         full_name: fullName || undefined,
@@ -64,7 +71,7 @@ export default function ProfilePageNew() {
       setEditDialogOpen(false);
     } catch (error) {
       console.error('更新失败:', error);
-      toast.error('更新失败');
+      toast.error('更新资料失败，请重试');
     }
   };
 

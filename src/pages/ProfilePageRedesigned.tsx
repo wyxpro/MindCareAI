@@ -13,8 +13,11 @@ import { toast } from 'sonner';
 import {
   Edit, LogOut, FileText,
   Settings, ChevronRight, User, Calendar, TrendingUp, Award,
-  ShieldCheck, Crown, Shield
+  ShieldCheck, Crown, Shield,
+  Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe,
+  ArrowRight, Fingerprint, Copy, Sparkles, Stethoscope, Loader2
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
 
 export default function ProfilePageRedesigned() {
@@ -29,7 +32,14 @@ export default function ProfilePageRedesigned() {
   const [doctorPassword, setDoctorPassword] = useState('');
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('openReport') === '1') {
+      setReportOpen(true);
+    }
+  }, [window.location.search]);
   // 健康数据
   const [emotionScore, setEmotionScore] = useState(75);
   const [consecutiveDays, setConsecutiveDays] = useState(15);
@@ -133,12 +143,14 @@ export default function ProfilePageRedesigned() {
       ],
     },
     {
-      title: '账号管理',
+      title: '功能服务',
       items: [
-        { icon: User, label: '个人信息管理', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
-        { icon: Crown, label: '会员订阅管理', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
-        { icon: ShieldCheck, label: '隐私安全设置', value: '账号安全加固', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => navigate('/profile/privacy') },
-        { icon: Shield, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => { } },
+        { icon: User, label: '个人信息', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
+        { icon: Sparkles, label: '疗愈计划', value: '专属定制方案', color: 'text-indigo-600', bgColor: 'bg-indigo-50', onClick: () => navigate('/profile/healing-plan') },
+        { icon: Stethoscope, label: '对接医生', value: '专业专家问诊', color: 'text-rose-600', bgColor: 'bg-rose-50', onClick: () => navigate('/profile/connect-doctor') },
+        { icon: Crown, label: '会员订阅', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
+        { icon: ShieldCheck, label: '隐私安全', value: '账号安全加固', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => navigate('/profile/privacy') },
+        { icon: HelpCircle, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => navigate('/profile/about') },
         {
           icon: Settings,
           label: profile?.role === 'doctor' || profile?.role === 'admin' ? '医生后台' : '医生后台登录',
@@ -208,34 +220,56 @@ export default function ProfilePageRedesigned() {
           </CardContent>
         </Card>
 
-        {/* 健康评估报告卡片 (长条形) */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <Card
-            className="border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 overflow-hidden group rounded-3xl py-3"
-            onClick={() => setReportOpen(true)}
+        {/* 查看健康报告卡片 */}
+        <div className="max-w-md mx-auto px-4 -mt-12 relative z-20 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-100 via-pink-100 to-rose-200 border border-rose-200"
+            onClick={() => {
+              if (reportLoading) return;
+              setReportLoading(true);
+              setTimeout(() => {
+                setReportOpen(true);
+                setReportLoading(false);
+              }, 1500); // 1.5s is enough for feeling 'active' without being annoying
+            }}
           >
-            <CardContent className="p-0 relative">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-150" />
-              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8 transition-transform duration-700 group-hover:scale-150" />
-
-              <div className="p-3 flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-inner border border-white/20">
-                  <FileText className="w-6 h-6 text-white" />
+            <div className="absolute inset-0">
+              <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-rose-300/40 blur-3xl" />
+              <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-pink-300/30 blur-2xl" />
+            </div>
+            <div className="flex justify-between items-center relative z-10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-rose-900 font-black text-lg">健康评估报告</span>
                 </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-white mb-0.5 tracking-wide">健康评估报告</h3>
-                  <p className="text-blue-100/80 text-sm leading-relaxed">
-                    查看多模态分析、AI评分及专家康复建议
-                  </p>
-                </div>
-
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:translate-x-1 transition-transform border border-white/10">
-                  <ChevronRight className="w-5 h-5 text-white" />
-                </div>
+                <p className="text-rose-700/80 text-xs mt-1">查看多模态分析、AI评分及专家建议</p>
               </div>
-            </CardContent>
-          </Card>
+              <Button
+                className="bg-rose-500 hover:bg-rose-600 text-white rounded-full text-[10px] font-black h-7 px-3 disabled:opacity-60"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (reportLoading) return;
+                  setReportLoading(true);
+                  setTimeout(() => {
+                    setReportOpen(true);
+                    setReportLoading(false);
+                  }, 1500);
+                }}
+                disabled={reportLoading}
+              >
+                {reportLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                    生成中...
+                  </>
+                ) : (
+                  <>打开</>
+                )}
+              </Button>
+            </div>
+          </motion.div>
         </div>
 
         {/* 快捷操作 (已移除，功能在菜单中保留) */}

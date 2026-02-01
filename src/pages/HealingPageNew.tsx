@@ -46,7 +46,7 @@ export default function HealingPageNew() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalTime] = useState(300);
-  const [meditationStats, setMeditationStats] = useState({ totalMinutes: 128, totalSessions: 12 });
+  const [meditationStats, setMeditationStats] = useState({ totalMinutes: 128, totalSessions: 12, averageRating: 0 });
   const [moodDialogOpen, setMoodDialogOpen] = useState(false);
   const [moodAfter, setMoodAfter] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -95,7 +95,11 @@ export default function HealingPageNew() {
     if (!user) return;
     try {
       const stats = await getMeditationStats(user.id);
-      setMeditationStats(stats);
+      setMeditationStats({
+        totalMinutes: (stats as any).totalMinutes ?? 0,
+        totalSessions: (stats as any).totalSessions ?? 0,
+        averageRating: (stats as any).averageRating ?? 0,
+      });
     } catch (error) {
       setMeditationStats({
         totalMinutes: 0,
@@ -206,16 +210,6 @@ export default function HealingPageNew() {
             冥想
           </Button>
           <Button
-            onClick={() => setActiveTab('knowledge')}
-            className={`flex-1 rounded-full py-6 text-base font-medium transition-smooth ${
-              activeTab === 'knowledge'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow hover:opacity-90'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            知识
-          </Button>
-          <Button
             onClick={() => setActiveTab('community')}
             className={`flex-1 rounded-full py-6 text-base font-medium transition-smooth ${
               activeTab === 'community'
@@ -224,6 +218,16 @@ export default function HealingPageNew() {
             }`}
           >
             树洞
+          </Button>
+          <Button
+            onClick={() => setActiveTab('knowledge')}
+            className={`flex-1 rounded-full py-6 text-base font-medium transition-smooth ${
+              activeTab === 'knowledge'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow hover:opacity-90'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            知识
           </Button>
         </div>
 
@@ -385,11 +389,11 @@ export default function HealingPageNew() {
           </div>
         )}
 
-        {/* 知识Tab内容 */}
-        {activeTab === 'knowledge' && <KnowledgeTab />}
-
         {/* 树洞Tab内容 */}
         {activeTab === 'community' && <CommunityTab />}
+
+        {/* 知识Tab内容 */}
+        {activeTab === 'knowledge' && <KnowledgeTab />}
 
         {/* 冥想完成对话框 */}
         <Dialog open={moodDialogOpen} onOpenChange={setMoodDialogOpen}>

@@ -375,7 +375,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             )}
           </div>
 
-          <div className="absolute bottom-32 left-0 right-0 px-6">
+          <div className="absolute bottom-44 md:bottom-32 left-0 right-0 px-6">
             <div className="max-w-md mx-auto">
               <div className="bg-slate-950/55 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between">
                 <div className="space-y-1">
