@@ -1,8 +1,6 @@
-# 🧠 灵愈AI - 智能心理健康应用
+# 🧠 灵愈AI - 智能心理检测与疗愈助手
 
 <div align="center">
-
-![灵愈AI Logo](https://img.shields.io/badge/灵愈AI-智能心理健康-blue?style=for-the-badge&logo=brain&logoColor=white)
 
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=flat&logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)

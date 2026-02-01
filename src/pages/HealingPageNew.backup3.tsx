@@ -28,10 +28,8 @@ import type { HealingContent, CommunityPost } from '@/types';
 
 const MEDITATION_CATEGORIES = [
   { id: 'all', label: '全部' },
-  { id: 'breathing', label: '呼吸' },
   { id: 'relax', label: '放松' },
   { id: 'sleep', label: '睡眠' },
-  { id: 'relief', label: '缓解' },
   { id: 'focus', label: '专注' },
 ];
 

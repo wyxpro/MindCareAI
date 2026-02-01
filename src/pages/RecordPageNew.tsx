@@ -12,7 +12,8 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMont
 import { zhCN } from 'date-fns/locale';
 import { convertWebmToWav, blobToBase64 } from '@/utils/audio';
 import type { EmotionDiary, EmotionLevel } from '@/types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import MoodFeedbackOverlay, { MoodFeedbackType } from '@/components/record/MoodFeedbackOverlay';
 
 const EMOTIONS = [
   { level: 'very_good' as EmotionLevel, label: '极好', emoji: '😄', color: 'bg-gradient-to-br from-success/20 to-success/10 text-success border-success/30 hover:border-success/50 hover:shadow-success-glow' },
@@ -52,6 +53,7 @@ export default function RecordPageNew() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<MoodFeedbackType>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -239,6 +241,16 @@ export default function RecordPageNew() {
         tags: selectedTriggers,
         image_urls: imageUrls
       });
+
+      // 触发反馈
+      if (emotionLevel === 'very_good' || emotionLevel === 'good') {
+        setFeedbackType('giver');
+      } else if (emotionLevel === 'bad' || emotionLevel === 'very_bad') {
+        setFeedbackType('receiver');
+      } else {
+        setFeedbackType('observer');
+      }
+
       try {
         const ics = buildDiaryIcs(saved);
         downloadTextFile(`mindcare-diary-${saved.diary_date}.ics`, ics, 'text/calendar');
@@ -246,6 +258,7 @@ export default function RecordPageNew() {
       }
       toast.success('记录已保存', { duration: 1000 });
       setContent('');
+      setSelectedTriggers([]);
       setImageUrls([]);
       await loadDiaries();
     } catch (error) {
@@ -441,76 +454,104 @@ export default function RecordPageNew() {
       
       {/* 当日记录列表弹窗 */}
       <Dialog open={dayDialogOpen} onOpenChange={(open) => setDayDialogOpen(open)}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-[28px] border-none">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-xl">
-              {format(selectedDate, 'yyyy年M月d日 EEEE', { locale: zhCN })}
+            <DialogTitle className="sr-only">
+              {format(selectedDate, 'yyyy年M月d日 当天记录', { locale: zhCN })}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-5 border-b">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-lg font-black">{format(selectedDate, 'yyyy年M月d日', { locale: zhCN })}</h3>
+                <p className="text-[11px] text-muted-foreground">{format(selectedDate, 'EEEE', { locale: zhCN })}</p>
+              </div>
+              <div className="flex gap-2">
+                {getDiariesForDate(selectedDate).slice(0,3).map((d, i) => (
+                  <span key={i} className="text-xl">{getEmotionEmoji(d.emotion_level)}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4 p-6">
             {getDiariesForDate(selectedDate).map((d) => (
-              <div key={d.id} className="rounded-xl border p-4 space-y-3 bg-muted/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{getEmotionEmoji(d.emotion_level)}</span>
-                    <div className="flex gap-1 flex-wrap">
-                      {d.tags?.map(tag => <Badge key={tag} variant="secondary" className="px-2 py-0.5 text-[11px]">{tag}</Badge>)}
-                    </div>
+              <div key={d.id} className="rounded-2xl border bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
+                <div className="flex gap-4 p-4">
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl">
+                    {getEmotionEmoji(d.emotion_level)}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setEditingId(editingId === d.id ? null : d.id);
-                      setEditContent(d.content || '');
-                    }}
-                    className="h-8"
-                  >
-                    {editingId === d.id ? '取消' : '编辑'}
-                  </Button>
-                </div>
-                {editingId === d.id ? (
-                  <div className="space-y-2">
-                    <Textarea rows={5} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
-                    <div className="flex justify-end">
-                      <Button size="sm" onClick={async () => {
-                        setLoading(true);
-                        try {
-                          await updateEmotionDiary(d.id, { content: editContent });
-                          toast.success('已更新', { duration: 1000 });
-                          await loadDiaries();
-                          setEditingId(null);
-                        } catch (e) {
-                          toast.error('更新失败', { duration: 1000 });
-                        } finally {
-                          setLoading(false);
-                        }
-                      }}>
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
-                        完成
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-1 flex-wrap">
+                        {d.tags?.map(tag => (
+                          <Badge key={tag} variant="outline" className="text-[10px] px-2 py-0.5">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingId(editingId === d.id ? null : d.id);
+                          setEditContent(d.content || '');
+                        }}
+                        className="h-8"
+                      >
+                        {editingId === d.id ? '取消' : '编辑'}
                       </Button>
                     </div>
-                  </div>
-                ) : (
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{d.content || '暂无内容'}</p>
-                )}
-                {d.image_urls && d.image_urls.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {d.image_urls.map((url, idx) => (
-                      <div key={idx} className="aspect-square rounded-md overflow-hidden border">
-                        <img src={url} alt={`dimg-${idx}`} className="w-full h-full object-cover" />
+                    {editingId === d.id ? (
+                      <div className="space-y-2">
+                        <Textarea rows={5} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
+                        <div className="flex justify-end">
+                          <Button size="sm" onClick={async () => {
+                            setLoading(true);
+                            try {
+                              await updateEmotionDiary(d.id, { content: editContent });
+                              toast.success('已更新', { duration: 1000 });
+                              await loadDiaries();
+                              setEditingId(null);
+                            } catch (e) {
+                              toast.error('更新失败', { duration: 1000 });
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}>
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+                            完成
+                          </Button>
+                        </div>
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700 dark:text-slate-300">
+                        {d.content || '暂无内容'}
+                      </p>
+                    )}
+                    {d.image_urls && d.image_urls.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {d.image_urls.map((url, idx) => (
+                          <div key={idx} className="aspect-square rounded-lg overflow-hidden border">
+                            <img src={url} alt={`dimg-${idx}`} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
-          <DialogFooter className="border-t pt-4">
-            <Button variant="outline" onClick={() => setDayDialogOpen(false)} className="w-full sm:w-auto">关闭</Button>
-          </DialogFooter>
+          <div className="px-6 pb-6">
+            <Button variant="outline" onClick={() => setDayDialogOpen(false)} className="w-full h-11 rounded-xl">关闭</Button>
+          </div>
         </DialogContent>
       </Dialog>
+      <MoodFeedbackOverlay 
+        type={feedbackType} 
+        content={content}
+        onClose={() => setFeedbackType(null)} 
+      />
     </div>
   );
 }

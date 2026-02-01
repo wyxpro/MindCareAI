@@ -23,10 +23,8 @@ import type { HealingContent } from '@/types';
 
 const MEDITATION_CATEGORIES = [
   { id: 'all', label: '全部' },
-  { id: 'breathing', label: '呼吸' },
   { id: 'relax', label: '放松' },
   { id: 'sleep', label: '睡眠' },
-  { id: 'relief', label: '缓解' },
   { id: 'focus', label: '专注' },
 ];
 
@@ -99,7 +97,11 @@ export default function HealingPageNew() {
       const stats = await getMeditationStats(user.id);
       setMeditationStats(stats);
     } catch (error) {
-      console.error('加载冥想统计失败:', error);
+      setMeditationStats({
+        totalMinutes: 0,
+        totalSessions: 0,
+        averageRating: 0,
+      });
     }
   };
 
@@ -304,38 +306,7 @@ export default function HealingPageNew() {
               </CardContent>
             </Card>
 
-            {/* 统计数据 */}
-            <div className="grid grid-cols-3 gap-3 items-stretch animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <Card className="glass border-border shadow-sm card-hover py-3">
-                <CardContent className="p-3 text-center">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center mx-auto mb-2">
-                    <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">{meditationStats.totalMinutes}</div>
-                  <div className="text-xs text-muted-foreground">分钟总计</div>
-                </CardContent>
-              </Card>
- 
-              <Card className="glass border-border shadow-sm card-hover py-3">
-                <CardContent className="p-3 text-center">
-                  <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-500/20 flex items-center justify-center mx-auto mb-2">
-                    <Heart className="w-4 h-4 text-pink-600 dark:text-pink-400" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">{meditationStats.totalSessions}</div>
-                  <div className="text-xs text-muted-foreground">练习天数</div>
-                </CardContent>
-              </Card>
- 
-              <Card className="glass border-border shadow-sm card-hover py-3">
-                <CardContent className="p-3 text-center">
-                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mx-auto mb-2">
-                    <Moon className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">4.5</div>
-                  <div className="text-xs text-muted-foreground">平均评分</div>
-                </CardContent>
-              </Card>
-            </div>
+            
 
             {/* 冥想库 */}
             <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>

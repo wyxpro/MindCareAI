@@ -1,25 +1,1682 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  </head>
-  <body>
-    <div id="root">
-      <div
-        style="
+    <meta
+      name="description"
+      content="MindCare AI - 专业的抑郁症AI数字医生辅助诊断系统，提供24/7心理健康评估与辅助治疗服务"
+    />
+    <title>MindCare AI - 基于多模态AI的数字医生抑郁诊断与疗愈助手</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- AOS动画库 -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- GSAP动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+        overflow-x: hidden;
+      }
+
+      /* 背景渐变 */
+      .hero-gradient {
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-gradient::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,197.3C1248,203,1344,149,1392,122.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        animation: wave 15s linear infinite;
+      }
+
+      @keyframes wave {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+
+      /* 玻璃态效果 */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      }
+
+      /* 悬浮动画 */
+      .float-animation {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      /* 脉冲动画 */
+      .pulse-glow {
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(102, 126, 234, 0.8);
+        }
+      }
+
+      /* 渐变文字 */
+      .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      /* 按钮悬停效果 */
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .btn-primary:hover::before {
+        left: 100%;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      }
+
+      /* 卡片悬停效果 */
+      .feature-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      /* 图标动画 */
+      .icon-container {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .icon-container::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(102, 126, 234, 0.1);
+        transform: translate(-50%, -50%);
+        transition:
+          width 0.6s,
+          height 0.6s;
+      }
+
+      .feature-card:hover .icon-container::after {
+        width: 200px;
+        height: 200px;
+      }
+
+      /* 滚动进度条 */
+      .scroll-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        z-index: 9999;
+        transition: width 0.1s;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 768px) {
+        .hero-title {
+          font-size: 2rem;
+        }
+        .hero-subtitle {
+          font-size: 1rem;
+        }
+      }
+
+      /* 平滑滚动 */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* 自定义滚动条 */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      }
+
+      /* 数字计数动画 */
+      .counter {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      /* 评价卡片 */
+      .testimonial-card {
+        transition: all 0.3s ease;
+      }
+
+      .testimonial-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      }
+      #features {
+        display: none !important;
+      }
+      body {
+        -webkit-tap-highlight-color: transparent;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      @media (max-width: 640px) {
+        .hero-title {
+          font-size: clamp(1.8rem, 6vw, 2.2rem);
+          line-height: 1.25;
+        }
+        .hero-subtitle {
+          font-size: clamp(0.95rem, 3.5vw, 1.1rem);
+        }
+        .btn-primary {
+          min-height: 48px;
+          padding: 12px 18px;
+          border-radius: 9999px;
+        }
+        #mobileMenuBtn {
+          padding: 12px;
+          border-radius: 12px;
+        }
+        nav .container {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .glass-card {
           padding: 16px;
-          font-family:
-            system-ui,
-            Segoe UI,
-            Arial;
-          color: #222;
-        "
+        }
+        .testimonial-card {
+          padding: 16px;
+        }
+        .counter {
+          font-size: 2rem;
+        }
+        .scroll-progress {
+          height: 2px;
+        }
+        .float-animation {
+          display: none;
+        }
+        #cta a {
+          min-height: 48px;
+          padding: 12px 20px;
+        }
+        #cta .text-4xl {
+          font-size: 1.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div id="landing">
+      <!-- 滚动进度条 -->
+      <div class="scroll-progress" id="scrollProgress"></div>
+
+      <!-- 导航栏 -->
+      <nav
+        class="glass-nav fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        id="navbar"
       >
-        应用正在启动...
-      </div>
+        <div class="container mx-auto px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div
+                class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  class="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  ></path>
+                </svg>
+              </div>
+              <span class="text-xl font-bold gradient-text">MindCare AI</span>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-8">
+              <a
+                href="#features"
+                class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                >产品特色</a
+              >
+              <a
+                href="#functions"
+                class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                >核心功能</a
+              >
+              <a
+                href="#testimonials"
+                class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                >用户评价</a
+              >
+              <a
+                href="#cta"
+                class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                >关于我们</a
+              >
+            </div>
+
+            <div class="flex items-center space-x-4">
+              <a
+                href="/#/login"
+                class="hidden md:block text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                >登录</a
+              >
+              <a
+                href="/#/"
+                class="btn-primary text-white px-6 py-2 rounded-full font-semibold shadow-lg"
+                >立即体验</a
+              >
+            </div>
+
+            <!-- 移动端菜单按钮 -->
+            <button class="md:hidden text-gray-700" id="mobileMenuBtn">
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                ></path>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 移动端菜单 -->
+          <div class="hidden md:hidden mt-4 pb-4" id="mobileMenu">
+            <a
+              href="#features"
+              class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
+              >产品特色</a
+            >
+            <a
+              href="#functions"
+              class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
+              >核心功能</a
+            >
+            <a
+              href="#testimonials"
+              class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
+              >用户评价</a
+            >
+            <a
+              href="#cta"
+              class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
+              >关于我们</a
+            >
+            <a
+              href="/#/login"
+              class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
+              >登录</a
+            >
+          </div>
+        </div>
+      </nav>
+
+      <!-- 英雄区域 -->
+      <section
+        class="hero-gradient min-h-screen flex items-center justify-center pt-20 relative"
+      >
+        <div
+          class="container mx-auto px-6 text-center text-white relative z-10"
+        >
+          <div data-aos="fade-up" data-aos-duration="1000">
+            <h1
+              class="hero-title text-5xl md:text-7xl font-bold mb-6 leading-tight"
+            >
+              MindCare AI<br />
+              <span class="text-4xl md:text-5xl font-light"
+                >基于多模态AI的数字医生抑郁诊断与疗愈助手</span
+              >
+            </h1>
+          </div>
+
+          <div data-aos="fade-up" data-aos-delay="200" data-aos-duration="1000">
+            <p
+              class="hero-subtitle text-xl md:text-2xl mb-8 max-w-3xl mx-auto font-light leading-relaxed"
+            >
+              通过先进的AI技术，提供专业、便捷、私密的心理健康评估与辅助治疗<br />
+              让每一个人都能获得及时、温暖的心理关怀
+            </p>
+          </div>
+
+          <div
+            data-aos="fade-up"
+            data-aos-delay="400"
+            data-aos-duration="1000"
+            class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16"
+          >
+            <a
+              href="/#/"
+              class="btn-primary text-white px-10 py-4 rounded-full text-lg font-semibold shadow-2xl pulse-glow inline-flex items-center space-x-2"
+            >
+              <span>立即使用</span>
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                ></path>
+              </svg>
+            </a>
+            <a
+              href="#features"
+              class="bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-semibold shadow-2xl hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              了解更多
+            </a>
+          </div>
+
+          <!-- 统计数据 -->
+          <div
+            data-aos="fade-up"
+            data-aos-delay="600"
+            data-aos-duration="1000"
+            class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
+          >
+            <div class="glass-card rounded-2xl p-6">
+              <div class="counter text-purple-600" data-target="50000">0</div>
+              <p class="text-gray-600 font-medium mt-2">累计用户</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6">
+              <div class="counter text-purple-600" data-target="98">0</div>
+              <p class="text-gray-600 font-medium mt-2">评估准确率%</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6">
+              <div class="counter text-purple-600" data-target="24">0</div>
+              <p class="text-gray-600 font-medium mt-2">全天候服务</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6">
+              <div class="counter text-purple-600" data-target="200">0</div>
+              <p class="text-gray-600 font-medium mt-2">专业医生+</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 浮动元素装饰 -->
+        <div
+          class="absolute top-20 left-10 w-20 h-20 bg-white opacity-10 rounded-full float-animation"
+          style="animation-delay: 0s"
+        ></div>
+        <div
+          class="absolute top-40 right-20 w-32 h-32 bg-white opacity-10 rounded-full float-animation"
+          style="animation-delay: 1s"
+        ></div>
+        <div
+          class="absolute bottom-20 left-1/4 w-16 h-16 bg-white opacity-10 rounded-full float-animation"
+          style="animation-delay: 2s"
+        ></div>
+      </section>
+
+      <!-- 产品理念 -->
+      <section class="py-20 bg-white" id="concept">
+        <div class="container mx-auto px-6">
+          <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">
+              产品理念
+            </h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+              我们相信，每个人都值得获得专业、便捷、私密的心理健康支持
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mx-auto mb-6 flex items-center justify-center"
+              >
+                <svg
+                  class="w-10 h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-3">专业可信</h3>
+              <p class="text-gray-600 leading-relaxed">
+                基于PHQ-9等国际标准量表，结合AI多模态分析技术，提供医学级评估结果
+              </p>
+            </div>
+
+            <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mx-auto mb-6 flex items-center justify-center"
+              >
+                <svg
+                  class="w-10 h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-3">隐私保护</h3>
+              <p class="text-gray-600 leading-relaxed">
+                端到端加密，严格遵守医疗数据隐私规范，您的每一次对话都绝对安全
+              </p>
+            </div>
+
+            <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+              <div
+                class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl mx-auto mb-6 flex items-center justify-center"
+              >
+                <svg
+                  class="w-10 h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-3">温暖陪伴</h3>
+              <p class="text-gray-600 leading-relaxed">
+                24/7全天候AI陪伴，危机时刻立即响应，让您永不孤单
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 特色亮点 -->
+      <section
+        class="py-20 bg-gradient-to-br from-purple-50 to-pink-50"
+        id="features"
+      >
+        <div class="container mx-auto px-6">
+          <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">
+              核心特色
+            </h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+              创新技术与人文关怀的完美结合
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- AI智能评估 -->
+            <div
+              class="feature-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
+              <div
+                class="icon-container w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  class="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-4">AI智能评估</h3>
+              <p class="text-gray-600 leading-relaxed mb-4">
+                结合语音、文本、面部表情等多模态数据，提供全面深入的心理状态分析
+              </p>
+              <div class="flex items-center text-purple-600 font-semibold">
+                <span>了解更多</span>
+                <svg
+                  class="w-4 h-4 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 24/7危机干预 -->
+            <div
+              class="feature-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
+              <div
+                class="icon-container w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  class="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-4">24/7危机干预</h3>
+              <p class="text-gray-600 leading-relaxed mb-4">
+                实时监测情绪变化，自动识别自杀风险，第一时间触发专业医生介入
+              </p>
+              <div class="flex items-center text-purple-600 font-semibold">
+                <span>了解更多</span>
+                <svg
+                  class="w-4 h-4 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 个性化疗愈 -->
+            <div
+              class="feature-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="300"
+            >
+              <div
+                class="icon-container w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  class="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-4">个性化疗愈</h3>
+              <p class="text-gray-600 leading-relaxed mb-4">
+                根据您的独特需求，定制专属冥想、放松训练和认知行为疗法方案
+              </p>
+              <div class="flex items-center text-purple-600 font-semibold">
+                <span>了解更多</span>
+                <svg
+                  class="w-4 h-4 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 医患协作 -->
+            <div
+              class="feature-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="400"
+            >
+              <div
+                class="icon-container w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6"
+              >
+                <svg
+                  class="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold mb-4">医患协作平台</h3>
+              <p class="text-gray-600 leading-relaxed mb-4">
+                无缝连接AI评估与专业医生，提供从筛查到诊疗的全流程服务
+              </p>
+              <div class="flex items-center text-purple-600 font-semibold">
+                <span>了解更多</span>
+                <svg
+                  class="w-4 h-4 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 核心功能模块 -->
+      <section class="py-20 bg-white" id="functions">
+        <div class="container mx-auto px-6">
+          <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">
+              核心功能
+            </h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+              全方位的心理健康管理解决方案
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            <!-- 用户侧功能 -->
+            <div data-aos="fade-right" data-aos-delay="100">
+              <div class="glass-card rounded-3xl p-8">
+                <h3 class="text-3xl font-bold mb-6 gradient-text">用户功能</h3>
+                <div class="space-y-6">
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">AI对话评估</h4>
+                      <p class="text-gray-600">
+                        智能对话系统,通过自然语言交流,进行PHQ-9等专业量表评估
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">情绪日记</h4>
+                      <p class="text-gray-600">
+                        记录每日情绪变化,智能分析情绪趋势,发现潜在问题
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">冥想疗愈</h4>
+                      <p class="text-gray-600">
+                        多种冥想与放松训练模式,帮助您缓解焦虑、改善睡眠
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">知识中心</h4>
+                      <p class="text-gray-600">
+                        丰富的心理健康科普知识库,帮助您更好地了解自己
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-pink-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">评估报告</h4>
+                      <p class="text-gray-600">
+                        生成详细的心理健康评估报告,可分享给专业医生
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 医生侧功能 -->
+            <div data-aos="fade-left" data-aos-delay="200">
+              <div class="glass-card rounded-3xl p-8">
+                <h3 class="text-3xl font-bold mb-6 gradient-text">医生功能</h3>
+                <div class="space-y-6">
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-indigo-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">患者管理</h4>
+                      <p class="text-gray-600">
+                        集中管理所有患者信息,实时查看AI评估结果与跟踪记录
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-red-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">危机预警中心</h4>
+                      <p class="text-gray-600">
+                        实时接收高风险患者预警,快速响应紧急情况
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-teal-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">数据分析</h4>
+                      <p class="text-gray-600">
+                        可视化患者数据仪表盘,辅助诊断决策与疗效评估
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-orange-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">知识库管理</h4>
+                      <p class="text-gray-600">
+                        维护和更新专业心理健康知识库,提供科普内容
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start space-x-4">
+                    <div
+                      class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-6 h-6 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                        ></path>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-semibold mb-2">系统设置</h4>
+                      <p class="text-gray-600">
+                        灵活配置预警阈值、通知方式等参数
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 用户评价 -->
+      <section
+        class="py-20 bg-gradient-to-br from-purple-50 to-pink-50"
+        id="testimonials"
+      >
+        <div class="container mx-auto px-6">
+          <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">
+              用户评价
+            </h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+              听听他们的改变故事
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div
+              class="testimonial-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+                >
+                  李
+                </div>
+                <div class="ml-4">
+                  <h4 class="font-semibold text-lg">李女士</h4>
+                  <div class="flex text-yellow-400">
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-700 leading-relaxed mb-4">
+                “使用MindCare
+                AI三个月后，我的睡眠质量明显改善。AI的评估非常专业，而且冥想训练特别有效，让我学会了如何管理焦虑情绪。”
+              </p>
+              <p class="text-gray-500 text-sm">—— 使用了90天</p>
+            </div>
+
+            <div
+              class="testimonial-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+                >
+                  王
+                </div>
+                <div class="ml-4">
+                  <h4 class="font-semibold text-lg">王先生</h4>
+                  <div class="flex text-yellow-400">
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-700 leading-relaxed mb-4">
+                “作为一名互联网从业者，工作压力很大。MindCare
+                AI的情绪日记功能让我更好地了解自己的状态，24/7的AI陪伴让我感觉不再孤单。”
+              </p>
+              <p class="text-gray-500 text-sm">—— 使用了120天</p>
+            </div>
+
+            <div
+              class="testimonial-card glass-card rounded-3xl p-8"
+              data-aos="fade-up"
+              data-aos-delay="300"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+                >
+                  张
+                </div>
+                <div class="ml-4">
+                  <h4 class="font-semibold text-lg">张医生</h4>
+                  <div class="flex text-yellow-400">
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                      ></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-700 leading-relaxed mb-4">
+                “作为一名心理医生，这个系统极大提高了我的工作效率。AI评估非常准确，危机预警功能让我能及时干预高风险患者，救了很多人。”
+              </p>
+              <p class="text-gray-500 text-sm">—— 使用了180天</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA区域 -->
+      <section
+        class="py-32 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 relative overflow-hidden"
+        id="cta"
+      >
+        <div class="absolute inset-0 opacity-10">
+          <div
+            class="absolute w-96 h-96 bg-white rounded-full blur-3xl top-10 left-10 animate-pulse"
+          ></div>
+          <div
+            class="absolute w-96 h-96 bg-white rounded-full blur-3xl bottom-10 right-10 animate-pulse"
+            style="animation-delay: 1s"
+          ></div>
+        </div>
+
+        <div class="container mx-auto px-6 text-center relative z-10">
+          <div data-aos="fade-up">
+            <h2 class="text-4xl md:text-6xl font-bold text-white mb-6">
+              开启您的心理健康之旅
+            </h2>
+            <p
+              class="text-xl md:text-2xl text-white opacity-90 mb-12 max-w-3xl mx-auto"
+            >
+              立即体验MindCare AI，让专业的AI技术为您的心理健康护航
+            </p>
+          </div>
+
+          <div
+            data-aos="fade-up"
+            data-aos-delay="200"
+            class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6"
+          >
+            <a
+              href="/#/dashboard"
+              class="bg-white text-purple-600 px-12 py-5 rounded-full text-xl font-bold shadow-2xl hover:shadow-xl transition-all duration-300 hover:scale-110 inline-flex items-center space-x-3"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+              <span>立即开始</span>
+            </a>
+            <a
+              href="#features"
+              class="border-2 border-white text-white px-12 py-5 rounded-full text-xl font-bold hover:bg-white hover:text-purple-600 transition-all duration-300"
+            >
+              了解更多
+            </a>
+          </div>
+
+          <div
+            data-aos="fade-up"
+            data-aos-delay="400"
+            class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
+          >
+            <div class="text-white">
+              <div class="text-4xl font-bold mb-2">免费</div>
+              <div class="text-white opacity-80">基础评估</div>
+            </div>
+            <div class="text-white">
+              <div class="text-4xl font-bold mb-2">24/7</div>
+              <div class="text-white opacity-80">在线服务</div>
+            </div>
+            <div class="text-white">
+              <div class="text-4xl font-bold mb-2">隐私</div>
+              <div class="text-white opacity-80">安全保护</div>
+            </div>
+            <div class="text-white">
+              <div class="text-4xl font-bold mb-2">专业</div>
+              <div class="text-white opacity-80">医学级评估</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 页脚 -->
+      <footer class="bg-gray-900 text-gray-300 py-12">
+        <div class="container mx-auto px-6">
+          <div class="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div class="flex items-center space-x-2 mb-4">
+                <div
+                  class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center"
+                >
+                  <svg
+                    class="w-5 h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    ></path>
+                  </svg>
+                </div>
+                <span class="text-xl font-bold text-white">MindCare AI</span>
+              </div>
+              <p class="text-sm leading-relaxed">
+                专业的抑郁症AI数字医生辅助诊断系统，为您的心理健康护航。
+              </p>
+            </div>
+
+            <div>
+              <h3 class="text-white font-semibold mb-4">产品</h3>
+              <ul class="space-y-2 text-sm">
+                <li>
+                  <a
+                    href="#features"
+                    class="hover:text-purple-400 transition-colors"
+                    >产品特色</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#functions"
+                    class="hover:text-purple-400 transition-colors"
+                    >核心功能</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#testimonials"
+                    class="hover:text-purple-400 transition-colors"
+                    >用户评价</a
+                  >
+                </li>
+                <li>
+                  <a href="/#/" class="hover:text-purple-400 transition-colors"
+                    >立即体验</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-white font-semibold mb-4">支持</h3>
+              <ul class="space-y-2 text-sm">
+                <li>
+                  <a href="#" class="hover:text-purple-400 transition-colors"
+                    >帮助中心</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-purple-400 transition-colors"
+                    >隐私政策</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-purple-400 transition-colors"
+                    >服务条款</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-purple-400 transition-colors"
+                    >联系我们</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-white font-semibold mb-4">联系方式</h3>
+              <ul class="space-y-2 text-sm">
+                <li>邮箱：support@mindcare.ai</li>
+                <li>电话：400-888-9999</li>
+                <li>地址：上海市浦东新区</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-800 pt-8 text-center text-sm">
+            <p>
+              &copy; 2026 MindCare AI. All rights reserved.
+              由AI技术驱动，为心理健康而生。
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      <!-- JavaScript交互 -->
+      <script>
+        // 初始化AOS动画库（容错）
+        try {
+          if (window.AOS && typeof AOS.init === "function") {
+            AOS.init({
+              duration: 800,
+              easing: "ease-in-out",
+              once: true,
+              offset: 100,
+            });
+          }
+        } catch (e) {}
+
+        // 滚动进度条
+        window.addEventListener("scroll", () => {
+          const scrollProgress = document.getElementById("scrollProgress");
+          const scrollTop =
+            window.pageYOffset || document.documentElement.scrollTop;
+          const scrollHeight =
+            document.documentElement.scrollHeight -
+            document.documentElement.clientHeight;
+          const progress = (scrollTop / scrollHeight) * 100;
+          scrollProgress.style.width = progress + "%";
+        });
+
+        // 导航栏滚动效果
+        const navbar = document.getElementById("navbar");
+        window.addEventListener("scroll", () => {
+          if (window.scrollY > 50) {
+            navbar.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.1)";
+          } else {
+            navbar.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.05)";
+          }
+        });
+
+        // 移动端菜单
+        const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+        const mobileMenu = document.getElementById("mobileMenu");
+        mobileMenuBtn.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+
+        // 数字计数动画
+        const counters = document.querySelectorAll(".counter");
+        const speed = 200;
+
+        const animateCounter = (counter) => {
+          const target = +counter.getAttribute("data-target");
+          const count = +counter.innerText;
+          const increment = target / speed;
+
+          if (count < target) {
+            counter.innerText = Math.ceil(count + increment);
+            setTimeout(() => animateCounter(counter), 10);
+          } else {
+            counter.innerText = target;
+          }
+        };
+
+        // 监听滚动，当数字进入视线时开始动画
+        const observerOptions = {
+          threshold: 0.5,
+        };
+
+        const counterObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const counter = entry.target;
+              animateCounter(counter);
+              counterObserver.unobserve(counter);
+            }
+          });
+        }, observerOptions);
+
+        counters.forEach((counter) => {
+          counterObserver.observe(counter);
+        });
+
+        // GSAP动画（可选）
+        try {
+          if (window.gsap) {
+            gsap.registerPlugin(window.ScrollTrigger || {});
+            // 特色卡片滚动动画
+            if (gsap.utils && typeof gsap.utils.toArray === "function") {
+              gsap.utils.toArray(".feature-card").forEach((card, index) => {
+                gsap.from(card, {
+                  scrollTrigger: window.ScrollTrigger
+                    ? {
+                        trigger: card,
+                        start: "top 80%",
+                        end: "bottom 20%",
+                        toggleActions: "play none none reverse",
+                      }
+                    : undefined,
+                  opacity: 0,
+                  y: 50,
+                  duration: 0.8,
+                  delay: index * 0.1,
+                });
+              });
+            }
+          }
+        } catch (e) {}
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+          anchor.addEventListener("click", function (e) {
+            const href = this.getAttribute("href");
+            if (href.startsWith("#") && href !== "#") {
+              e.preventDefault();
+              const target = document.querySelector(href);
+              if (target) {
+                target.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }
+            }
+          });
+        });
+      </script>
     </div>
+    <div id="root" style="display: none"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        const landing = document.getElementById("landing");
+        const root = document.getElementById("root");
+        const syncView = () => {
+          const isApp = !!location.hash && location.hash.startsWith("#/");
+          if (landing) landing.style.display = isApp ? "none" : "";
+          if (root) root.style.display = isApp ? "" : "none";
+        };
+        window.addEventListener("hashchange", syncView);
+        syncView();
+      })();
+    </script>
   </body>
 </html>

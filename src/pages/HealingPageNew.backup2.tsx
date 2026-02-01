@@ -14,7 +14,6 @@ const MEDITATION_CATEGORIES = [
   { id: 'breathing', label: '呼吸' },
   { id: 'relax', label: '放松' },
   { id: 'sleep', label: '睡眠' },
-  { id: 'relief', label: '缓解' },
 ];
 
 const CONTENT_GRADIENTS = [
