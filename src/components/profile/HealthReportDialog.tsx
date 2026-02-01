@@ -206,6 +206,7 @@ export const HealthReportDialog: React.FC<HealthReportDialogProps> = ({ open, on
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-0 bg-transparent shadow-none sm:rounded-3xl">
+        <DialogTitle className="sr-only">健康评估报告</DialogTitle>
         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col" ref={reportRef}>
           <button 
             onClick={() => onOpenChange(false)}
