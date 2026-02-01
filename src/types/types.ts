@@ -1,4 +1,21 @@
 // 类型定义文件
+export interface AiAnalysis {
+  emotion_score?: number;
+  negative_keywords?: string[];
+  emotion_label?: string;
+  confidence?: number;
+  analysis_description?: string;
+  recommendations?: string[];
+  multimodal_scores?: {
+    text: number;
+    image: number;
+    voice: number;
+    video: number;
+  };
+  fused_score?: number;
+  symptoms?: Record<string, number>;
+  modalities_used?: number;
+}
 export type UserRole = 'user' | 'doctor' | 'admin';
 
 export type EmotionLevel = 'very_bad' | 'bad' | 'neutral' | 'good' | 'very_good';
@@ -37,15 +54,19 @@ export interface Assessment {
   id: string;
   user_id: string;
   assessment_type: string;
-  conversation_history: any[];
+  conversation_history: (ChatMessage | Message)[];
   text_input?: string;
   voice_input_url?: string;
   image_input_url?: string;
   video_input_url?: string;
-  ai_analysis?: any;
+  ai_analysis?: AiAnalysis;
   risk_level?: number;
   score?: number;
-  report?: any;
+  report?: {
+    content: string;
+    recommendations: string[];
+    generated_at: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -162,6 +183,38 @@ export interface KnowledgeBase {
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
+}
+
+export interface Message extends ChatMessage {
+  type?: 'text' | 'image' | 'voice' | 'video';
+  timestamp: Date | string;
+  analysis?: any;
+}
+
+export interface MultimodalData {
+  text_analysis?: {
+    emotion_score: number;
+    negative_keywords: string[];
+    text_length: number;
+  };
+  image_analysis?: {
+    emotion_score: number;
+    analysis_text: string;
+  };
+  voice_analysis?: {
+    emotion_score: number;
+    recognized_text: string;
+    duration: number;
+  };
+  facial_emotion?: {
+    emotion: string;
+    confidence: number;
+    timestamp: string;
+  };
+  video_analysis?: {
+    emotion_score: number;
+    analysis_text: string;
+  };
 }
 
 export interface MultimodalContent {

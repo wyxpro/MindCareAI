@@ -30,6 +30,8 @@ export default function EmotionCamera({ onClose, onEmotionDetected }: EmotionCam
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAnalyzeAtRef = useRef(0);
+  const ANALYZE_INTERVAL_MS = 10000;
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState<string | null>(null);
@@ -81,10 +83,10 @@ export default function EmotionCamera({ onClose, onEmotionDetected }: EmotionCam
   };
 
   const startEmotionDetection = () => {
-    // 每3秒分析一次表情
+    // 限速：避免触发模型 RPM 限制
     intervalRef.current = setInterval(() => {
       captureAndAnalyze();
-    }, 3000);
+    }, ANALYZE_INTERVAL_MS);
     
     // 立即执行一次
     captureAndAnalyze();
@@ -92,6 +94,9 @@ export default function EmotionCamera({ onClose, onEmotionDetected }: EmotionCam
 
   const captureAndAnalyze = async () => {
     if (!videoRef.current || !canvasRef.current || isAnalyzing) return;
+    const now = Date.now();
+    if (now - lastAnalyzeAtRef.current < ANALYZE_INTERVAL_MS - 500) return;
+    lastAnalyzeAtRef.current = now;
 
     try {
       setIsAnalyzing(true);

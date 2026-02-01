@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { getProfile } from '@/contexts/AuthContext';
-import { supabase } from '@/db/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,27 +39,11 @@ export default function LoginPage() {
     if (error) {
       toast.error('登录失败: ' + error.message);
     } else {
-      // 根据角色进行跳转与校验
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        let userRole: 'user' | 'doctor' | 'admin' | undefined = undefined;
-        if (session?.user) {
-          const p = await getProfile(session.user.id);
-          userRole = p?.role;
-        }
-        if (role === 'doctor') {
-          if (userRole === 'doctor' || userRole === 'admin') {
-            toast.success('医生端登录成功');
-            navigate('/doctor/dashboard', { replace: true });
-          } else {
-            toast.error('当前账号非医生/管理员角色，无法进入医生端');
-            navigate('/profile', { replace: true });
-          }
-        } else {
-          toast.success('登录成功');
-          navigate(from, { replace: true });
-        }
-      } catch {
+      // 登录成功后的逻辑，useAuth 已经处理了状态更新
+      if (role === 'doctor') {
+        toast.success('医生端登录成功');
+        navigate('/doctor/dashboard', { replace: true });
+      } else {
         toast.success('登录成功');
         navigate(from, { replace: true });
       }

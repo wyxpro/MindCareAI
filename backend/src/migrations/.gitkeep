@@ -1,0 +1,13 @@
+# TypeORM Migrations
+#
+# 由于数据库已通过 Supabase 迁移脚本创建，
+# 此目录用于存放未来的数据库变更迁移。
+#
+# 创建新迁移的命令：
+# npm run migration:generate -- -n MigrationName
+#
+# 运行迁移的命令：
+# npm run migration:run
+#
+# 回滚迁移的命令：
+# npm run migration:revert

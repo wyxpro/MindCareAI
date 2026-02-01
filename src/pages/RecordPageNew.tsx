@@ -133,9 +133,7 @@ export default function RecordPageNew() {
     setRecognizing(true);
     try {
       const wavBlob = await convertWebmToWav(audioBlob);
-      const base64Audio = await blobToBase64(wavBlob);
-      
-      const response = await speechRecognition(base64Audio, 'wav', 16000, wavBlob.size);
+      const response = await speechRecognition(wavBlob, 'wav', 'zh');
       
       if (response?.text) {
         setContent(prev => prev + (prev ? '\n' : '') + response.text);
