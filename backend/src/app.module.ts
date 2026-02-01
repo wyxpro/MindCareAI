@@ -3,6 +3,7 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { configuration } from './config/configuration';
 import { TypeOrmConfigService } from './config/typeorm.config';
 import { HealthModule } from './modules/health/health.module';
@@ -29,6 +30,14 @@ import { DoctorModule } from './modules/doctor/doctor.module';
       load: [configuration],
       envFilePath: ['.env', '.env.local'],
     }),
+
+    // 速率限制配置
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,  // 60秒时间窗口
+        limit: 100,  // 最多100次请求
+      },
+    ]),
 
     // TypeORM 配置 - 使用异步配置以便使用环境变量
     TypeOrmModule.forRootAsync({

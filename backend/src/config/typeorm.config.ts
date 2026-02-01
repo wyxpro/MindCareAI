@@ -20,7 +20,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         url: dbConfig.url,
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-        synchronize: dbConfig.synchronize,
+        synchronize: false, // 强制关闭，所有数据库变更必须使用 migration
         logging: dbConfig.logging,
         extra: {
           max: 20,
@@ -40,7 +40,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       database: dbConfig.database,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-      synchronize: dbConfig.synchronize,
+      synchronize: false, // 强制关闭，所有数据库变更必须使用 migration
       logging: dbConfig.logging,
       extra: {
         max: 20,
