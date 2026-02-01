@@ -7,6 +7,9 @@ import LoginPage from './pages/LoginPage';
 import PersonalInfoPage from './pages/PersonalInfoPage';
 import PrivacySettingsPage from './pages/PrivacySettingsPage';
 import SubscriptionPage from './pages/SubscriptionPage';
+import HealingPlanPage from './pages/HealingPlanPage';
+import ConnectDoctorPage from './pages/ConnectDoctorPage';
+import AboutUsPage from './pages/AboutUsPage';
 import DoctorDashboardPage from './pages/doctor/DashboardPage';
 import DoctorPatientsPage from './pages/doctor/PatientsPage';
 import DoctorKnowledgePage from './pages/doctor/KnowledgePage';
@@ -63,6 +66,24 @@ const routes: RouteConfig[] = [
     name: '会员订阅',
     path: '/profile/subscription',
     element: <SubscriptionPage />,
+    visible: false,
+  },
+  {
+    name: '疗愈计划',
+    path: '/profile/healing-plan',
+    element: <HealingPlanPage />,
+    visible: false,
+  },
+  {
+    name: '对接医生',
+    path: '/profile/connect-doctor',
+    element: <ConnectDoctorPage />,
+    visible: false,
+  },
+  {
+    name: '关于我们',
+    path: '/profile/about',
+    element: <AboutUsPage />,
     visible: false,
   },
   // 登录

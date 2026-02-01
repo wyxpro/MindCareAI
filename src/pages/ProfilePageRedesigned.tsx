@@ -18,7 +18,7 @@ import {
   Edit, LogOut, Activity, FileText, Heart, Bell, Shield, 
   Settings, ChevronRight, User, Calendar, TrendingUp, Award,
   Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe,
-  ArrowRight, ShieldCheck, Crown, Fingerprint, Copy
+  ArrowRight, ShieldCheck, Crown, Fingerprint, Copy, Sparkles, Stethoscope, Loader2
 } from 'lucide-react';
 
 export default function ProfilePageRedesigned() {
@@ -34,6 +34,7 @@ export default function ProfilePageRedesigned() {
   const [doctorPassword, setDoctorPassword] = useState('');
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('openReport') === '1') {
@@ -142,12 +143,14 @@ export default function ProfilePageRedesigned() {
   // 菜单项配置
   const menuSections = [
     {
-      title: '账号管理',
+      title: '功能',
       items: [
         { icon: User, label: '个人信息', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
+        { icon: Sparkles, label: '疗愈计划', value: '专属定制方案', color: 'text-indigo-600', bgColor: 'bg-indigo-50', onClick: () => navigate('/profile/healing-plan') },
+        { icon: Stethoscope, label: '对接医生', value: '专业专家问诊', color: 'text-rose-600', bgColor: 'bg-rose-50', onClick: () => navigate('/profile/connect-doctor') },
         { icon: Crown, label: '会员订阅', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
         { icon: ShieldCheck, label: '隐私安全', value: '账号安全加固', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => navigate('/profile/privacy') },
-        { icon: Shield, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
+        { icon: HelpCircle, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => navigate('/profile/about') },
         {
           icon: Settings,
           label: profile?.role === 'doctor' || profile?.role === 'admin' ? '医生后台' : '医生后台登录',
@@ -217,19 +220,48 @@ export default function ProfilePageRedesigned() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800"
-          onClick={() => setReportOpen(true)}
+          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-100 via-pink-100 to-rose-200 border border-rose-200"
+          onClick={() => {
+            if (reportLoading) return;
+            setReportLoading(true);
+            setTimeout(() => {
+              setReportOpen(true);
+              setReportLoading(false);
+            }, 3000);
+          }}
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-10 -mt-10 blur-2xl" />
+          <div className="absolute inset-0">
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-rose-300/40 blur-3xl" />
+            <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-pink-300/30 blur-2xl" />
+          </div>
           <div className="flex justify-between items-center relative z-10">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-white font-black text-lg">查看健康报告</span>
+                <span className="text-rose-900 font-black text-lg">查看健康报告</span>
               </div>
-              <p className="text-slate-300/70 text-xs mt-1">多模态评估结果与康复建议</p>
+              <p className="text-rose-700/80 text-xs mt-1">多模态评估结果与康复建议</p>
             </div>
-            <Button className="bg-primary hover:bg-primary/90 text-white rounded-full text-[10px] font-black h-7 px-3" onClick={() => setReportOpen(true)}>
-              打开
+            <Button 
+              className="bg-rose-500 hover:bg-rose-600 text-white rounded-full text-[10px] font-black h-7 px-3 disabled:opacity-60"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (reportLoading) return;
+                setReportLoading(true);
+                setTimeout(() => {
+                  setReportOpen(true);
+                  setReportLoading(false);
+                }, 3000);
+              }}
+              disabled={reportLoading}
+            >
+              {reportLoading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                  生成中...
+                </>
+              ) : (
+                <>打开</>
+              )}
             </Button>
           </div>
         </motion.div>

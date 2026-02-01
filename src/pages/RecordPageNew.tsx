@@ -180,7 +180,7 @@ export default function RecordPageNew() {
 
   const buildDiaryIcs = (diary: EmotionDiary) => {
     const dateStr = diary.diary_date;
-    const start = dateStr.replaceAll('-', '');
+    const start = dateStr.replace(/-/g, '');
     const dt = new Date(`${dateStr}T00:00:00`);
     const endDate = new Date(dt.getTime() + 24 * 60 * 60 * 1000);
     const end = format(endDate, 'yyyyMMdd');
