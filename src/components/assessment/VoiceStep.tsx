@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { speechRecognition } from '@/db/api';
+import { speechRecognition, chatCompletion } from '@/db/api';
 import { convertWebmToWav } from '@/utils/audio';
 
 interface VoiceStepProps {
@@ -180,20 +180,34 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       if (result?.text) {
         setRecognizedText(result.text);
 
-        // 使用 AI 分析语音内容的情绪
-        const analysisPrompt = `请分析以下语音识别文本中的情绪状态：
+        // 调用 AI 分析语音内容的情绪
+        try {
+          const analysisResponse = await chatCompletion([
+            {
+              role: 'system',
+              content: `你是灵愈AI心理助手，正在分析用户的语音情绪。
+
+请分析以下语音识别文本中的情绪状态，并给出专业评估：
 "${result.text}"
 
-请评估：
+请从以下维度评估：
 1. 整体情绪倾向（积极/消极/中性）
-2. 是否有焦虑、抑郁等负面情绪的迹象
-3. 语调特征推测
+2. 是否有焦虑、抑郁、压力等负面情绪的迹象
+3. 语气和措辞反映的心理状态
 
-请用简练的语言总结（100字以内）。`;
+请用简练、专业的语言总结（100字以内），给出建设性的反馈。`
+            },
+          ]);
 
-        // 这里可以调用 chatCompletion 进行情绪分析
-        // 暂时使用模拟分析
-        setEmotionAnalysis('语音内容显示情绪平稳，语速适中，无明显焦虑或抑郁迹象。');
+          const analysis = analysisResponse?.choices?.[0]?.message?.content ||
+                          analysisResponse?.choices?.[0]?.delta?.content ||
+                          '语音内容情绪分析：内容表达清晰，情绪状态相对平稳。';
+
+          setEmotionAnalysis(analysis);
+        } catch (aiError) {
+          console.error('情绪分析失败:', aiError);
+          setEmotionAnalysis('语音识别成功，但情绪分析暂时不可用。从内容来看，表达较为平和。');
+        }
 
         setShowReport(true);
       } else {
@@ -227,7 +241,30 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
 
       if (result?.text) {
         setRecognizedText(result.text);
-        setEmotionAnalysis('音频文件分析完成，内容情绪特征正常。');
+
+        // 调用 AI 分析情绪
+        try {
+          const analysisResponse = await chatCompletion([
+            {
+              role: 'system',
+              content: `你是灵愈AI心理助手，正在分析用户上传的音频内容。
+
+语音识别内容："${result.text}"
+
+请分析用户的情绪状态，给出专业评估（100字以内）。`
+            },
+          ]);
+
+          const analysis = analysisResponse?.choices?.[0]?.message?.content ||
+                          analysisResponse?.choices?.[0]?.delta?.content ||
+                          '音频内容分析完成。';
+
+          setEmotionAnalysis(analysis);
+        } catch (aiError) {
+          console.error('情绪分析失败:', aiError);
+          setEmotionAnalysis('语音识别成功，情绪分析暂时不可用。');
+        }
+
         setShowReport(true);
       } else {
         throw new Error('语音识别失败');
