@@ -1,17 +1,26 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { supabase } from '@/db/supabase';
-import type { User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
 import type { Profile } from '@/types';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
+
+export interface User {
+  id: string;
+  username: string;
+  role: string;
+}
+
 export async function getProfile(userId: string): Promise<Profile | null> {
+  const token = localStorage.getItem('mindcare_token');
+  if (!token) return null;
+
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-    if (error) return null;
-    return data ?? null;
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) return null;
+    return response.json();
   } catch {
     return null;
   }
@@ -33,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (!user) {
       setProfile(null);
       return;
@@ -41,74 +50,108 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const profileData = await getProfile(user.id);
     setProfile(profileData);
-  };
+  }, [user]);
 
   useEffect(() => {
-    let safetyTimer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        getProfile(session.user.id).then(setProfile);
-      }
-      setLoading(false);
-      clearTimeout(safetyTimer);
-    });
-    // In this function, do NOT use any await calls. Use `.then()` instead to avoid deadlocks.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        getProfile(session.user.id).then(setProfile);
-      } else {
-        setProfile(null);
-      }
-    });
+    const token = localStorage.getItem('mindcare_token');
+    const storedUser = localStorage.getItem('mindcare_user');
 
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(safetyTimer);
-    };
+    if (token && storedUser) {
+      const userObj = JSON.parse(storedUser);
+      setUser(userObj);
+      getProfile(userObj.id).then(setProfile);
+    }
+    setLoading(false);
   }, []);
 
-  const signInWithUsername = async (username: string, password: string) => {
+  const signInWithUsername = useCallback(async (username: string, password: string) => {
     try {
-      const email = `${username}@miaoda.com`;
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || '登录失败');
+      }
+
+      const userData: User = {
+        id: data.tenantId,
+        username: data.username,
+        role: 'user', // 后台目前硬编码了
+      };
+
+      localStorage.setItem('mindcare_token', data.accessToken);
+      localStorage.setItem('mindcare_user', JSON.stringify(userData));
+
+      setUser(userData);
+      const profileData = await getProfile(userData.id);
+      setProfile(profileData);
+
       return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
-  };
+  }, []);
 
-  const signUpWithUsername = async (username: string, password: string) => {
+  const signUpWithUsername = useCallback(async (username: string, password: string) => {
     try {
-      const email = `${username}@miaoda.com`;
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || '注册失败');
+      }
+
+      // 注册成功后自动登录
+      const userData: User = {
+        id: data.tenantId,
+        username: data.username,
+        role: 'user',
+      };
+
+      localStorage.setItem('mindcare_token', data.accessToken);
+      localStorage.setItem('mindcare_user', JSON.stringify(userData));
+
+      setUser(userData);
+      // 新注册用户Profile可能为空，可以尝试获取或初始化
+      const profileData = await getProfile(userData.id);
+      setProfile(profileData);
+
       return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
-  };
+  }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+
+  const signOut = useCallback(async () => {
+    localStorage.removeItem('mindcare_token');
+    localStorage.removeItem('mindcare_user');
     setUser(null);
     setProfile(null);
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    profile,
+    loading,
+    signInWithUsername,
+    signUpWithUsername,
+    signOut,
+    refreshProfile
+  }), [user, profile, loading, signInWithUsername, signUpWithUsername, signOut, refreshProfile]);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithUsername, signUpWithUsername, signOut, refreshProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

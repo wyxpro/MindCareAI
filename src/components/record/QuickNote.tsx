@@ -3,12 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Mic, Image as ImageIcon, X, Loader2, Camera, Upload, MicOff 
+import {
+  Mic, Image as ImageIcon, X, Loader2, Camera, Upload, MicOff
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/db/supabase';
 import { convertWebmToWav } from '@/utils/audio';
+import { speechRecognition, uploadFile } from '@/db/api';
 
 interface QuickNoteProps {
   onSave: (data: {
@@ -27,7 +27,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showCameraOptions, setShowCameraOptions] = useState(false);
-  
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +56,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -95,40 +95,15 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
     try {
       // 转换为WAV格式
       const wavBlob = await convertWebmToWav(audioBlob);
-      
-      // 转换为base64
-      const reader = new FileReader();
-      reader.readAsDataURL(wavBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-        const base64Data = base64Audio.split(',')[1];
-        
-        // 调用语音识别
-        const { data, error } = await supabase.functions.invoke('speech-recognition', {
-          body: {
-            format: 'wav',
-            rate: 16000,
-            cuid: 'lingyu-ai-user',
-            speech: base64Data,
-            len: wavBlob.size,
-          },
-        });
+      // 调用语音识别 (使用 api.ts)
+      const recognizedText = await speechRecognition(wavBlob, 'wav', 'zh');
 
-        if (error) {
-          console.error('语音识别失败:', error);
-          toast.error('语音识别失败');
-          return;
-        }
-
-        if (data.err_no === 0 && data.result && data.result.length > 0) {
-          const recognizedText = data.result[0];
-          setContent(prev => prev ? `${prev}\n${recognizedText}` : recognizedText);
-          toast.success('语音识别成功');
-        } else {
-          toast.error('无法识别语音内容');
-        }
-      };
+      if (recognizedText?.text) {
+        setContent(prev => prev ? `${prev}\n${recognizedText.text}` : recognizedText.text);
+        toast.success('语音识别成功');
+      } else {
+        toast.error('无法识别语音内容');
+      }
     } catch (error) {
       console.error('处理音频失败:', error);
       toast.error('处理音频失败');
@@ -150,7 +125,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+
         // 验证文件大小 (最大5MB)
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`图片 ${file.name} 超过5MB限制`);
@@ -165,30 +140,16 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
           continue;
         }
 
-        // 生成文件名
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `diary-images/${fileName}`;
+        // 上传到 NestJS 后端 (使用 api.ts)
+        const uploadResult = await uploadFile(file);
 
-        // 上传到Supabase Storage
-        const { error } = await supabase.storage
-          .from('diary-images')
-          .upload(filePath, file);
-
-        if (error) {
-          console.error('上传图片失败:', error);
+        if (uploadResult?.url) {
+          uploadedUrls.push(uploadResult.url);
+          successCount++;
+        } else {
           toast.error(`上传 ${file.name} 失败`);
           errorCount++;
-          continue;
         }
-
-        // 获取公开URL
-        const { data: urlData } = supabase.storage
-          .from('diary-images')
-          .getPublicUrl(filePath);
-
-        uploadedUrls.push(urlData.publicUrl);
-        successCount++;
       }
 
       if (uploadedUrls.length > 0) {
@@ -243,7 +204,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
         content: content.trim(),
         imageUrls,
       });
-      
+
       // 清空表单
       setContent('');
       setImageUrls([]);
@@ -299,11 +260,10 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
               size="sm"
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isProcessing}
-              className={`transition-all duration-200 ${
-                isRecording 
-                  ? 'text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-950/20' 
-                  : 'hover:bg-blue-50 dark:hover:bg-blue-950/20'
-              }`}
+              className={`transition-all duration-200 ${isRecording
+                ? 'text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-950/20'
+                : 'hover:bg-blue-50 dark:hover:bg-blue-950/20'
+                }`}
             >
               {isProcessing ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

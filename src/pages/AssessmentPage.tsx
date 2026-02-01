@@ -34,6 +34,17 @@ export default function AssessmentPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const serializeConversationHistory = (items: Message[]) => {
+    // 仅保存可序列化字段，避免 Date/复杂对象导致入库异常
+    return items.map((item) => ({
+      role: item.role,
+      content: item.content,
+      timestamp: item.timestamp instanceof Date
+        ? item.timestamp.toISOString()
+        : new Date(item.timestamp).toISOString(),
+    }));
+  };
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -102,7 +113,7 @@ export default function AssessmentPage() {
         // 更新评估记录
         if (currentAssessment) {
           await updateAssessment(currentAssessment.id, {
-            conversation_history: [...messages, userMessage, aiMessage],
+            conversation_history: serializeConversationHistory([...messages, userMessage, aiMessage]),
             text_input: inputText,
           });
         }
@@ -160,7 +171,7 @@ export default function AssessmentPage() {
 
           if (currentAssessment) {
             await updateAssessment(currentAssessment.id, {
-              conversation_history: [...messages, userMessage, aiMessage],
+              conversation_history: serializeConversationHistory([...messages, userMessage, aiMessage]),
               image_input_url: base64,
             });
           }

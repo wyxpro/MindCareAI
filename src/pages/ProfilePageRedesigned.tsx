@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getProfile } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,13 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updateProfile, getAssessments, getEmotionDiaries } from '@/db/api';
-import { supabase } from '@/db/supabase';
 import { toast } from 'sonner';
-import { 
-  Edit, LogOut, Activity, FileText, Heart, Bell, Shield, 
+import {
+  Edit, LogOut, FileText,
   Settings, ChevronRight, User, Calendar, TrendingUp, Award,
-  Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe,
-  ArrowRight, ShieldCheck, Crown, Fingerprint
+  ShieldCheck, Crown, Shield
 } from 'lucide-react';
 import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
 
@@ -32,7 +29,7 @@ export default function ProfilePageRedesigned() {
   const [doctorPassword, setDoctorPassword] = useState('');
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  
+
   // 健康数据
   const [emotionScore, setEmotionScore] = useState(75);
   const [consecutiveDays, setConsecutiveDays] = useState(15);
@@ -51,27 +48,27 @@ export default function ProfilePageRedesigned() {
     if (!user) return;
     try {
       const [assessments, diaries] = await Promise.all([
-        getAssessments(user.id, 100),
-        getEmotionDiaries(user.id, 100),
+        getAssessments(100),
+        getEmotionDiaries(100),
       ]);
       setAssessmentCount(assessments.length);
       setDiaryCount(diaries.length);
-      
+
       // 计算连续打卡天数
       if (diaries.length > 0) {
-        const sortedDiaries = diaries.sort((a, b) => 
+        const sortedDiaries = diaries.sort((a: any, b: any) =>
           new Date(b.diary_date).getTime() - new Date(a.diary_date).getTime()
         );
         let count = 0;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         for (let i = 0; i < sortedDiaries.length; i++) {
           const diaryDate = new Date(sortedDiaries[i].diary_date);
           diaryDate.setHours(0, 0, 0, 0);
           const expectedDate = new Date(today);
           expectedDate.setDate(today.getDate() - count);
-          
+
           if (diaryDate.getTime() === expectedDate.getTime()) {
             count++;
           } else {
@@ -80,12 +77,12 @@ export default function ProfilePageRedesigned() {
         }
         setConsecutiveDays(count);
       }
-      
+
       // 计算情绪评分
       if (diaries.length > 0) {
         const recentDiaries = diaries.slice(0, 7);
-        const scoreMap = { very_bad: 20, bad: 40, neutral: 60, good: 80, very_good: 100 };
-        const avgScore = recentDiaries.reduce((sum, d) => sum + (scoreMap[d.emotion_level] || 60), 0) / recentDiaries.length;
+        const scoreMap: Record<string, number> = { very_bad: 20, bad: 40, neutral: 60, good: 80, very_good: 100 };
+        const avgScore = recentDiaries.reduce((sum: number, d: any) => sum + (scoreMap[d.emotion_level] || 60), 0) / recentDiaries.length;
         setEmotionScore(Math.round(avgScore));
       }
     } catch (error) {
@@ -109,7 +106,7 @@ export default function ProfilePageRedesigned() {
     if (!user) return;
     setSaving(true);
     try {
-      await updateProfile(user.id, {
+      await updateProfile({
         full_name: fullName,
         phone: phone,
       });
@@ -131,8 +128,8 @@ export default function ProfilePageRedesigned() {
       items: [
         { icon: Calendar, label: '我的日记', value: `${diaryCount}条`, color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/record') },
         { icon: FileText, label: '评估记录', value: `${assessmentCount}次`, color: 'text-purple-600', bgColor: 'bg-purple-50', onClick: () => navigate('/assessment') },
-        { icon: TrendingUp, label: '健康趋势', value: '查看', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => {} },
-        { icon: Award, label: '成就徽章', value: '3个', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => {} },
+        { icon: TrendingUp, label: '健康趋势', value: '查看', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => { } },
+        { icon: Award, label: '成就徽章', value: '3个', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => { } },
       ],
     },
     {
@@ -141,7 +138,7 @@ export default function ProfilePageRedesigned() {
         { icon: User, label: '个人信息管理', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
         { icon: Crown, label: '会员订阅管理', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
         { icon: ShieldCheck, label: '隐私安全设置', value: '账号安全加固', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => navigate('/profile/privacy') },
-        { icon: Shield, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => {} },
+        { icon: Shield, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => { } },
         {
           icon: Settings,
           label: profile?.role === 'doctor' || profile?.role === 'admin' ? '医生后台' : '医生后台登录',
@@ -169,7 +166,7 @@ export default function ProfilePageRedesigned() {
             <div className="flex items-center gap-4 mb-6">
               <Avatar className="w-20 h-20 border-4 border-white/30 shadow-lg">
                 <AvatarFallback className="bg-white/20 text-white text-2xl font-bold backdrop-blur-sm">
-                  {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
+                  {profile?.username?.charAt(0) || user?.username?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
@@ -177,7 +174,7 @@ export default function ProfilePageRedesigned() {
                   {profile?.full_name || '未设置姓名'}
                 </h2>
                 <p className="text-blue-100 text-sm truncate">
-                  {user?.email || '未设置邮箱'}
+                  {user?.username || '未设置用户名'}
                 </p>
                 <Badge className="mt-2 bg-white/20 text-white border-white/30 backdrop-blur-sm">
                   普通用户
@@ -213,26 +210,26 @@ export default function ProfilePageRedesigned() {
 
         {/* 健康评估报告卡片 (长条形) */}
         <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <Card 
+          <Card
             className="border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 overflow-hidden group rounded-3xl py-3"
             onClick={() => setReportOpen(true)}
           >
             <CardContent className="p-0 relative">
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-150" />
               <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8 transition-transform duration-700 group-hover:scale-150" />
-              
+
               <div className="p-3 flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-inner border border-white/20">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <h3 className="text-xl font-bold text-white mb-0.5 tracking-wide">健康评估报告</h3>
                   <p className="text-blue-100/80 text-sm leading-relaxed">
                     查看多模态分析、AI评分及专家康复建议
                   </p>
                 </div>
-                
+
                 <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 group-hover:translate-x-1 transition-transform border border-white/10">
                   <ChevronRight className="w-5 h-5 text-white" />
                 </div>
@@ -246,9 +243,9 @@ export default function ProfilePageRedesigned() {
 
         {/* 功能菜单 */}
         {menuSections.map((section, sectionIndex) => (
-          <div 
-            key={section.title} 
-            className="space-y-2 animate-fade-in-up" 
+          <div
+            key={section.title}
+            className="space-y-2 animate-fade-in-up"
             style={{ animationDelay: `${0.2 + sectionIndex * 0.1}s` }}
           >
             <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 px-1">
@@ -260,9 +257,8 @@ export default function ProfilePageRedesigned() {
                   <div
                     key={item.label}
                     onClick={item.onClick}
-                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                      index !== section.items.length - 1 ? 'border-b border-slate-100 dark:border-slate-700' : ''
-                    }`}
+                    className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${index !== section.items.length - 1 ? 'border-b border-slate-100 dark:border-slate-700' : ''
+                      }`}
                   >
                     <div className={`w-10 h-10 rounded-xl ${item.bgColor} dark:bg-slate-700 flex items-center justify-center flex-shrink-0`}>
                       <item.icon className={`w-5 h-5 ${item.color} dark:text-slate-300`} />
@@ -333,13 +329,13 @@ export default function ProfilePageRedesigned() {
               />
             </div>
             <div className="space-y-2">
-              <Label>邮箱</Label>
+              <Label>用户名</Label>
               <Input
-                value={user?.email || ''}
+                value={user?.username || ''}
                 disabled
                 className="bg-slate-50 dark:bg-slate-800"
               />
-              <p className="text-xs text-slate-500">邮箱不可修改</p>
+              <p className="text-xs text-slate-500">用户名不可修改</p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -420,11 +416,11 @@ export default function ProfilePageRedesigned() {
                   return;
                 }
                 await refreshProfile();
-                const { data: { session } } = await supabase.auth.getSession();
-                const latestProfile = session?.user ? await getProfile(session.user.id) : null;
                 setDoctorLoading(false);
                 setDoctorDialogOpen(false);
-                if (latestProfile?.role === 'doctor' || latestProfile?.role === 'admin') {
+
+                // profile 应该已经被 refreshProfile 更新
+                if (profile?.role === 'doctor' || profile?.role === 'admin') {
                   toast.success('登录成功，正在进入医生后台');
                   navigate('/doctor/dashboard');
                 } else {

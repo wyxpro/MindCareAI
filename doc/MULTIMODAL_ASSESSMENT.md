@@ -191,14 +191,10 @@ const response = await fetch(
 
 **功能**: 调用短语音识别API转换语音为文字
 
-**请求参数**:
-```typescript
-{
-  audioBase64: string,  // base64编码的音频数据
-  format: 'wav' | 'm4a',
-  rate: 16000 | 8000
-}
-```
+**请求参数**（multipart/form-data）:
+- `file`: 音频文件
+- `format`: wav | m4a（可选）
+- `language`: zh 等（可选）
 
 **响应格式**: JSON
 ```json
@@ -209,30 +205,7 @@ const response = await fetch(
 }
 ```
 
-**关键代码**:
-```typescript
-const audioData = audioBase64.replace(/^data:audio\/\w+;base64,/, '');
-const len = Math.ceil(audioData.length * 3 / 4);
-const cuid = crypto.randomUUID();
-
-const response = await fetch(
-  'https://app-97zabxvzebcx-api-Aa2PZnjEw5NL-gateway.appmiaoda.com/server_api',
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Gateway-Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      format,
-      rate,
-      cuid,
-      speech: audioData,
-      len,
-    }),
-  }
-);
-```
+**说明**：当前语音识别已迁移到 NestJS 后端 `/api/v1/ai/speech-recognition`，使用文件上传方式对接 StepFun `audio/transcriptions`。
 
 ## 三、前端实现
 
@@ -381,30 +354,32 @@ const processAudioRecording = async (audioBlob: Blob) => {
   // 转换webm为wav
   const wavBlob = await convertWebmToWav(audioBlob);
   
-  // 转换为base64
-  const base64Audio = await blobToBase64(wavBlob);
-  
-  // 调用speech-recognition
-  const { data, error } = await supabase.functions.invoke('speech-recognition', {
-    body: {
-      audioBase64: base64Audio,
-      format: 'wav',
-      rate: 16000,
-    },
+  // 通过 NestJS 后端上传文件进行语音识别
+  const formData = new FormData();
+  formData.append('file', wavBlob, 'audio.wav');
+  formData.append('format', 'wav');
+  formData.append('language', 'zh');
+
+  const response = await fetch('/api/v1/ai/speech-recognition', {
+    method: 'POST',
+    body: formData,
   });
-  
+  const data = await response.json();
   const recognizedText = data?.text;
   
   // 调用text-chat分析
-  const { data: chatData } = await supabase.functions.invoke('text-chat', {
-    body: {
+  const chatResponse = await fetch('/api/v1/ai/text-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       messages: [
         { role: 'system', content: '你是灵愈AI助手...' },
         ...messages,
         { role: 'user', content: recognizedText },
       ],
-    },
+    }),
   });
+  const chatData = await chatResponse.json();
   
   // 解析流式响应
   const aiResponse = await parseStreamResponse(chatData);
