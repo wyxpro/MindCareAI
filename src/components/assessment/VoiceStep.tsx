@@ -380,8 +380,11 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
 
       {/* 报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none">
+        <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none" aria-describedby="emotion-analysis-desc">
           <DialogTitle className="sr-only">语音情绪分析报告</DialogTitle>
+          <div id="emotion-analysis-desc" className="sr-only">
+            AI 多模态语音情绪与心理特征分析报告，包含情绪状态、录音时长等信息。
+          </div>
           <div className={`bg-gradient-to-br p-8 text-center text-white space-y-4 ${emotionType === 'positive' ? 'from-emerald-500 to-teal-600' :
             emotionType === 'negative' ? 'from-rose-500 to-pink-600' :
               'from-indigo-600 to-purple-600'
