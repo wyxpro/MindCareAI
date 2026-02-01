@@ -1,20 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 /**
  * 通用响应 DTO
  * 统一 API 响应格式
  */
 export class ResponseDto<T = any> {
-  @ApiProperty({ description: '状态码' })
+  @ApiProperty({ description: "状态码" })
   statusCode: number;
 
-  @ApiProperty({ description: '响应消息' })
+  @ApiProperty({ description: "响应消息" })
   message: string;
 
-  @ApiProperty({ description: '响应数据', required: false })
+  @ApiProperty({ description: "响应数据", required: false })
   data?: T;
 
-  @ApiProperty({ description: '时间戳' })
+  @ApiProperty({ description: "时间戳" })
   timestamp: string;
 }
 
@@ -22,19 +22,19 @@ export class ResponseDto<T = any> {
  * 分页响应 DTO
  */
 export class PaginatedResponseDto<T = any> {
-  @ApiProperty({ description: '数据列表' })
+  @ApiProperty({ description: "数据列表" })
   items: T[];
 
-  @ApiProperty({ description: '总数' })
+  @ApiProperty({ description: "总数" })
   total: number;
 
-  @ApiProperty({ description: '当前页码' })
+  @ApiProperty({ description: "当前页码" })
   page: number;
 
-  @ApiProperty({ description: '每页数量' })
+  @ApiProperty({ description: "每页数量" })
   pageSize: number;
 
-  @ApiProperty({ description: '总页数' })
+  @ApiProperty({ description: "总页数" })
   totalPages: number;
 }
 
@@ -44,6 +44,6 @@ export class PaginatedResponseDto<T = any> {
 export class PaginationDto {
   page?: number = 1;
   pageSize?: number = 10;
-  sortBy?: string = 'createdAt';
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  sortBy?: string = "createdAt";
+  sortOrder?: "ASC" | "DESC" = "DESC";
 }

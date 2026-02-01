@@ -1,21 +1,21 @@
-import { Module } from '@nestjs/common';
-import { join } from 'path';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { configuration } from './config/configuration';
-import { TypeOrmConfigService } from './config/typeorm.config';
-import { HealthModule } from './modules/health/health.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { TenantsModule } from './modules/tenants/tenants.module';
-import { UsersModule } from './modules/users/users.module';
-import { AiModule } from './modules/ai/ai.module';
-import { EmotionDiariesModule } from './modules/emotion-diaries/emotion-diaries.module';
-import { AssessmentsModule } from './modules/assessments/assessments.module';
-import { HealingModule } from './modules/healing/healing.module';
-import { CommunityModule } from './modules/community/community.module';
-import { DoctorModule } from './modules/doctor/doctor.module';
+import { Module } from "@nestjs/common";
+import { join } from "path";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { ConfigModule } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { configuration } from "./config/configuration";
+import { TypeOrmConfigService } from "./config/typeorm.config";
+import { HealthModule } from "./modules/health/health.module";
+import { AuthModule } from "./modules/auth/auth.module";
+import { TenantsModule } from "./modules/tenants/tenants.module";
+import { UsersModule } from "./modules/users/users.module";
+import { AiModule } from "./modules/ai/ai.module";
+import { EmotionDiariesModule } from "./modules/emotion-diaries/emotion-diaries.module";
+import { AssessmentsModule } from "./modules/assessments/assessments.module";
+import { HealingModule } from "./modules/healing/healing.module";
+import { CommunityModule } from "./modules/community/community.module";
+import { DoctorModule } from "./modules/doctor/doctor.module";
 
 /**
  * 根模块
@@ -28,14 +28,14 @@ import { DoctorModule } from './modules/doctor/doctor.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-      envFilePath: ['.env', '.env.local'],
+      envFilePath: [".env", ".env.local"],
     }),
 
     // 速率限制配置
     ThrottlerModule.forRoot([
       {
-        ttl: 60000,  // 60秒时间窗口
-        limit: 100,  // 最多100次请求
+        ttl: 60000, // 60秒时间窗口
+        limit: 100, // 最多100次请求
       },
     ]),
 
@@ -77,11 +77,11 @@ import { DoctorModule } from './modules/doctor/doctor.module';
 
     // 静态文件服务
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
+      rootPath: join(__dirname, "..", "uploads"),
+      serveRoot: "/uploads",
     }),
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule { }
+export class AppModule {}

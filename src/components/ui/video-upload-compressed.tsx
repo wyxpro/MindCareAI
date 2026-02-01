@@ -1,18 +1,19 @@
 /**
  * 带压缩功能的视频上传组件
  */
-import React, { useState, useRef } from 'react';
-import { Upload, X, Film, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+
+import { AlertCircle, CheckCircle, Film, Loader2, Upload, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { uploadFile } from '@/db/api';
 import {
   compressVideo,
-  getVideoInfo,
   estimateCompressedSize,
-  formatFileSize
+  formatFileSize, 
+  getVideoInfo
 } from '@/utils/video-compressor';
-import { toast } from 'sonner';
 
 interface VideoUploadCompressedProps {
   onUploadComplete?: (url: string, file: File) => void;

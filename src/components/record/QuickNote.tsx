@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import {
-  Mic, Image as ImageIcon, X, Loader2, Camera, Upload, MicOff
+import {Camera, Image as ImageIcon, Loader2, 
+  Mic, MicOff, Upload, X 
 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { convertWebmToWav } from '@/utils/audio';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { speechRecognition, uploadFile } from '@/db/api';
+import { convertWebmToWav } from '@/utils/audio';
 
 interface QuickNoteProps {
   onSave: (data: {

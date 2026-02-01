@@ -1,18 +1,18 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import {
-  LayoutDashboard,
-  Users,
-  BookOpen,
   AlertTriangle,
+  BookOpen,
+  LayoutDashboard,
   LogOut,
   Menu,
+  Users,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface DoctorLayoutProps {
   children: React.ReactNode;

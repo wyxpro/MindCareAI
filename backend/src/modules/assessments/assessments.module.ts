@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AssessmentsController } from './assessments.controller';
-import { AssessmentsService } from './assessments.service';
-import { Assessment } from './entities/assessment.entity';
-import { AiModule } from '../ai/ai.module';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { AssessmentsController } from "./assessments.controller";
+import { AssessmentsService } from "./assessments.service";
+import { Assessment } from "./entities/assessment.entity";
+import { AiModule } from "../ai/ai.module";
 
 /**
  * 评估记录模块
@@ -14,4 +14,4 @@ import { AiModule } from '../ai/ai.module';
   providers: [AssessmentsService],
   exports: [AssessmentsService],
 })
-export class AssessmentsModule { }
+export class AssessmentsModule {}

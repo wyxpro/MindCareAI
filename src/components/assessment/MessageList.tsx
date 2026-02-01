@@ -1,7 +1,7 @@
-import { useRef, useEffect, memo } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Image as ImageIcon, Loader2, Mic, Video } from 'lucide-react';
+import { memo, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Image as ImageIcon, Mic, Video } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface Message {
     role: 'user' | 'assistant' | 'system';

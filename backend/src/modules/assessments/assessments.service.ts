@@ -1,11 +1,14 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Assessment } from './entities/assessment.entity';
-import { CreateAssessmentDto, UpdateAssessmentDto, AssessmentDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Assessment } from "./entities/assessment.entity";
+import { CreateAssessmentDto, UpdateAssessmentDto, AssessmentDto } from "./dto";
 
-import { AssessmentsModule } from './assessments.module';
-import { AiService } from '../ai/ai.service';
+import { AiService } from "../ai/ai.service";
 
 /**
  * 评估记录服务
@@ -16,7 +19,7 @@ export class AssessmentsService {
     @InjectRepository(Assessment)
     private readonly assessmentRepository: Repository<Assessment>,
     private readonly aiService: AiService,
-  ) { }
+  ) {}
 
   /**
    * 创建评估记录
@@ -33,22 +36,29 @@ export class AssessmentsService {
     );
 
     // 有输入时才调用 AI，避免空记录导致外部服务异常
-    const aiAnalysis = hasInput ? await this.aiService.multimodalAnalysis({
-      model: 'step-3', // 使用 Step-3 模型
-      messages: [
-        {
-          role: 'user',
-          content: [
-            ...(createDto.text_input
-              ? [{ type: 'text' as const, text: createDto.text_input }]
-              : []),
-            ...(createDto.image_input_url
-              ? [{ type: 'image_url' as const, image_url: { url: createDto.image_input_url } }]
-              : []),
+    const aiAnalysis = hasInput
+      ? await this.aiService.multimodalAnalysis({
+          model: "step-3", // 使用 Step-3 模型
+          messages: [
+            {
+              role: "user",
+              content: [
+                ...(createDto.text_input
+                  ? [{ type: "text" as const, text: createDto.text_input }]
+                  : []),
+                ...(createDto.image_input_url
+                  ? [
+                      {
+                        type: "image_url" as const,
+                        image_url: { url: createDto.image_input_url },
+                      },
+                    ]
+                  : []),
+              ],
+            },
           ],
-        },
-      ],
-    }) : undefined;
+        })
+      : undefined;
 
     const assessment = this.assessmentRepository.create({
       ...createDto,
@@ -73,7 +83,7 @@ export class AssessmentsService {
       where: { user_id: userId },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      order: { created_at: 'DESC' },
+      order: { created_at: "DESC" },
     });
 
     return {
@@ -85,14 +95,24 @@ export class AssessmentsService {
   /**
    * 获取单条评估记录
    */
-  async findOne(id: string, userId: string, userRole: string): Promise<AssessmentDto> {
-    const assessment = await this.assessmentRepository.findOne({ where: { id } });
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+  ): Promise<AssessmentDto> {
+    const assessment = await this.assessmentRepository.findOne({
+      where: { id },
+    });
     if (!assessment) {
-      throw new NotFoundException('评估记录不存在');
+      throw new NotFoundException("评估记录不存在");
     }
 
-    if (assessment.user_id !== userId && userRole !== 'doctor' && userRole !== 'admin') {
-      throw new ForbiddenException('无权查看此评估记录');
+    if (
+      assessment.user_id !== userId &&
+      userRole !== "doctor" &&
+      userRole !== "admin"
+    ) {
+      throw new ForbiddenException("无权查看此评估记录");
     }
 
     return this.toDto(assessment);
@@ -107,13 +127,19 @@ export class AssessmentsService {
     userId: string,
     userRole: string,
   ): Promise<AssessmentDto> {
-    const assessment = await this.assessmentRepository.findOne({ where: { id } });
+    const assessment = await this.assessmentRepository.findOne({
+      where: { id },
+    });
     if (!assessment) {
-      throw new NotFoundException('评估记录不存在');
+      throw new NotFoundException("评估记录不存在");
     }
 
-    if (assessment.user_id !== userId && userRole !== 'doctor' && userRole !== 'admin') {
-      throw new ForbiddenException('无权修改此评估记录');
+    if (
+      assessment.user_id !== userId &&
+      userRole !== "doctor" &&
+      userRole !== "admin"
+    ) {
+      throw new ForbiddenException("无权修改此评估记录");
     }
 
     Object.assign(assessment, updateDto);

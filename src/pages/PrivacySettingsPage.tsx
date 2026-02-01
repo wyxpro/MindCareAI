@@ -1,14 +1,14 @@
+import { Bell, Book, Camera, 
+  ChevronLeft, ChevronRight, Eye, Fingerprint, Lock, 
+  MapPin, Shield 
+} from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { 
-  ChevronLeft, Lock, Shield, Eye, Bell, 
-  MapPin, Camera, Book, Fingerprint, ChevronRight
-} from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 export default function PrivacySettingsPage() {
   const navigate = useNavigate();

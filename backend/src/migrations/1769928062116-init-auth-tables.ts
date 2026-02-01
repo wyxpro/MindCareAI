@@ -1,7 +1,7 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class InitAuthTables1769928062116 implements MigrationInterface {
-  name = 'InitAuthTables1769928062116';
+  name = "InitAuthTables1769928062116";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";');

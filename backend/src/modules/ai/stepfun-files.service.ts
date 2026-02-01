@@ -4,17 +4,17 @@
  * 参考: https://platform.stepfun.com/docs/guide/video_chat
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
-import FormData from 'form-data';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import axios from "axios";
+import * as fs from "fs";
+import * as path from "path";
+import FormData from "form-data";
 
 @Injectable()
 export class StepFunFilesService {
   private readonly logger = new Logger(StepFunFilesService.name);
-  private readonly apiBaseUrl = 'https://api.stepfun.com/v1';
+  private readonly apiBaseUrl = "https://api.stepfun.com/v1";
   private readonly maxFileSize = 128 * 1024 * 1024; // 128MB 限制
 
   constructor(private readonly configService: ConfigService) {}
@@ -29,11 +29,11 @@ export class StepFunFilesService {
   async uploadFile(
     file: Buffer | Express.Multer.File,
     filename: string,
-    mimeType: string
+    mimeType: string,
   ): Promise<string> {
-    const apiKey = this.configService.get<string>('ai.apiKey');
+    const apiKey = this.configService.get<string>("ai.apiKey");
     if (!apiKey) {
-      throw new Error('API Key not configured');
+      throw new Error("API Key not configured");
     }
 
     // 获取文件内容
@@ -49,37 +49,39 @@ export class StepFunFilesService {
     // 检查文件大小（128MB 限制）
     if (fileBuffer.length > this.maxFileSize) {
       this.logger.error(`❌ 文件过大: ${fileSizeMB}MB，最大支持 128MB`);
-      throw new Error(
-        `文件太大 (${fileSizeMB}MB)。最大支持 128MB。`
-      );
+      throw new Error(`文件太大 (${fileSizeMB}MB)。最大支持 128MB。`);
     }
 
     this.logger.log(`📤 开始上传文件到 StepFun: ${filename} (${fileSizeMB}MB)`);
     const startTime = Date.now();
 
     const formData = new FormData();
-    formData.append('file', fileBuffer, { filename, contentType: mimeType });
-    formData.append('purpose', 'storage');
+    formData.append("file", fileBuffer, { filename, contentType: mimeType });
+    formData.append("purpose", "storage");
 
     try {
       // 监听上传进度
       const response = await axios.post(`${this.apiBaseUrl}/files`, formData, {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           ...formData.getHeaders(),
         },
         maxBodyLength: Infinity,
         maxContentLength: Infinity,
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
             const uploadedMB = (progressEvent.loaded / 1024 / 1024).toFixed(2);
             const totalMB = (progressEvent.total / 1024 / 1024).toFixed(2);
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
             // 每 10% 输出一次进度
             if (percentCompleted % 10 === 0 || percentCompleted === 100) {
-              this.logger.log(`⏳ 上传进度: ${percentCompleted}% (${uploadedMB}/${totalMB}MB) - 耗时: ${elapsed}秒`);
+              this.logger.log(
+                `⏳ 上传进度: ${percentCompleted}% (${uploadedMB}/${totalMB}MB) - 耗时: ${elapsed}秒`,
+              );
             }
           }
         },
@@ -92,11 +94,15 @@ export class StepFunFilesService {
       return `stepfile://${fileId}`;
     } catch (error) {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      this.logger.error(`❌ StepFun 上传失败 (耗时: ${elapsed}秒): ${error.message}`);
+      this.logger.error(
+        `❌ StepFun 上传失败 (耗时: ${elapsed}秒): ${error.message}`,
+      );
       if (error.response?.data) {
         this.logger.error(`错误详情: ${JSON.stringify(error.response.data)}`);
       }
-      throw new Error(`StepFun 文件上传失败: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `StepFun 文件上传失败: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
@@ -111,7 +117,7 @@ export class StepFunFilesService {
     const filename = path.basename(localPath);
     const fileBuffer = fs.readFileSync(localPath);
 
-    return this.uploadFile(fileBuffer, filename, 'video/mp4');
+    return this.uploadFile(fileBuffer, filename, "video/mp4");
   }
 
   /**
@@ -124,7 +130,7 @@ export class StepFunFilesService {
   async uploadAudio(
     audioBuffer: Buffer,
     filename: string,
-    mimeType: string
+    mimeType: string,
   ): Promise<string> {
     return this.uploadFile(audioBuffer, filename, mimeType);
   }
@@ -134,13 +140,17 @@ export class StepFunFilesService {
    */
   async uploadMultipleFiles(
     files: Array<{ buffer: Buffer; filename: string; mimeType: string }>,
-    onProgress?: (current: number, total: number) => void
+    onProgress?: (current: number, total: number) => void,
   ): Promise<string[]> {
     const results: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const fileId = await this.uploadFile(file.buffer, file.filename, file.mimeType);
+      const fileId = await this.uploadFile(
+        file.buffer,
+        file.filename,
+        file.mimeType,
+      );
       results.push(fileId);
       onProgress?.(i + 1, files.length);
     }
@@ -152,7 +162,7 @@ export class StepFunFilesService {
    * 检查文件是否已存在（通过文件名）
    */
   async checkFileExists(filename: string): Promise<string | null> {
-    const apiKey = this.configService.get<string>('ai.apiKey');
+    const apiKey = this.configService.get<string>("ai.apiKey");
     if (!apiKey) {
       return null;
     }
@@ -160,11 +170,13 @@ export class StepFunFilesService {
     try {
       const response = await axios.get(`${this.apiBaseUrl}/files`, {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
       });
 
-      const existingFile = response.data.data?.find((f: any) => f.filename === filename);
+      const existingFile = response.data.data?.find(
+        (f: any) => f.filename === filename,
+      );
       return existingFile ? `stepfile://${existingFile.id}` : null;
     } catch {
       return null;
@@ -175,17 +187,17 @@ export class StepFunFilesService {
    * 删除 StepFun 存储中的文件
    */
   async deleteFile(fileId: string): Promise<void> {
-    const apiKey = this.configService.get<string>('ai.apiKey');
+    const apiKey = this.configService.get<string>("ai.apiKey");
     if (!apiKey) {
-      throw new Error('API Key not configured');
+      throw new Error("API Key not configured");
     }
 
     // 移除 stepfile:// 前缀
-    const actualId = fileId.replace('stepfile://', '');
+    const actualId = fileId.replace("stepfile://", "");
 
     await axios.delete(`${this.apiBaseUrl}/files/${actualId}`, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
     });
 
@@ -196,17 +208,23 @@ export class StepFunFilesService {
    * 将 stepfile:// URL 转换为消息内容格式
    * 用于发送给 AI API
    */
-  formatAsVideoUrl(fileId: string): { type: string; video_url: { url: string } } {
+  formatAsVideoUrl(fileId: string): {
+    type: string;
+    video_url: { url: string };
+  } {
     return {
-      type: 'video_url',
-      video_url: { url: fileId }
+      type: "video_url",
+      video_url: { url: fileId },
     };
   }
 
-  formatAsImageUrl(fileId: string): { type: string; image_url: { url: string } } {
+  formatAsImageUrl(fileId: string): {
+    type: string;
+    image_url: { url: string };
+  } {
     return {
-      type: 'image_url',
-      image_url: { url: fileId }
+      type: "image_url",
+      image_url: { url: fileId },
     };
   }
 }

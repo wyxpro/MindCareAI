@@ -1,18 +1,18 @@
+import { Clock, Eye, Heart as HeartIcon, MessageCircle, Play, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { getHealingContents, createHealingRecord, getCommunityPosts, createCommunityPost, togglePostLike } from '@/db/api';
 import { toast } from 'sonner';
-import { Play, Clock, Eye, Heart as HeartIcon, MessageCircle, Plus } from 'lucide-react';
-import type { HealingContent, CommunityPost } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { createCommunityPost, createHealingRecord, getCommunityPosts, getHealingContents, togglePostLike } from '@/db/api';
+import type { CommunityPost, HealingContent } from '@/types';
 
 export default function HealingPage() {
   const { user } = useAuth();

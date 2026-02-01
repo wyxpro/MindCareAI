@@ -1,5 +1,5 @@
-import { FileValidator, BadRequestException } from '@nestjs/common';
-import { extname } from 'path';
+import { FileValidator, BadRequestException } from "@nestjs/common";
+import { extname } from "path";
 
 /**
  * 自定义文件扩展名验证器
@@ -17,11 +17,11 @@ export class FileExtensionValidator extends FileValidator<{
       return false;
     }
 
-    const fileExt = extname(file.originalname).toLowerCase().replace('.', '');
-    return this.allowedExtensions.some(ext => ext.toLowerCase() === fileExt);
+    const fileExt = extname(file.originalname).toLowerCase().replace(".", "");
+    return this.allowedExtensions.some((ext) => ext.toLowerCase() === fileExt);
   }
 
   buildErrorMessage(): string {
-    return `不支持的文件格式。支持的格式: ${this.allowedExtensions.join(', ')}`;
+    return `不支持的文件格式。支持的格式: ${this.allowedExtensions.join(", ")}`;
   }
 }

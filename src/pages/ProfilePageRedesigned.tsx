@@ -1,24 +1,23 @@
+import { motion } from 'framer-motion';
+import {Award,Calendar, ChevronRight, Crown,
+  Edit, FileText,
+  HelpCircle, Loader2, LogOut, 
+  Settings, 
+  ShieldCheck, Sparkles, Stethoscope, TrendingUp, User 
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { updateProfile, getAssessments, getEmotionDiaries } from '@/db/api';
-import { toast } from 'sonner';
-import {
-  Edit, LogOut, FileText,
-  Settings, ChevronRight, User, Calendar, TrendingUp, Award,
-  ShieldCheck, Crown, Shield,
-  Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe,
-  ArrowRight, Fingerprint, Copy, Sparkles, Stethoscope, Loader2
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAssessments, getEmotionDiaries, updateProfile } from '@/db/api';
 
 export default function ProfilePageRedesigned() {
   const { user, profile, signOut, refreshProfile, signInWithUsername } = useAuth();

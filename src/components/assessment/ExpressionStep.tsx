@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, StopCircle, RefreshCcw, Info, Check, Download, Video, Shield, ScanFace, Activity, Maximize, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Activity, Camera, Check, Download, Info, Loader2, Maximize, RefreshCcw, ScanFace, Shield, StopCircle, Video } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { multimodalAnalysis, uploadFile } from '@/db/api';
 import { imageToBase64 } from '@/utils/audio';
 

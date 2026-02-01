@@ -1,6 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Injectable, Inject } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from "@nestjs/typeorm";
 
 /**
  * TypeORM 配置服务
@@ -8,18 +8,20 @@ import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from '@nestjs/typeorm';
  */
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
-  constructor(@Inject(ConfigService) private readonly configService: ConfigService) {}
+  constructor(
+    @Inject(ConfigService) private readonly configService: ConfigService,
+  ) {}
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
-    const dbConfig = this.configService.get('database');
+    const dbConfig = this.configService.get("database");
 
     // 如果提供了完整的 DATABASE_URL，使用它
     if (dbConfig.url) {
       return {
-        type: 'postgres',
+        type: "postgres",
         url: dbConfig.url,
-        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+        entities: [__dirname + "/../**/*.entity{.ts,.js}"],
+        migrations: [__dirname + "/../migrations/*{.ts,.js}"],
         synchronize: false, // 强制关闭，所有数据库变更必须使用 migration
         logging: dbConfig.logging,
         extra: {
@@ -32,14 +34,14 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
 
     // 否则使用单独的连接参数
     return {
-      type: 'postgres',
+      type: "postgres",
       host: dbConfig.host,
       port: dbConfig.port,
       username: dbConfig.username,
       password: dbConfig.password,
       database: dbConfig.database,
-      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-      migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+      entities: [__dirname + "/../**/*.entity{.ts,.js}"],
+      migrations: [__dirname + "/../migrations/*{.ts,.js}"],
       synchronize: false, // 强制关闭，所有数据库变更必须使用 migration
       logging: dbConfig.logging,
       extra: {

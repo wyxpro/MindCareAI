@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  ChevronLeft, Heart, Shield, Sparkles, 
-  Users, Globe, Github, Mail, ExternalLink,
-  Zap, Brain, MessageSquare
+import { Brain, 
+  ChevronLeft, ExternalLink,Github, Globe, Heart, Mail, MessageSquare, Shield, Sparkles, 
+  Users, 
+  Zap 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 export default function AboutUsPage() {
   const navigate = useNavigate();

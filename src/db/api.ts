@@ -1,14 +1,23 @@
 // NestJS API 封装
 import type {
-  Profile,
-  EmotionDiary,
   Assessment,
-  WearableData,
-  UserHealingRecord,
-  CommunityPost,
-  CommunityComment,
   ChatMessage,
+  CommunityComment,
+  CommunityPost,
+  EmotionDiary,
+  Profile,
+  UserHealingRecord,
+  WearableData,
 } from '@/types';
+
+export interface MultimodalMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string | Array<{
+    type: 'text' | 'image_url';
+    text?: string;
+    image_url?: { url: string }
+  }>;
+}
 
 // ==================== NestJS API 基础配置 ====================
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
@@ -30,6 +39,27 @@ async function fetchFromApi(endpoint: string, options: RequestInit = {}) {
   if (!response.ok) {
     const errorBody = await response.text();
     throw new Error(`API Error: ${response.status} - ${errorBody}`);
+  }
+
+  return response.json();
+}
+
+async function fetchFromApiMultipart(endpoint: string, formData: FormData) {
+  const token = localStorage.getItem('mindcare_token');
+
+  const headers = {
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`API Multipart Error: ${response.status} - ${errorBody}`);
   }
 
   return response.json();
@@ -292,34 +322,20 @@ export const chatCompletion = async (messages: ChatMessage[], enableThinking = f
   });
 };
 
-export const multimodalAnalysis = async (messages: any[], enableThinking = false) => {
+export const multimodalAnalysis = async (messages: MultimodalMessage[], enableThinking = false) => {
   return fetchFromApi('/ai/multimodal-analysis', {
     method: 'POST',
     body: JSON.stringify({ messages, enableThinking }),
   });
 };
 
-export const speechRecognition = async (audio: Blob, format: 'wav' | 'm4a' = 'wav', language: string = 'zh') => {
+export const speechRecognition = async (audio: Blob, format: 'wav' | 'm4a' = 'wav', language = 'zh') => {
   const formData = new FormData();
   formData.append('file', audio, `audio.${format}`);
   formData.append('format', format);
   formData.append('language', language);
 
-  const token = localStorage.getItem('mindcare_token');
-  const response = await fetch(`${API_BASE_URL}/ai/speech-recognition`, {
-    method: 'POST',
-    headers: {
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`API Error: ${response.status} - ${errorBody}`);
-  }
-
-  return response.json();
+  return fetchFromApiMultipart('/ai/speech-recognition', formData);
 };
 
 /**
@@ -328,25 +344,11 @@ export const speechRecognition = async (audio: Blob, format: 'wav' | 'm4a' = 'wa
  * @param audio 音频 Blob
  * @param filename 文件名（带扩展名）
  */
-export const audioEmotionAnalysis = async (audio: Blob, filename: string = 'audio.webm') => {
+export const audioEmotionAnalysis = async (audio: Blob, filename = 'audio.webm') => {
   const formData = new FormData();
   formData.append('file', audio, filename);
 
-  const token = localStorage.getItem('mindcare_token');
-  const response = await fetch(`${API_BASE_URL}/ai/audio-emotion-analysis`, {
-    method: 'POST',
-    headers: {
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`API Error: ${response.status} - ${errorBody}`);
-  }
-
-  return response.json();
+  return fetchFromApiMultipart('/ai/audio-emotion-analysis', formData);
 };
 
 // RAG检索 - 主动式对话
@@ -380,21 +382,7 @@ export const uploadFile = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const token = localStorage.getItem('mindcare_token');
-  const response = await fetch(`${API_BASE_URL}/ai/upload`, {
-    method: 'POST',
-    headers: {
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Upload Error: ${response.status} - ${errorBody}`);
-  }
-
-  return response.json();
+  return fetchFromApiMultipart('/ai/upload', formData);
 };
 
 // 上传视频到 StepFun 存储（用于视频理解）
@@ -402,21 +390,7 @@ export const uploadVideoToStepFun = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const token = localStorage.getItem('mindcare_token');
-  const response = await fetch(`${API_BASE_URL}/ai/upload-to-stepfun`, {
-    method: 'POST',
-    headers: {
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Upload Error: ${response.status} - ${errorBody}`);
-  }
-
-  return response.json();
+  return fetchFromApiMultipart('/ai/upload-to-stepfun', formData);
 };
 
 // 视频理解分析

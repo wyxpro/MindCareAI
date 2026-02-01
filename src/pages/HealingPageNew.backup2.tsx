@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { getHealingContents, getCommunityPosts, createCommunityPost, togglePostLike } from '@/db/api';
+import { Bell, Clock, Heart, MessageCircle, Moon, Music, Pause, Play, Send, Settings, SkipBack, SkipForward, ThumbsUp, Volume2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Music, Bell, Settings, Volume2, SkipBack, SkipForward, Pause, Play, Clock, Heart, Moon, MessageCircle, ThumbsUp, Send } from 'lucide-react';
-import type { HealingContent, CommunityPost } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { createCommunityPost, getCommunityPosts, getHealingContents, togglePostLike } from '@/db/api';
+import type { CommunityPost, HealingContent } from '@/types';
 
 const MEDITATION_CATEGORIES = [
   { id: 'all', label: '全部' },

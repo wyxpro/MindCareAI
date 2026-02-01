@@ -1,7 +1,7 @@
-import { useRef, memo } from 'react';
+import { Camera, Image as ImageIcon, Mic, Send, StopCircle } from 'lucide-react';
+import { memo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Mic, Image as ImageIcon, Camera, StopCircle } from 'lucide-react';
 
 interface ChatInputProps {
     inputText: string;

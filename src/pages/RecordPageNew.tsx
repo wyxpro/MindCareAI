@@ -1,19 +1,37 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { createEmotionDiary, getEmotionDiaries, updateEmotionDiary, speechRecognition } from '@/db/api';
-import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Plus, Smile, Loader2, Mic, Image as ImageIcon, X, Trash2, Edit2, Check, StopCircle, Sparkles, Cloud, Sun, CloudRain, Wind } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
+import { addMonths, eachDayOfInterval, endOfMonth, format, isSameDay, startOfMonth, subMonths } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { convertWebmToWav, blobToBase64 } from '@/utils/audio';
-import type { EmotionDiary, EmotionLevel } from '@/types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Loader2,
+  Mic,
+  Plus,
+  StopCircle,
+  Sun,
+  X
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import MoodFeedbackOverlay, { MoodFeedbackType } from '@/components/record/MoodFeedbackOverlay';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  createCommunityPost,
+  createEmotionDiary,
+  getEmotionDiaries,
+  getPostCategories,
+  speechRecognition,
+  updateEmotionDiary
+} from '@/db/api';
+import type { EmotionDiary, EmotionLevel } from '@/types';
+import { blobToBase64, convertWebmToWav } from '@/utils/audio';
 
 const EMOTIONS = [
   { level: 'very_good' as EmotionLevel, label: '极好', emoji: '😄', color: 'bg-gradient-to-br from-success/20 to-success/10 text-success border-success/30 hover:border-success/50 hover:shadow-success-glow' },
@@ -26,12 +44,12 @@ const EMOTIONS = [
 const TRIGGERS = ['睡眠不足', '工作压力', '家庭琐事', '运动', '社交活动', '天气阴郁', '身体不适', '学习困难', '人际关系', '经济压力', '饮食不规律', '其他'];
 
 const getEmotionColor = (level: EmotionLevel) => {
-  const colors = { 
-    very_good: 'bg-success/10 border-success/30', 
-    good: 'bg-info/10 border-info/30', 
-    neutral: 'bg-muted border-border', 
-    bad: 'bg-warning/10 border-warning/30', 
-    very_bad: 'bg-destructive/10 border-destructive/30' 
+  const colors = {
+    very_good: 'bg-success/10 border-success/30',
+    good: 'bg-info/10 border-info/30',
+    neutral: 'bg-muted border-border',
+    bad: 'bg-warning/10 border-warning/30',
+    very_bad: 'bg-destructive/10 border-destructive/30'
   };
   return colors[level] || 'bg-background';
 };
@@ -54,22 +72,49 @@ export default function RecordPageNew() {
   const [isRecording, setIsRecording] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
   const [feedbackType, setFeedbackType] = useState<MoodFeedbackType>(null);
-  
+  const [communityCategories, setCommunityCategories] = useState<{ id: string; name: string }[]>([]);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { if (user) loadDiaries(); }, [user, currentMonth]);
+  // 优化：使用 Map 按日期索引日记，提高查询性能
+  const diariesByDate = useMemo(() => {
+    const map = new Map<string, EmotionDiary[]>();
+    for (const d of diaries) {
+      // 假设 diary_date 已经是 YYYY-MM-DD 格式，如果不是则需要处理
+      const dateKey = typeof d.diary_date === 'string' ? d.diary_date.split('T')[0] : format(new Date(d.diary_date), 'yyyy-MM-dd');
+      if (!map.has(dateKey)) map.set(dateKey, []);
+      map.get(dateKey)?.push(d);
+    }
+    return map;
+  }, [diaries]);
 
-  const loadDiaries = async () => {
+  const loadDiaries = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await getEmotionDiaries(user.id, 100);
+      const data = await getEmotionDiaries(100);
       setDiaries(data);
     } catch (error) {
       console.error('加载日记失败:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) loadDiaries();
+  }, [user, loadDiaries, currentMonth]);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const cats = await getPostCategories();
+        setCommunityCategories(cats);
+      } catch (e) {
+        console.error('Fetch categories failed', e);
+      }
+    };
+    fetchCats();
+  }, []);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -77,7 +122,10 @@ export default function RecordPageNew() {
   const firstDayOfWeek = monthStart.getDay();
   const emptyDays = Array(firstDayOfWeek).fill(null);
 
-  const getDiariesForDate = (date: Date) => diaries.filter(d => isSameDay(new Date(d.diary_date), date));
+  const getDiariesForDate = useCallback((date: Date) => {
+    const dateKey = format(date, 'yyyy-MM-dd');
+    return diariesByDate.get(dateKey) || [];
+  }, [diariesByDate]);
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -134,7 +182,7 @@ export default function RecordPageNew() {
     try {
       const wavBlob = await convertWebmToWav(audioBlob);
       const response = await speechRecognition(wavBlob, 'wav', 'zh');
-      
+
       if (response?.text) {
         setContent(prev => prev + (prev ? '\n' : '') + response.text);
         toast.success('语音识别成功', { duration: 1000 });
@@ -169,59 +217,6 @@ export default function RecordPageNew() {
     setImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const icsEscape = (value: string) =>
-    value
-      .replace(/\\/g, '\\\\')
-      .replace(/\n/g, '\\n')
-      .replace(/;/g, '\\;')
-      .replace(/,/g, '\\,');
-
-  const buildDiaryIcs = (diary: EmotionDiary) => {
-    const dateStr = diary.diary_date;
-    const start = dateStr.replace(/-/g, '');
-    const dt = new Date(`${dateStr}T00:00:00`);
-    const endDate = new Date(dt.getTime() + 24 * 60 * 60 * 1000);
-    const end = format(endDate, 'yyyyMMdd');
-
-    const label = EMOTIONS.find(e => e.level === diary.emotion_level)?.label || '一般';
-    const summary = `情绪日记·${label}`;
-    const descriptionParts: string[] = [];
-    if (diary.tags && diary.tags.length > 0) descriptionParts.push(`触发因素：${diary.tags.join('、')}`);
-    if (diary.content) descriptionParts.push(diary.content);
-    const description = descriptionParts.join('\n\n');
-    const uid = `${diary.id}@mindcare`;
-    const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-    return [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//MindCare//EmotionDiary//CN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      `UID:${icsEscape(uid)}`,
-      `DTSTAMP:${dtStamp}`,
-      `DTSTART;VALUE=DATE:${start}`,
-      `DTEND;VALUE=DATE:${end}`,
-      `SUMMARY:${icsEscape(summary)}`,
-      `DESCRIPTION:${icsEscape(description)}`,
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-  };
-
-  const downloadTextFile = (filename: string, text: string, mime = 'text/plain') => {
-    const blob = new Blob([text], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
   const toggleTrigger = (trigger: string) => {
     setSelectedTriggers(prev => prev.includes(trigger) ? prev.filter(t => t !== trigger) : [...prev, trigger]);
   };
@@ -231,14 +226,16 @@ export default function RecordPageNew() {
     if (!content.trim() && imageUrls.length === 0) { toast.error('请写下你的心情或上传图片', { duration: 1000 }); return; }
     setLoading(true);
     try {
-      const saved = await createEmotionDiary({ 
-        user_id: user.id, 
-        diary_date: format(selectedDate, 'yyyy-MM-dd'), 
-        emotion_level: emotionLevel, 
+      const diaryData = {
+        user_id: user.id,
+        diary_date: format(selectedDate, 'yyyy-MM-dd'),
+        emotion_level: emotionLevel,
         content,
         tags: selectedTriggers,
         image_urls: imageUrls
-      });
+      };
+
+      await createEmotionDiary(diaryData);
 
       // 触发反馈
       if (emotionLevel === 'very_good' || emotionLevel === 'good') {
@@ -249,13 +246,7 @@ export default function RecordPageNew() {
         setFeedbackType('observer');
       }
 
-      try {
-        const ics = buildDiaryIcs(saved);
-        downloadTextFile(`mindcare-diary-${saved.diary_date}.ics`, ics, 'text/calendar');
-      } catch {
-      }
       toast.success('记录已保存', { duration: 1000 });
-      setContent('');
       setSelectedTriggers([]);
       setImageUrls([]);
       await loadDiaries();
@@ -267,18 +258,22 @@ export default function RecordPageNew() {
     }
   };
 
-  const getWeeklySummary = () => {
-    const today = new Date();
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekDiaries = diaries.filter(d => { const diaryDate = new Date(d.diary_date); return diaryDate >= weekAgo && diaryDate <= today; });
-    if (weekDiaries.length === 0) return null;
-    const emotionToNumber = (level: EmotionLevel): number => ({ very_bad: 1, bad: 2, neutral: 3, good: 4, very_good: 5 }[level] || 3);
-    const avgEmotion = (weekDiaries.reduce((sum, d) => sum + emotionToNumber(d.emotion_level), 0) / weekDiaries.length).toFixed(1);
-    const improvement = emotionToNumber(weekDiaries[0]?.emotion_level) > emotionToNumber(weekDiaries[weekDiaries.length - 1]?.emotion_level);
-    return { avgEmotion, improvement, count: weekDiaries.length };
+  const handleShareToCommunity = async (shareContent: string) => {
+    if (!user) return;
+    try {
+      const treeHoleCat = communityCategories.find(c => c.name === '情绪树洞');
+      await createCommunityPost({
+        content: shareContent,
+        title: shareContent.slice(0, 30) || '心情分享',
+        category_id: treeHoleCat?.id,
+        anonymous_name: `守护者${Math.random().toString(36).substring(2, 5)}`,
+      });
+      setContent('');
+    } catch (e) {
+      console.error('Share to community failed', e);
+      toast.error('分享失败');
+    }
   };
-
-  const weeklySummary = getWeeklySummary();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-24">
@@ -287,7 +282,7 @@ export default function RecordPageNew() {
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <h1 className="text-[20px] md:text-xl font-black text-slate-800 truncate">情绪日记</h1>
           </div>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full border border-blue-100 bg-blue-50/60 shadow-sm shrink-0 max-w-[68%] sm:max-w-none"
@@ -343,9 +338,6 @@ export default function RecordPageNew() {
               </div>
             </CardContent>
           </Card>
-          {weeklySummary && (
-            <></>
-          )}
         </div>
         <div className="lg:col-span-1">
           <Card className="shadow-lg border-0 sticky top-6">
@@ -407,14 +399,14 @@ export default function RecordPageNew() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="relative group">
-                  <Textarea 
-                    placeholder="写下点什么..." 
-                    value={content} 
-                    onChange={(e) => setContent(e.target.value)} 
-                    rows={6} 
-                    className="resize-none transition-all duration-300 focus:shadow-inner-glow" 
+                  <Textarea
+                    placeholder="写下点什么..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={6}
+                    className="resize-none transition-all duration-300 focus:shadow-inner-glow"
                   />
                   {recognizing && (
                     <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
@@ -442,22 +434,17 @@ export default function RecordPageNew() {
                   </div>
                 )}
               </div>
-              <Button onClick={handleSave} disabled={loading || (!content.trim() && imageUrls.length === 0)} className="w-full h-12 text-base font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg">
+
+              <Button onClick={handleSave} disabled={loading || (!content.trim() && imageUrls.length === 0)} className="w-full h-12 text-base font-medium bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg transition-smooth">
                 {loading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />保存中...</> : '保存记录'}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
-      
-      {/* 当日记录列表弹窗 */}
+
       <Dialog open={dayDialogOpen} onOpenChange={(open) => setDayDialogOpen(open)}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-[28px] border-none">
-          <DialogHeader>
-            <DialogTitle className="sr-only">
-              {format(selectedDate, 'yyyy年M月d日 当天记录', { locale: zhCN })}
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-[28px] border-none shadow-2xl">
           <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-6 py-5 border-b">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -465,7 +452,7 @@ export default function RecordPageNew() {
                 <p className="text-[11px] text-muted-foreground">{format(selectedDate, 'EEEE', { locale: zhCN })}</p>
               </div>
               <div className="flex gap-2">
-                {getDiariesForDate(selectedDate).slice(0,3).map((d, i) => (
+                {getDiariesForDate(selectedDate).slice(0, 3).map((d, i) => (
                   <span key={i} className="text-xl">{getEmotionEmoji(d.emotion_level)}</span>
                 ))}
               </div>
@@ -473,7 +460,7 @@ export default function RecordPageNew() {
           </div>
           <div className="space-y-4 p-6">
             {getDiariesForDate(selectedDate).map((d) => (
-              <div key={d.id} className="rounded-2xl border bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
+              <div key={d.id} className="rounded-2xl border bg-white dark:bg-slate-950 shadow-sm overflow-hidden transition-smooth hover:shadow-md">
                 <div className="flex gap-4 p-4">
                   <div className="shrink-0 w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl">
                     {getEmotionEmoji(d.emotion_level)}
@@ -501,7 +488,7 @@ export default function RecordPageNew() {
                     </div>
                     {editingId === d.id ? (
                       <div className="space-y-2">
-                        <Textarea rows={5} value={editContent} onChange={(e) => setEditContent(e.target.value)} />
+                        <Textarea rows={5} value={editContent} onChange={(e) => setEditContent(e.target.value)} className="resize-none" />
                         <div className="flex justify-end">
                           <Button size="sm" onClick={async () => {
                             setLoading(true);
@@ -545,10 +532,14 @@ export default function RecordPageNew() {
           </div>
         </DialogContent>
       </Dialog>
-      <MoodFeedbackOverlay 
-        type={feedbackType} 
+      <MoodFeedbackOverlay
+        type={feedbackType}
         content={content}
-        onClose={() => setFeedbackType(null)} 
+        onClose={() => {
+          setFeedbackType(null);
+          setContent('');
+        }}
+        onShareToTreeHole={handleShareToCommunity}
       />
     </div>
   );

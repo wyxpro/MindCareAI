@@ -1,19 +1,19 @@
+import { Activity, ChevronRight, 
+  Edit, FileText, Heart, LogOut, Pill, 
+  Settings, Stethoscope, UserCircle, Watch 
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { updateProfile, getAssessments, getEmotionDiaries } from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  Edit, LogOut, Activity, FileText, Stethoscope, Watch, 
-  Settings, ChevronRight, Heart, UserCircle, Pill
-} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAssessments, getEmotionDiaries, updateProfile } from '@/db/api';
 
 export default function ProfilePageNew() {
   const { user, profile, signOut, refreshProfile } = useAuth();

@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Gamepad2, ClipboardList, Info, ChevronRight, 
-  Sparkles, Moon, Brain, Users, LineChart, 
-  Heart, Star, Zap, Coffee
+import { AnimatePresence, motion } from 'framer-motion';
+import { Brain, ChevronRight, ClipboardList, Coffee, 
+  Gamepad2, 
+  Heart, Info, LineChart, Moon, 
+  Sparkles, Star, Users, Zap 
 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getEmotionDiaries } from '@/db/api';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import EmotionAvatar from '@/components/home/EmotionAvatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { getEmotionDiaries } from '@/db/api';
 
 export default function HomePage() {
   const { user, profile } = useAuth();

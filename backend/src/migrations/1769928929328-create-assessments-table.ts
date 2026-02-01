@@ -1,7 +1,7 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class CreateAssessmentsTable1769928929328 implements MigrationInterface {
-  name = 'CreateAssessmentsTable1769928929328';
+  name = "CreateAssessmentsTable1769928929328";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";');
@@ -30,7 +30,9 @@ export class CreateAssessmentsTable1769928929328 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP INDEX IF EXISTS "IDX_assessments_user_id_created_at";');
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "IDX_assessments_user_id_created_at";',
+    );
     await queryRunner.query('DROP TABLE IF EXISTS "assessments";');
   }
 }

@@ -1,10 +1,16 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType, Logger, BadRequestException } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { json, urlencoded } from 'express';
-import { join } from 'path';
+import { NestFactory } from "@nestjs/core";
+import {
+  ValidationPipe,
+  VersioningType,
+  Logger,
+  BadRequestException,
+} from "@nestjs/common";
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { AppModule } from "./app.module";
+import { AllExceptionsFilter } from "./common/filters/http-exception.filter";
+import { json, urlencoded } from "express";
+import { join } from "path";
+import helmet from "helmet";
 
 /**
  * 应用程序入口
@@ -12,15 +18,34 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // 安全头部
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`],
+          imgSrc: [`'self'`, "data:", "validator.swagger.io"],
+          scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+        },
+      },
+    }),
+  );
+
   // 全局前缀
-  const apiPrefix = process.env.API_PREFIX || 'api/v1';
+  const apiPrefix = process.env.API_PREFIX || "api/v1";
 
   // 语音/多模态等大体积请求体需要更高上限
-  app.use(json({ limit: '20mb' }));
-  app.use(urlencoded({ extended: true, limit: '20mb' }));
+  app.use(json({ limit: "20mb" }));
+  app.use(urlencoded({ extended: true, limit: "20mb" }));
 
   // 静态文件服务 - 提供 uploads 目录中的文件
-  app.use('/uploads', json({ limit: '20mb' }), require('express').static(join(__dirname, '..', 'uploads')));
+  app.use(
+    "/uploads",
+    json({ limit: "20mb" }),
+    require("express").static(join(__dirname, "..", "uploads")),
+  );
 
   // 语音识别日志在服务层输出，这里不重复记录
 
@@ -32,9 +57,11 @@ async function bootstrap() {
   });
 
   // CORS 配置
-  const corsEnabled = process.env.CORS_ENABLED === 'true';
+  const corsEnabled = process.env.CORS_ENABLED === "true";
   if (corsEnabled) {
-    const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'];
+    const corsOrigins = process.env.CORS_ORIGINS?.split(",") || [
+      "http://localhost:5173",
+    ];
     app.enableCors({
       origin: corsOrigins,
       credentials: true,
@@ -42,7 +69,7 @@ async function bootstrap() {
   }
 
   // 全局验证管道
-  const validationLogger = new Logger('Validation');
+  const validationLogger = new Logger("Validation");
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // 自动移除未在 DTO 中定义的属性
@@ -67,22 +94,22 @@ async function bootstrap() {
 
   // Swagger 文档配置（无需认证）
   const config = new DocumentBuilder()
-    .setTitle('MindCareAI API')
-    .setDescription('MindCareAI 后端 API 文档 - 租户模式')
-    .setVersion('1.0')
-    .addTag('auth', '认证相关接口（简单用户名/密码）')
-    .addTag('users', '用户管理接口')
-    .addTag('tenants', '租户管理接口')
-    .addTag('ai', 'AI 服务接口')
-    .addTag('emotion-diaries', '情绪日记接口')
-    .addTag('assessments', '评估记录接口')
-    .addTag('healing', '疗愈内容接口')
-    .addTag('community', '社区接口')
-    .addTag('doctor', '医生管理接口')
+    .setTitle("MindCareAI API")
+    .setDescription("MindCareAI 后端 API 文档 - 租户模式")
+    .setVersion("1.0")
+    .addTag("auth", "认证相关接口（简单用户名/密码）")
+    .addTag("users", "用户管理接口")
+    .addTag("tenants", "租户管理接口")
+    .addTag("ai", "AI 服务接口")
+    .addTag("emotion-diaries", "情绪日记接口")
+    .addTag("assessments", "评估记录接口")
+    .addTag("healing", "疗愈内容接口")
+    .addTag("community", "社区接口")
+    .addTag("doctor", "医生管理接口")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup("api-docs", app, document);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

@@ -1,21 +1,21 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Award, Bookmark, 
+  BookOpen, Clock, Eye, FileText, Headphones, Play, Search, Sparkles, ThumbsUp, 
+  TrendingUp, Video, Zap
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   getHealingContents, 
-  toggleFavorite, 
   getUserFavorites,
-  incrementViewCount,
   incrementLikeCount,
+  incrementViewCount,
+  toggleFavorite, 
 } from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  BookOpen, Video, Headphones, Search, Bookmark, Eye, ThumbsUp, 
-  TrendingUp, Clock, Sparkles, Play, FileText, Award, Zap
-} from 'lucide-react';
 import type { HealingContent } from '@/types';
 
 const CONTENT_TYPES = [

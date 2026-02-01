@@ -1,15 +1,15 @@
+import { Check, Edit, Image, Loader2, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, X, Check, Loader2, Image } from 'lucide-react';
-import { toast } from 'sonner';
 import type { EmotionDiary, EmotionLevel } from '@/types';
 
 interface NoteDetailDialogProps {

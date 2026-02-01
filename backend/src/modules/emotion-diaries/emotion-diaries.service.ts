@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
-import { EmotionDiary } from './entities/emotion-diary.entity';
-import { CreateEmotionDiaryDto, UpdateEmotionDiaryDto, EmotionDiaryDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Between } from "typeorm";
+import { EmotionDiary } from "./entities/emotion-diary.entity";
+import {
+  CreateEmotionDiaryDto,
+  UpdateEmotionDiaryDto,
+  EmotionDiaryDto,
+} from "./dto";
 
 /**
  * 情绪日记服务
@@ -24,7 +32,9 @@ export class EmotionDiariesService {
     const diary = this.emotionDiaryRepository.create({
       ...createDto,
       user_id: userId,
-      diary_date: createDto.diary_date ? new Date(createDto.diary_date) : new Date(),
+      diary_date: createDto.diary_date
+        ? new Date(createDto.diary_date)
+        : new Date(),
     });
 
     const saved = await this.emotionDiaryRepository.save(diary);
@@ -41,17 +51,20 @@ export class EmotionDiariesService {
     startDate?: string,
     endDate?: string,
   ): Promise<{ items: EmotionDiaryDto[]; total: number }> {
-    let whereCondition: any = { user_id: userId };
+    const whereCondition: any = { user_id: userId };
 
     if (startDate && endDate) {
-      whereCondition.diary_date = Between(new Date(startDate), new Date(endDate));
+      whereCondition.diary_date = Between(
+        new Date(startDate),
+        new Date(endDate),
+      );
     }
 
     const [items, total] = await this.emotionDiaryRepository.findAndCount({
       where: whereCondition,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      order: { diary_date: 'DESC', created_at: 'DESC' },
+      order: { diary_date: "DESC", created_at: "DESC" },
     });
 
     return {
@@ -63,7 +76,10 @@ export class EmotionDiariesService {
   /**
    * 根据日期获取情绪日记
    */
-  async findByDate(userId: string, date: Date): Promise<EmotionDiaryDto | null> {
+  async findByDate(
+    userId: string,
+    date: Date,
+  ): Promise<EmotionDiaryDto | null> {
     const diary = await this.emotionDiaryRepository.findOne({
       where: {
         user_id: userId,
@@ -76,15 +92,23 @@ export class EmotionDiariesService {
   /**
    * 获取单条情绪日记
    */
-  async findOne(id: string, userId: string, userRole: string): Promise<EmotionDiaryDto> {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+  ): Promise<EmotionDiaryDto> {
     const diary = await this.emotionDiaryRepository.findOne({ where: { id } });
     if (!diary) {
-      throw new NotFoundException('情绪日记不存在');
+      throw new NotFoundException("情绪日记不存在");
     }
 
     // 权限检查：用户只能查看自己的日记，医生可以查看所有
-    if (diary.user_id !== userId && userRole !== 'doctor' && userRole !== 'admin') {
-      throw new ForbiddenException('无权查看此日记');
+    if (
+      diary.user_id !== userId &&
+      userRole !== "doctor" &&
+      userRole !== "admin"
+    ) {
+      throw new ForbiddenException("无权查看此日记");
     }
 
     return this.toDto(diary);
@@ -101,12 +125,16 @@ export class EmotionDiariesService {
   ): Promise<EmotionDiaryDto> {
     const diary = await this.emotionDiaryRepository.findOne({ where: { id } });
     if (!diary) {
-      throw new NotFoundException('情绪日记不存在');
+      throw new NotFoundException("情绪日记不存在");
     }
 
     // 权限检查
-    if (diary.user_id !== userId && userRole !== 'doctor' && userRole !== 'admin') {
-      throw new ForbiddenException('无权修改此日记');
+    if (
+      diary.user_id !== userId &&
+      userRole !== "doctor" &&
+      userRole !== "admin"
+    ) {
+      throw new ForbiddenException("无权修改此日记");
     }
 
     Object.assign(diary, updateDto);
@@ -120,12 +148,12 @@ export class EmotionDiariesService {
   async remove(id: string, userId: string, userRole: string): Promise<void> {
     const diary = await this.emotionDiaryRepository.findOne({ where: { id } });
     if (!diary) {
-      throw new NotFoundException('情绪日记不存在');
+      throw new NotFoundException("情绪日记不存在");
     }
 
     // 权限检查
-    if (diary.user_id !== userId && userRole !== 'admin') {
-      throw new ForbiddenException('无权删除此日记');
+    if (diary.user_id !== userId && userRole !== "admin") {
+      throw new ForbiddenException("无权删除此日记");
     }
 
     await this.emotionDiaryRepository.remove(diary);
@@ -135,14 +163,24 @@ export class EmotionDiariesService {
    * 转换为 DTO
    */
   private toDto(diary: EmotionDiary): EmotionDiaryDto {
+    let dateStr = "";
+    if (diary.diary_date) {
+      const dt =
+        diary.diary_date instanceof Date
+          ? diary.diary_date
+          : new Date(diary.diary_date);
+      dateStr = dt.toISOString().split("T")[0];
+    }
+
     return {
       id: diary.id,
       user_id: diary.user_id,
-      diary_date: diary.diary_date.toISOString().split('T')[0],
+      diary_date: dateStr,
       emotion_level: diary.emotion_level,
       title: diary.title || undefined,
       content: diary.content || undefined,
       tags: diary.tags || undefined,
+      image_urls: diary.image_urls || undefined,
       ai_analysis: diary.ai_analysis || undefined,
       created_at: diary.created_at,
       updated_at: diary.updated_at,

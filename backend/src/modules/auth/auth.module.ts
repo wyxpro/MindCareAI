@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { Tenant } from '../tenants/entities/tenant.entity';
-import { Profile } from '../users/entities/profile.entity';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { JwtModule } from "@nestjs/jwt";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+import { Tenant } from "../tenants/entities/tenant.entity";
+import { Profile } from "../users/entities/profile.entity";
 
 /**
  * 认证模块
@@ -19,8 +19,8 @@ import { Profile } from '../users/entities/profile.entity';
       global: true,
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('auth.jwtSecret'),
-        signOptions: { expiresIn: '7d' },
+        secret: configService.get<string>("auth.jwtSecret"),
+        signOptions: { expiresIn: "7d" },
       }),
       inject: [ConfigService],
     }),
@@ -29,4 +29,4 @@ import { Profile } from '../users/entities/profile.entity';
   providers: [AuthService],
   exports: [AuthService, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

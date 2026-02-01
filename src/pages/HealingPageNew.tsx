@@ -1,24 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Bell, 
+  Bookmark, Clock, Heart, Moon, 
+  Music, Pause, Play, SkipBack, SkipForward, Volume2 
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import CommunityTab from '@/components/healing/CommunityTab';
 import KnowledgeTab from '@/components/healing/KnowledgeTab';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
-  getHealingContents, 
   createMeditationSession,
+  getHealingContents, 
   getMeditationStats,
   toggleFavorite,
 } from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  Music, Bell, Volume2, SkipBack, SkipForward, Pause, Play, Clock, Heart, Moon, 
-  Bookmark
-} from 'lucide-react';
 import type { HealingContent } from '@/types';
 
 const MEDITATION_CATEGORIES = [

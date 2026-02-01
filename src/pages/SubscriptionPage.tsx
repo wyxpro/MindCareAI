@@ -1,13 +1,13 @@
+import { ArrowRight, Check, 
+  ChevronLeft, 
+  CreditCard, Crown, History, Receipt, ShieldCheck, Star, Zap 
+} from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ChevronLeft, Crown, Check, Zap, Star, 
-  CreditCard, History, Receipt, ArrowRight, ShieldCheck
-} from 'lucide-react';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function SubscriptionPage() {
   const navigate = useNavigate();

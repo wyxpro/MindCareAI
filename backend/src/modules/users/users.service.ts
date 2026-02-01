@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Profile } from './entities/profile.entity';
-import { UpdateProfileDto, ProfileDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Profile } from "./entities/profile.entity";
+import { UpdateProfileDto, ProfileDto } from "./dto";
 
 /**
  * 用户服务
@@ -21,7 +25,7 @@ export class UsersService {
   async findOne(id: string): Promise<ProfileDto> {
     const profile = await this.profileRepository.findOne({ where: { id } });
     if (!profile) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
     return this.toDto(profile);
   }
@@ -29,11 +33,14 @@ export class UsersService {
   /**
    * 获取所有用户（仅管理员/医生）
    */
-  async findAll(page: number = 1, pageSize: number = 10): Promise<{ items: ProfileDto[]; total: number }> {
+  async findAll(
+    page: number = 1,
+    pageSize: number = 10,
+  ): Promise<{ items: ProfileDto[]; total: number }> {
     const [items, total] = await this.profileRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
-      order: { created_at: 'DESC' },
+      order: { created_at: "DESC" },
     });
 
     return {
@@ -53,17 +60,17 @@ export class UsersService {
   ): Promise<ProfileDto> {
     const profile = await this.profileRepository.findOne({ where: { id } });
     if (!profile) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
     // 权限检查：只能更新自己的档案，或者管理员可以更新任何档案
-    const isAdmin = currentUserRole === 'admin';
+    const isAdmin = currentUserRole === "admin";
     if (id !== currentUserId && !isAdmin) {
-      throw new ForbiddenException('无权更新其他用户的档案');
+      throw new ForbiddenException("无权更新其他用户的档案");
     }
 
     // 非管理员不能修改角色
-    if (!isAdmin && updateProfileDto.hasOwnProperty('role')) {
+    if (!isAdmin && updateProfileDto.hasOwnProperty("role")) {
       delete (updateProfileDto as any).role;
     }
 
@@ -76,13 +83,13 @@ export class UsersService {
    * 删除用户（仅管理员）
    */
   async remove(id: string, currentUserRole: string): Promise<void> {
-    if (currentUserRole !== 'admin') {
-      throw new ForbiddenException('只有管理员可以删除用户');
+    if (currentUserRole !== "admin") {
+      throw new ForbiddenException("只有管理员可以删除用户");
     }
 
     const profile = await this.profileRepository.findOne({ where: { id } });
     if (!profile) {
-      throw new NotFoundException('用户不存在');
+      throw new NotFoundException("用户不存在");
     }
 
     await this.profileRepository.remove(profile);
@@ -92,7 +99,9 @@ export class UsersService {
    * 根据用户名查找用户
    */
   async findByUsername(username: string): Promise<ProfileDto | null> {
-    const profile = await this.profileRepository.findOne({ where: { username } });
+    const profile = await this.profileRepository.findOne({
+      where: { username },
+    });
     return profile ? this.toDto(profile) : null;
   }
 
@@ -109,7 +118,9 @@ export class UsersService {
       avatar_url: profile.avatar_url || undefined,
       full_name: profile.full_name || undefined,
       gender: profile.gender || undefined,
-      birth_date: profile.birth_date ? profile.birth_date.toISOString().split('T')[0] : undefined,
+      birth_date: profile.birth_date
+        ? profile.birth_date.toISOString().split("T")[0]
+        : undefined,
       created_at: profile.created_at,
       updated_at: profile.updated_at,
     };

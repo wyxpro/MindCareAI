@@ -1,16 +1,16 @@
+import { motion } from 'framer-motion';
+import { ArrowRight,Award, Calendar, 
+  ChevronLeft, Clock, Filter, MapPin, 
+  MessageCircle, Search, ShieldCheck, Star, 
+  UserCheck, Video 
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  ChevronLeft, Search, Filter, Star, ShieldCheck, 
-  MessageCircle, Video, Calendar, MapPin, ArrowRight,
-  UserCheck, Award, Clock
-} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ConnectDoctorPage() {
   const navigate = useNavigate();

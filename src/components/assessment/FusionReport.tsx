@@ -1,16 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  FileText, TrendingUp, History, Download, Printer, Share2,
-  ChevronDown, ChevronUp, ChevronRight, AlertCircle, CheckCircle2,
-  BarChart3, Brain, Mic, Video, ClipboardList, Calendar, Search, Filter, Loader2
+  AlertCircle,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  ClipboardList,
+  Download,
+  Filter,
+  History,
+  Loader2,
+  Mic,
+  Search,
+  Share2,
+  Video,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
 import { multimodalFusion } from '@/db/api';
 
 interface FusionReportProps {
@@ -37,8 +48,8 @@ export default function FusionReport({ scaleData, voiceData, expressionData, onC
       try {
         // 构建融合分析输入
         const textInput = voiceData?.recognizedText ||
-                         scaleData?.aiResponse ||
-                         '用户完成了多模态评估';
+          scaleData?.aiResponse ||
+          '用户完成了多模态评估';
 
         // 构建文本描述，包含所有三个维度的信息
         const fusionText = `## 多模态心理健康评估数据汇总
@@ -121,7 +132,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
       color: 'text-primary',
       content: scaleData?.aiResponse
         ? `AI 分析：${scaleData.aiResponse}`
-        : `PHQ-9 评估总分 ${scaleData?.score || 0} 分。${scaleData?.score >= 20 ? '提示有较高抑郁风险，建议寻求专业帮助。' : '心理状态相对稳定。'}`,
+        : `PHQ-9 评估总分 ${scaleData?.score || 0} 分。${scaleData?.score >= 20 ? '提示有较高抑育风险，建议寻求专业帮助。' : '心理状态相对稳定。'}`,
     },
     {
       id: 'voice',
@@ -147,14 +158,14 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 pb-24 px-4">
       <div className="max-w-md mx-auto space-y-8">
         {/* 顶部汇总卡片 */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="relative bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden"
         >
           {/* 背景装饰 */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-          
+
           <div className="flex justify-between items-start mb-6">
             <div className="space-y-1">
               <h2 className="text-2xl font-black text-slate-800 dark:text-white">融合评估报告</h2>
@@ -163,10 +174,9 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
                 2026-02-01 14:32
               </div>
             </div>
-            <Badge className={`${
-              riskLevel === 'high' ? 'bg-rose-500 shadow-rose-500/20' : 
-              riskLevel === 'medium' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-emerald-500 shadow-emerald-500/20'
-            } text-white px-4 py-1.5 rounded-full text-xs font-black shadow-lg`}>
+            <Badge className={`${riskLevel === 'high' ? 'bg-rose-500 shadow-rose-500/20' :
+                riskLevel === 'medium' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-emerald-500 shadow-emerald-500/20'
+              } text-white px-4 py-1.5 rounded-full text-xs font-black shadow-lg`}>
               {riskLevel === 'high' ? '高风险' : riskLevel === 'medium' ? '中风险' : '低风险'}
             </Badge>
           </div>
@@ -175,8 +185,8 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
             <div className="relative w-28 h-28">
               <svg className="w-full h-full -rotate-90">
                 <circle cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-100 dark:text-slate-800" />
-                <motion.circle 
-                  cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" 
+                <motion.circle
+                  cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8"
                   strokeDasharray={301.59}
                   initial={{ strokeDashoffset: 301.59 }}
                   animate={{ strokeDashoffset: 301.59 - (301.59 * fusionScore) / 100 }}
@@ -226,14 +236,15 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
 
         {/* 子报告折叠面板 */}
         <div className="space-y-3">
-          {sections.map((section, idx) => (
-            <Card 
-              key={section.id} 
+          {sections.map((section) => (
+            <Card
+              key={section.id}
               className="rounded-3xl border-none shadow-sm overflow-hidden bg-white dark:bg-slate-900"
             >
-              <button 
+              <button
                 onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
                 className="w-full p-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                type="button"
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950 flex items-center justify-center ${section.color}`}>
@@ -279,7 +290,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
 
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <motion.div 
+              <motion.div
                 key={i}
                 whileTap={{ scale: 0.98 }}
                 className="bg-white dark:bg-slate-900 p-4 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer"
@@ -290,7 +301,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-100">综合评估报告</p>
-                    <p className="text-[10px] text-slate-400 font-bold">2026-01-{20-i} 10:15</p>
+                    <p className="text-[10px] text-slate-400 font-bold">2026-01-{20 - i} 10:15</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -302,7 +313,7 @@ ${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
           </div>
         </div>
 
-        <Button 
+        <Button
           onClick={onClose}
           className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 bg-primary"
         >

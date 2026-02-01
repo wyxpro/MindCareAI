@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  getCommunityPosts, 
-  createCommunityPost, 
-  togglePostLike,
-  getPostCategories,
-  getCommunityPostsByCategory,
-  getRecoveryStories,
-} from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  Heart, TrendingUp, HelpCircle, Smile, Star, Send, ThumbsUp, 
-  MessageCircle, Share2, Sparkles, TrendingUpIcon, Clock, Eye
+import {Clock, Eye, 
+  Heart, HelpCircle, 
+  MessageCircle, Send, Share2, Smile, Sparkles, Star, ThumbsUp,TrendingUp 
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  createCommunityPost,
+  getCommunityPosts,
+  getCommunityPostsByCategory,
+  getPostCategories,
+  getRecoveryStories,
+  togglePostLike,
+} from '@/db/api';
 import type { CommunityPost } from '@/types';
 
 const CATEGORY_ICONS: Record<string, any> = {
@@ -64,7 +64,7 @@ export default function CommunityTab() {
     setLoading(true);
     try {
       const [postsData, categoriesData, storiesData] = await Promise.all([
-        selectedCategory 
+        selectedCategory
           ? getCommunityPostsByCategory(selectedCategory, 20)
           : getCommunityPosts(20),
         getPostCategories(),
@@ -73,6 +73,8 @@ export default function CommunityTab() {
       setPosts(postsData);
       setCategories(categoriesData);
       setRecoveryStories(storiesData);
+      console.log('CommunityTab loaded posts:', postsData);
+      console.log('CommunityTab loaded categories:', categoriesData);
     } catch (error) {
       console.error('加载数据失败:', error);
       toast.error('加载失败');
@@ -97,7 +99,7 @@ export default function CommunityTab() {
         content: newPost,
         title: newPost.slice(0, 50),
         category_id: selectedPostCategory,
-        anonymous_nickname: anonymousNickname,
+        anonymous_name: anonymousNickname,
       });
       setNewPost('');
       setSelectedPostCategory('');
@@ -115,7 +117,7 @@ export default function CommunityTab() {
       return;
     }
     try {
-      await togglePostLike(postId, user.id);
+      await togglePostLike(postId);
       await loadData();
     } catch (error) {
       console.error('点赞失败:', error);
@@ -175,16 +177,15 @@ export default function CommunityTab() {
                 const Icon = getCategoryIcon(cat.icon);
                 const gradient = getCategoryGradient(cat.color);
                 const isSelected = selectedPostCategory === cat.id;
-                
+
                 return (
                   <Button
                     key={cat.id}
                     onClick={() => setSelectedPostCategory(cat.id)}
-                    className={`rounded-full px-4 py-2 transition-all duration-300 ${
-                      isSelected
-                        ? `bg-gradient-to-r ${gradient} text-white shadow-glow scale-105`
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:scale-105'
-                    }`}
+                    className={`rounded-full px-4 py-2 transition-all duration-300 ${isSelected
+                      ? `bg-gradient-to-r ${gradient} text-white shadow-glow scale-105`
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:scale-105'
+                      }`}
                   >
                     <Icon className="w-4 h-4 mr-2" />
                     {cat.name}
@@ -225,22 +226,20 @@ export default function CommunityTab() {
       <div className="flex gap-3 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <Button
           onClick={() => setActiveTab('all')}
-          className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
-            activeTab === 'all'
-              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
-          }`}
+          className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${activeTab === 'all'
+            ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-glow'
+            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
         >
           <MessageCircle className="w-5 h-5 mr-2" />
           全部动态
         </Button>
         <Button
           onClick={() => setActiveTab('recovery')}
-          className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
-            activeTab === 'recovery'
-              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
-          }`}
+          className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${activeTab === 'recovery'
+            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-glow'
+            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
         >
           <Star className="w-5 h-5 mr-2" />
           康复故事
@@ -253,11 +252,10 @@ export default function CommunityTab() {
           <Button
             onClick={() => setSelectedCategory('')}
             variant={!selectedCategory ? 'default' : 'outline'}
-            className={`whitespace-nowrap rounded-full transition-all duration-300 ${
-              !selectedCategory
-                ? 'bg-gradient-to-r from-primary to-info text-white shadow-glow'
-                : 'hover:scale-105'
-            }`}
+            className={`whitespace-nowrap rounded-full transition-all duration-300 ${!selectedCategory
+              ? 'bg-gradient-to-r from-primary to-info text-white shadow-glow'
+              : 'hover:scale-105'
+              }`}
           >
             全部
           </Button>
@@ -265,17 +263,16 @@ export default function CommunityTab() {
             const Icon = getCategoryIcon(cat.icon);
             const gradient = getCategoryGradient(cat.color);
             const isSelected = selectedCategory === cat.id;
-            
+
             return (
               <Button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
                 variant={isSelected ? 'default' : 'outline'}
-                className={`whitespace-nowrap rounded-full transition-all duration-300 ${
-                  isSelected
-                    ? `bg-gradient-to-r ${gradient} text-white shadow-glow`
-                    : 'hover:scale-105'
-                }`}
+                className={`whitespace-nowrap rounded-full transition-all duration-300 ${isSelected
+                  ? `bg-gradient-to-r ${gradient} text-white shadow-glow`
+                  : 'hover:scale-105'
+                  }`}
               >
                 <Icon className="w-4 h-4 mr-2" />
                 {cat.name}
@@ -313,11 +310,10 @@ export default function CommunityTab() {
             return (
               <Card
                 key={post.id}
-                className={`glass shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] animate-fade-in-up ${
-                  isRecoveryStory
-                    ? 'border-2 border-amber-500/50 bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-yellow-50/50 dark:from-amber-500/10 dark:via-orange-500/5 dark:to-yellow-500/10'
-                    : 'border-border'
-                }`}
+                className={`glass shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] animate-fade-in-up ${isRecoveryStory
+                  ? 'border-2 border-amber-500/50 bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-yellow-50/50 dark:from-amber-500/10 dark:via-orange-500/5 dark:to-yellow-500/10'
+                  : 'border-border'
+                  }`}
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <CardContent className="p-6">
@@ -325,26 +321,26 @@ export default function CommunityTab() {
                   <div className="flex items-start gap-4 mb-4">
                     <Avatar className={`w-12 h-12 border-2 border-white dark:border-slate-800 shadow-lg`}>
                       <AvatarFallback className={`bg-gradient-to-br ${avatarGradient} text-white font-semibold text-lg`}>
-                        {post.anonymous_nickname?.charAt(2) || 'U'}
+                        {post.anonymous_name?.charAt(2) || 'U'}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-semibold text-foreground">
-                          {post.anonymous_nickname || '匿名用户'}
+                          {post.anonymous_name || '匿名用户'}
                         </span>
-                        
+
                         {isRecoveryStory && (
                           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-glow">
                             <Star className="w-3 h-3 mr-1" fill="currentColor" />
                             康复故事
                           </Badge>
                         )}
-                        
+
                         {categoryData && (
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={`bg-gradient-to-r ${categoryGradient} text-white border-0`}
                           >
                             <CategoryIcon className="w-3 h-3 mr-1" />
@@ -352,7 +348,7 @@ export default function CommunityTab() {
                           </Badge>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
@@ -384,7 +380,7 @@ export default function CommunityTab() {
                       <ThumbsUp className="w-4 h-4 mr-2 group-hover:fill-current" />
                       <span className="font-medium">{post.like_count || 0}</span>
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -393,7 +389,7 @@ export default function CommunityTab() {
                       <MessageCircle className="w-4 h-4 mr-2 group-hover:fill-current" />
                       <span className="font-medium">{post.comment_count || 0}</span>
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"

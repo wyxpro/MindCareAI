@@ -21,7 +21,8 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "npm run typeorm -- migration:generate -d src/config/typeorm.datasource.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/config/typeorm.datasource.ts",
-    "migration:revert": "npm run typeorm -- migration:revert -d src/config/typeorm.datasource.ts"
+    "migration:revert": "npm run typeorm -- migration:revert -d src/config/typeorm.datasource.ts",
+    "seed": "ts-node -r tsconfig-paths/register ./src/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
@@ -40,6 +41,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "form-data": "^4.0.0",
+    "helmet": "^8.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

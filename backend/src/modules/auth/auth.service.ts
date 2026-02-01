@@ -1,11 +1,16 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { LoginDto, LoginResponseDto, RegisterDto } from './dto';
-import { Tenant } from '../tenants/entities/tenant.entity';
-import { Profile } from '../users/entities/profile.entity';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  Logger,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, DataSource } from "typeorm";
+import * as bcrypt from "bcrypt";
+import { JwtService } from "@nestjs/jwt";
+import { LoginDto, LoginResponseDto, RegisterDto } from "./dto";
+import { Tenant } from "../tenants/entities/tenant.entity";
+import { Profile } from "../users/entities/profile.entity";
 
 /**
  * 认证服务
@@ -22,7 +27,7 @@ export class AuthService {
     private readonly profileRepository: Repository<Profile>,
     private readonly jwtService: JwtService,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   /**
    * 用户登录
@@ -36,21 +41,24 @@ export class AuthService {
 
     if (!tenant) {
       this.logger.warn(`login failed: user not found: ${loginDto.username}`);
-      throw new UnauthorizedException('用户名或密码错误');
+      throw new UnauthorizedException("用户名或密码错误");
     }
 
     // 验证密码
-    const isPasswordValid = await bcrypt.compare(loginDto.password, tenant.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      tenant.password,
+    );
     if (!isPasswordValid) {
       this.logger.warn(`login failed: invalid password: ${loginDto.username}`);
-      throw new UnauthorizedException('用户名或密码错误');
+      throw new UnauthorizedException("用户名或密码错误");
     }
 
     // 生成 JWT Token
     const payload = {
       username: tenant.username,
       sub: tenant.id,
-      role: 'user', // 默认角色
+      role: "user", // 默认角色
     };
     const accessToken = await this.jwtService.signAsync(payload);
 
@@ -62,7 +70,7 @@ export class AuthService {
       tenantId: tenant.id,
       displayName: tenant.display_name || tenant.username,
       accessToken,
-      message: '登录成功',
+      message: "登录成功",
     };
   }
 
@@ -79,7 +87,7 @@ export class AuthService {
 
     if (existingUser) {
       this.logger.warn(`register failed: username exists: ${username}`);
-      throw new ConflictException('用户名已存在');
+      throw new ConflictException("用户名已存在");
     }
 
     // 密码加密
@@ -107,7 +115,7 @@ export class AuthService {
           email: savedTenant.email,
           phone: savedTenant.phone,
           full_name: savedTenant.display_name,
-          role: 'user',
+          role: "user",
         });
 
         const savedProfile = await manager.save(newProfile);
@@ -120,14 +128,16 @@ export class AuthService {
         };
         const accessToken = await this.jwtService.signAsync(payload);
 
-        this.logger.log(`register success: ${savedTenant.username} (${savedTenant.id})`);
+        this.logger.log(
+          `register success: ${savedTenant.username} (${savedTenant.id})`,
+        );
         return {
           success: true,
           username: savedTenant.username,
           tenantId: savedTenant.id,
           displayName: savedTenant.display_name,
           accessToken,
-          message: '注册成功',
+          message: "注册成功",
         };
       });
     } catch (error) {
@@ -142,7 +152,10 @@ export class AuthService {
   /**
    * 验证租户凭证（用于中间件）
    */
-  async validateTenant(username: string, password: string): Promise<Tenant | null> {
+  async validateTenant(
+    username: string,
+    password: string,
+  ): Promise<Tenant | null> {
     const tenant = await this.tenantRepository.findOne({
       where: { username },
     });

@@ -1,9 +1,9 @@
+import { Activity, AlertTriangle, TrendingUp, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllProfiles, getRiskAlerts, getEmotionDiaries, getAssessments } from '@/db/api';
-import { Users, AlertTriangle, TrendingUp, Activity } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { getAllProfiles, getAssessments, getEmotionDiaries, getRiskAlerts } from '@/db/api';
 import type { Profile, RiskAlert } from '@/types';
 
 export default function DoctorDashboardPage() {

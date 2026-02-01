@@ -1,7 +1,7 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class CreateHealingTables1769937060000 implements MigrationInterface {
-  name = 'CreateHealingTables1769937060000';
+  name = "CreateHealingTables1769937060000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";');
@@ -69,9 +69,15 @@ export class CreateHealingTables1769937060000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP INDEX IF EXISTS "IDX_user_favorites_user_id";');
-    await queryRunner.query('DROP INDEX IF EXISTS "IDX_user_healing_records_user_id";');
-    await queryRunner.query('DROP INDEX IF EXISTS "IDX_healing_contents_category";');
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "IDX_user_favorites_user_id";',
+    );
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "IDX_user_healing_records_user_id";',
+    );
+    await queryRunner.query(
+      'DROP INDEX IF EXISTS "IDX_healing_contents_category";',
+    );
     await queryRunner.query('DROP TABLE IF EXISTS "user_favorites";');
     await queryRunner.query('DROP TABLE IF EXISTS "meditation_sessions";');
     await queryRunner.query('DROP TABLE IF EXISTS "user_healing_records";');

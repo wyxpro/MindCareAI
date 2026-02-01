@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, ClipboardList, Info, ChevronRight, Check, AlertTriangle, FileText, Download, Printer } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Check, ChevronRight, ClipboardList, Download, FileText, Info, Printer, Send } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ragRetrieval } from '@/db/api';
-import { toast } from 'sonner';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';

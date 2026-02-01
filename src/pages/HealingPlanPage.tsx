@@ -1,14 +1,14 @@
+import { motion } from 'framer-motion';
+import { Activity, ArrowRight, Award, BookOpen, Calendar, CheckCircle2, 
+  ChevronLeft, Circle, Clock, Heart, Music, Sparkles, 
+  Target 
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  ChevronLeft, Calendar, CheckCircle2, Circle, Clock, 
-  Target, Sparkles, BookOpen, Music, Heart, ArrowRight, Award, Activity
-} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 
 export default function HealingPlanPage() {
   const navigate = useNavigate();

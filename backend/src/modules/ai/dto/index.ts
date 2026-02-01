@@ -1,1 +1,1 @@
-export * from './text-chat.dto';
+export * from "./text-chat.dto";

@@ -1,5 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface EmotionAvatarProps {
   emotion: 'very_good' | 'good' | 'neutral' | 'bad' | 'very_bad';

@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { Tenant } from './entities/tenant.entity';
-import { CreateTenantDto, UpdateTenantDto, TenantDto } from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import * as bcrypt from "bcrypt";
+import { Tenant } from "./entities/tenant.entity";
+import { CreateTenantDto, UpdateTenantDto, TenantDto } from "./dto";
 
 /**
  * 租户服务
@@ -25,7 +29,7 @@ export class TenantsService {
     });
 
     if (existing) {
-      throw new ConflictException('用户名已存在');
+      throw new ConflictException("用户名已存在");
     }
 
     // 加密密码
@@ -44,11 +48,14 @@ export class TenantsService {
   /**
    * 获取所有租户
    */
-  async findAll(page: number = 1, pageSize: number = 10): Promise<{ items: TenantDto[]; total: number }> {
+  async findAll(
+    page: number = 1,
+    pageSize: number = 10,
+  ): Promise<{ items: TenantDto[]; total: number }> {
     const [items, total] = await this.tenantRepository.findAndCount({
       skip: (page - 1) * pageSize,
       take: pageSize,
-      order: { created_at: 'DESC' },
+      order: { created_at: "DESC" },
     });
 
     return {
@@ -66,7 +73,7 @@ export class TenantsService {
     });
 
     if (!tenant) {
-      throw new NotFoundException('租户不存在');
+      throw new NotFoundException("租户不存在");
     }
 
     return this.toDto(tenant);
@@ -89,12 +96,15 @@ export class TenantsService {
   async update(id: string, updateDto: UpdateTenantDto): Promise<TenantDto> {
     const tenant = await this.tenantRepository.findOne({ where: { id } });
     if (!tenant) {
-      throw new NotFoundException('租户不存在');
+      throw new NotFoundException("租户不存在");
     }
 
     // 如果要更新密码，需要加密
     if ((updateDto as any).password) {
-      (updateDto as any).password = await bcrypt.hash((updateDto as any).password, 10);
+      (updateDto as any).password = await bcrypt.hash(
+        (updateDto as any).password,
+        10,
+      );
     }
 
     Object.assign(tenant, updateDto);
@@ -108,7 +118,7 @@ export class TenantsService {
   async remove(id: string): Promise<void> {
     const tenant = await this.tenantRepository.findOne({ where: { id } });
     if (!tenant) {
-      throw new NotFoundException('租户不存在');
+      throw new NotFoundException("租户不存在");
     }
 
     await this.tenantRepository.remove(tenant);

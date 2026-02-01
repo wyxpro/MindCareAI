@@ -2,13 +2,14 @@
  * 基于关键帧的视频上传组件
  * 适用于表情分析等场景，只上传关键帧而非完整视频
  */
-import React, { useState, useRef } from 'react';
-import { Upload, X, Film, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
+
+import { CheckCircle, Film, Image as ImageIcon, Loader2, Upload, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { uploadFile } from '@/db/api';
-import { extractKeyFrames, extractFirstFrame } from '@/utils/video-frame-extractor';
-import { toast } from 'sonner';
+import { extractFirstFrame, extractKeyFrames } from '@/utils/video-frame-extractor';
 
 interface VideoFrameUploadProps {
   onUploadComplete?: (urls: string[]) => void;

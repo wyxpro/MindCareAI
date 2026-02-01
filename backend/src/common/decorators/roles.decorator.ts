@@ -1,12 +1,12 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
 /**
  * 用户角色枚举
  */
 export enum UserRole {
-  USER = 'user',
-  DOCTOR = 'doctor',
-  ADMIN = 'admin',
+  USER = "user",
+  DOCTOR = "doctor",
+  ADMIN = "admin",
 }
 
 /**
@@ -17,5 +17,5 @@ export enum UserRole {
  * @Get('admin-only')
  * adminOnly() {}
  */
-export const ROLES_KEY = 'roles';
+export const ROLES_KEY = "roles";
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);

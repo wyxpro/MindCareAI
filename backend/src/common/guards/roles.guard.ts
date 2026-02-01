@@ -1,6 +1,11 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY, UserRole } from '../decorators/roles.decorator';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { ROLES_KEY, UserRole } from "../decorators/roles.decorator";
 
 /**
  * 角色守卫
@@ -12,10 +17,10 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     // 获取装饰器设置的角色要求
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // 如果没有设置角色要求，则允许访问
     if (!requiredRoles || requiredRoles.length === 0) {
@@ -26,7 +31,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('用户未认证');
+      throw new ForbiddenException("用户未认证");
     }
 
     // 从 Supabase JWT 中获取用户角色
@@ -37,7 +42,7 @@ export class RolesGuard implements CanActivate {
     const hasRole = requiredRoles.includes(userRole);
 
     if (!hasRole) {
-      throw new ForbiddenException('需要更高的权限才能访问此资源');
+      throw new ForbiddenException("需要更高的权限才能访问此资源");
     }
 
     return true;
