@@ -1,30 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Bell, Bookmark,BookOpen, Clock, Filter, Headphones, Heart, HelpCircle, 
+  MessageCircle, Moon, 
+  Music, Pause, Play, Search, Send, SkipBack, SkipForward, Smile, Star, ThumbsUp, 
+  TrendingUp, Video, Volume2 
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
-  getHealingContents, 
-  getCommunityPosts, 
   createCommunityPost, 
-  togglePostLike,
-  getPostCategories,
-  getCommunityPostsByCategory,
   createMeditationSession,
+  getCommunityPosts, 
+  getCommunityPostsByCategory,
+  getHealingContents, 
   getMeditationStats,
-  toggleFavorite,
+  getPostCategories,
   isFavorited,
+  toggleFavorite,
+  togglePostLike,
 } from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  Music, Bell, Volume2, SkipBack, SkipForward, Pause, Play, Clock, Heart, Moon, 
-  MessageCircle, ThumbsUp, Send, BookOpen, Video, Headphones, Star, Bookmark,
-  TrendingUp, HelpCircle, Smile, Search, Filter
-} from 'lucide-react';
-import type { HealingContent, CommunityPost } from '@/types';
+import type { CommunityPost, HealingContent } from '@/types';
 
 const MEDITATION_CATEGORIES = [
   { id: 'all', label: '全部' },

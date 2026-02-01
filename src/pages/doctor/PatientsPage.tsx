@@ -1,13 +1,13 @@
+import { Activity, Eye, Search, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { getAllProfiles, getEmotionDiaries, getAssessments } from '@/db/api';
-import { Search, Eye, TrendingUp, Activity } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getAllProfiles, getAssessments, getEmotionDiaries } from '@/db/api';
 import type { Profile } from '@/types';
 
 export default function PatientsPage() {

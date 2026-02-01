@@ -11,8 +11,8 @@
  * }
  */
 
-import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import React, { useEffect, useState } from 'react';
 
 interface QRCodeDataUrlProps {
   /** 

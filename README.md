@@ -1601,7 +1601,7 @@ SOFTWARE.
 
 Made with ❤️ by [灵愈AI团队](https://www.miaoda.cn)
 
-© 2024 灵愈AI. All rights reserved.
+© 2026 灵愈AI. All rights reserved.
 
 ---
 

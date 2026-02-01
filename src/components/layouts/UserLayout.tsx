@@ -1,5 +1,5 @@
+import { Activity, BookOpen, Heart, Home, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Activity, Heart, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UserLayoutProps {

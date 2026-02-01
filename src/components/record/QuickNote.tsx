@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Mic, Image as ImageIcon, X, Loader2, Camera, Upload, MicOff 
+import { Camera, Image as ImageIcon, Loader2, 
+  Mic, MicOff, Upload, X 
 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/db/supabase';
 import { convertWebmToWav } from '@/utils/audio';
 
@@ -54,8 +54,17 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
   // 开始录音
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000
+        } 
+      });
+      
+      const mediaRecorder = new MediaRecorder(stream, { 
+        mimeType: 'audio/webm;codecs=opus' 
+      });
       
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -74,10 +83,16 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
 
       mediaRecorder.start();
       setIsRecording(true);
-      toast.info('开始录音...');
+      toast.info('开始录音，说话时请靠近麦克风...');
     } catch (error) {
       console.error('录音失败:', error);
-      toast.error('无法访问麦克风');
+      if (error.name === 'NotAllowedError') {
+        toast.error('请允许访问麦克风权限');
+      } else if (error.name === 'NotFoundError') {
+        toast.error('未找到麦克风设备');
+      } else {
+        toast.error('无法访问麦克风');
+      }
     }
   };
 
@@ -86,6 +101,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      toast.info('录音结束，正在识别...');
     }
   };
 
@@ -102,16 +118,13 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
       
       reader.onloadend = async () => {
         const base64Audio = reader.result as string;
-        const base64Data = base64Audio.split(',')[1];
         
-        // 调用语音识别
+        // 调用语音识别 - 修正参数格式
         const { data, error } = await supabase.functions.invoke('speech-recognition', {
           body: {
+            audioBase64: base64Audio,
             format: 'wav',
             rate: 16000,
-            cuid: 'lingyu-ai-user',
-            speech: base64Data,
-            len: wavBlob.size,
           },
         });
 
@@ -121,8 +134,9 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
           return;
         }
 
-        if (data.err_no === 0 && data.result && data.result.length > 0) {
-          const recognizedText = data.result[0];
+        // 修正返回结果的处理
+        if (data.text && data.text.trim()) {
+          const recognizedText = data.text.trim();
           setContent(prev => prev ? `${prev}\n${recognizedText}` : recognizedText);
           toast.success('语音识别成功');
         } else {
@@ -301,8 +315,8 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
               disabled={isProcessing}
               className={`transition-all duration-200 ${
                 isRecording 
-                  ? 'text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-950/20' 
-                  : 'hover:bg-blue-50 dark:hover:bg-blue-950/20'
+                  ? 'text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800' 
+                  : 'hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:text-blue-600 dark:hover:text-blue-400'
               }`}
             >
               {isProcessing ? (
@@ -312,7 +326,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
               ) : (
                 <Mic className="w-5 h-5" />
               )}
-              <span className="ml-1 text-sm">
+              <span className="ml-1 text-sm font-medium">
                 {isRecording ? '停止录音' : '语音输入'}
               </span>
             </Button>
@@ -374,10 +388,10 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
             />
 
             {/* 状态提示 */}
-            {isProcessing && (
+            {(isProcessing || isRecording) && (
               <Badge variant="secondary" className="ml-2 animate-pulse">
                 <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                {isRecording ? '录音中...' : '处理中...'}
+                {isRecording ? '录音中...' : '识别中...'}
               </Badge>
             )}
           </div>

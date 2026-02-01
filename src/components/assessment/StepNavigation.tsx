@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, ClipboardList, Mic, Video } from 'lucide-react';
+import React from 'react';
 
 export type AssessmentStep = 'scale' | 'voice' | 'expression' | 'report';
 

@@ -1,10 +1,10 @@
+import { Camera, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X, Camera, Loader2 } from 'lucide-react';
-import { multimodalAnalysis } from '@/db/api';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { multimodalAnalysis } from '@/db/api';
 
 // 表情映射
 const EMOTION_MAP: Record<string, { label: string; emoji: string; color: string }> = {

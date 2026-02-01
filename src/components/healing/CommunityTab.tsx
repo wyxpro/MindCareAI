@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  getCommunityPosts, 
-  createCommunityPost, 
-  togglePostLike,
-  getPostCategories,
-  getCommunityPostsByCategory,
-  getRecoveryStories,
-} from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  Heart, TrendingUp, HelpCircle, Smile, Star, Send, ThumbsUp, 
-  MessageCircle, Share2, Sparkles, TrendingUpIcon, Clock, Eye
+import { Clock, Eye, 
+  Heart, HelpCircle, 
+  MessageCircle, Send, Share2, Smile, Sparkles, Star, ThumbsUp, TrendingUp, TrendingUpIcon 
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  createCommunityPost, 
+  getCommunityPosts, 
+  getCommunityPostsByCategory,
+  getPostCategories,
+  getRecoveryStories,
+  togglePostLike,
+} from '@/db/api';
 import type { CommunityPost } from '@/types';
 
 const CATEGORY_ICONS: Record<string, any> = {

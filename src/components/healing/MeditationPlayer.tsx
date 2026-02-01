@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Pause, Play, SkipBack, SkipForward } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface MeditationPlayerProps {
   content: {

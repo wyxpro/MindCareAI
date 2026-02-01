@@ -1,25 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Bell, 
+  Bookmark, Clock, Heart, Moon, 
+  Music, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import CommunityTab from '@/components/healing/CommunityTab';
 import KnowledgeTab from '@/components/healing/KnowledgeTab';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
-  getHealingContents, 
   createMeditationSession,
+  getHealingContents, 
   getMeditationStats,
   toggleFavorite,
 } from '@/db/api';
-import { toast } from 'sonner';
-import { 
-  Music, Bell, Volume2, SkipBack, SkipForward, Pause, Play, Clock, Heart, Moon, 
-  Bookmark
-} from 'lucide-react';
 import type { HealingContent } from '@/types';
+
+type LoopMode = 'one' | 'all' | 'shuffle';
 
 const MEDITATION_CATEGORIES = [
   { id: 'all', label: '全部' },
@@ -36,6 +40,27 @@ const CONTENT_GRADIENTS = [
   'from-amber-500 to-amber-600',
 ];
 
+const meditationMusicModules = import.meta.glob('/srcs/music/*.{mp3,ogg,wav,m4a}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+
+const meditationTracks = Object.entries(meditationMusicModules)
+  .map(([path, url]) => {
+    const fileName = path.split('/').pop() || path;
+    const nameWithoutExt = fileName.replace(/\.(mp3|ogg|wav|m4a)$/i, '');
+    const [title, artist] = nameWithoutExt.split(' - ');
+    return {
+      id: path,
+      url: url as string,
+      title: (title || nameWithoutExt).trim(),
+      artist: (artist || '').trim(),
+      fileName,
+    };
+  })
+  .sort((a, b) => a.fileName.localeCompare(b.fileName, 'zh-Hans-CN'));
+
 export default function HealingPageNew() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('meditation');
@@ -45,13 +70,22 @@ export default function HealingPageNew() {
   const [selectedContent, setSelectedContent] = useState<HealingContent | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [totalTime] = useState(300);
+  const [totalTime, setTotalTime] = useState(0);
+  const [trackIndex, setTrackIndex] = useState(0);
+  const [loopMode, setLoopMode] = useState<LoopMode>('all');
+  const [volume, setVolume] = useState(0.85);
+  const [muted, setMuted] = useState(false);
+  const [buffering, setBuffering] = useState(false);
+  const [playError, setPlayError] = useState<string | null>(null);
   const [meditationStats, setMeditationStats] = useState({ totalMinutes: 128, totalSessions: 12, averageRating: 0 });
   const [moodDialogOpen, setMoodDialogOpen] = useState(false);
   const [moodAfter, setMoodAfter] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const startTimeRef = useRef<number>(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const preloadRef = useRef<HTMLAudioElement | null>(null);
+  const loopModeRef = useRef<LoopMode>('all');
+  const trackIndexRef = useRef(0);
+  const wantPlayRef = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -70,10 +104,125 @@ export default function HealingPageNew() {
   }, [user]);
 
   useEffect(() => {
+    loopModeRef.current = loopMode;
+  }, [loopMode]);
+
+  useEffect(() => {
+    trackIndexRef.current = trackIndex;
+  }, [trackIndex]);
+
+  useEffect(() => {
+    if (activeTab !== 'meditation') return;
+    if (meditationTracks.length === 0) {
+      setPlayError('未找到冥想音乐文件');
+      return;
+    }
+    setPlayError(null);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (meditationTracks.length === 0) return;
+
+    audio.preload = 'auto';
+    audio.src = meditationTracks[trackIndex].url;
+    audio.volume = muted ? 0 : volume;
+    audio.load();
+    if (wantPlayRef.current) {
+      audio.play().catch(() => {});
+    }
+
+    const nextIndex = (trackIndex + 1) % meditationTracks.length;
+    const preloader = new Audio();
+    preloader.preload = 'auto';
+    preloader.src = meditationTracks[nextIndex].url;
+    preloader.load();
+    preloadRef.current = preloader;
+
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      preloadRef.current = null;
+    };
+  }, [trackIndex, muted, volume]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onLoadedMetadata = () => {
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      setTotalTime(Math.floor(duration));
+    };
+    const onTimeUpdate = () => {
+      setCurrentTime(Math.floor(audio.currentTime || 0));
+    };
+    const onPlay = () => {
+      wantPlayRef.current = true;
+      setIsPlaying(true);
+    };
+    const onPause = () => {
+      wantPlayRef.current = false;
+      setIsPlaying(false);
+    };
+    const onWaiting = () => setBuffering(true);
+    const onPlaying = () => setBuffering(false);
+    const onEnded = () => {
+      setBuffering(false);
+      if (meditationTracks.length === 0) return;
+      wantPlayRef.current = true;
+      const mode = loopModeRef.current;
+      const current = trackIndexRef.current;
+      if (mode === 'one') {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+        return;
       }
+      if (mode === 'shuffle') {
+        const next = meditationTracks.length <= 1 ? current : (() => {
+          let candidate = current;
+          while (candidate === current) {
+            candidate = Math.floor(Math.random() * meditationTracks.length);
+          }
+          return candidate;
+        })();
+        setTrackIndex(next);
+        return;
+      }
+      const next = (current + 1) % meditationTracks.length;
+      setTrackIndex(next);
+    };
+    const onError = () => {
+      const current = meditationTracks[trackIndexRef.current];
+      setBuffering(false);
+      setIsPlaying(false);
+      setPlayError(`音乐加载失败：${current?.fileName || '未知文件'}`);
+      toast.error('音乐加载失败，请检查文件是否存在');
+      if (meditationTracks.length > 1) {
+        setTrackIndex((prev) => (prev + 1) % meditationTracks.length);
+      }
+    };
+
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
+    audio.addEventListener('waiting', onWaiting);
+    audio.addEventListener('playing', onPlaying);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onError);
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
+      audio.removeEventListener('waiting', onWaiting);
+      audio.removeEventListener('playing', onPlaying);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('error', onError);
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
     };
   }, []);
 
@@ -112,37 +261,79 @@ export default function HealingPageNew() {
   const handlePlayContent = (content: HealingContent) => {
     setSelectedContent(content);
     setCurrentTime(0);
-    setIsPlaying(false);
-  };
-
-  const togglePlay = () => {
-    if (!isPlaying) {
-      // 开始播放
-      setIsPlaying(true);
-      startTimeRef.current = Date.now() - currentTime * 1000;
-      timerRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        setCurrentTime(elapsed);
-        if (elapsed >= totalTime) {
-          handleMeditationComplete();
-        }
-      }, 1000);
-    } else {
-      // 暂停
-      setIsPlaying(false);
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
     }
   };
+
+  const togglePlay = async () => {
+    if (meditationTracks.length === 0) {
+      toast.error('未找到冥想音乐文件');
+      return;
+    }
+    const audio = audioRef.current;
+    if (!audio) return;
+    setPlayError(null);
+    try {
+      if (audio.paused) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch (error) {
+      console.error('播放失败:', error);
+      setPlayError('播放被浏览器阻止或音频不可用');
+      toast.error('播放失败，请再次点击播放');
+    }
+  };
+
+  const playPrev = () => {
+    if (meditationTracks.length === 0) return;
+    setPlayError(null);
+    setTrackIndex((prev) => (prev - 1 + meditationTracks.length) % meditationTracks.length);
+  };
+
+  const playNext = () => {
+    if (meditationTracks.length === 0) return;
+    setPlayError(null);
+    if (loopModeRef.current === 'shuffle' && meditationTracks.length > 1) {
+      const current = trackIndexRef.current;
+      let candidate = current;
+      while (candidate === current) {
+        candidate = Math.floor(Math.random() * meditationTracks.length);
+      }
+      setTrackIndex(candidate);
+      return;
+    }
+    setTrackIndex((prev) => (prev + 1) % meditationTracks.length);
+  };
+
+  const cycleLoopMode = () => {
+    setLoopMode((prev) => (prev === 'all' ? 'one' : prev === 'one' ? 'shuffle' : 'all'));
+  };
+
+  const loopIcon = useMemo(() => {
+    if (loopMode === 'one') return Repeat1;
+    if (loopMode === 'shuffle') return Shuffle;
+    return Repeat;
+  }, [loopMode]);
+
+  const progressValue = useMemo(() => {
+    if (!totalTime) return 0;
+    return Math.min(100, Math.max(0, (currentTime / totalTime) * 100));
+  }, [currentTime, totalTime]);
+
+  const currentTrackLabel = useMemo(() => {
+    const track = meditationTracks[trackIndex];
+    if (!track) return '';
+    return track.artist ? `${track.title} · ${track.artist}` : track.title;
+  }, [trackIndex]);
 
   const handleMeditationComplete = () => {
-    setIsPlaying(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    const audio = audioRef.current;
+    if (audio) audio.pause();
     setMoodDialogOpen(true);
   };
 
@@ -250,6 +441,11 @@ export default function HealingPageNew() {
                   <p className="text-indigo-300 text-xs">
                     {selectedContent?.description || '跟随圆圈来缓呼吸'}
                   </p>
+                  {currentTrackLabel && (
+                    <p className="text-white/70 text-[11px] mt-2">
+                      当前音乐：{currentTrackLabel}
+                    </p>
+                  )}
                 </div>
 
                 {/* 呼吸动画圆形 */}
@@ -268,21 +464,31 @@ export default function HealingPageNew() {
                 <div className="mb-4">
                   <div className="flex items-center justify-between text-xs text-indigo-300 mb-2">
                     <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(totalTime)}</span>
+                    <span>{formatTime(totalTime || 0)}</span>
                   </div>
-                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full transition-all duration-300"
-                      style={{ width: `${(currentTime / totalTime) * 100}%` }}
-                    />
-                  </div>
+                  <Slider
+                    value={[progressValue]}
+                    max={100}
+                    step={0.1}
+                    onValueChange={(v) => {
+                      const audio = audioRef.current;
+                      if (!audio || !totalTime) return;
+                      const nextTime = (v[0] / 100) * totalTime;
+                      audio.currentTime = Math.max(0, Math.min(totalTime, nextTime));
+                      setCurrentTime(Math.floor(audio.currentTime));
+                    }}
+                    className="w-full [&_[data-slot=slider-track]]:bg-white/10 [&_[data-slot=slider-range]]:bg-gradient-to-r [&_[data-slot=slider-range]]:from-indigo-500 [&_[data-slot=slider-range]]:to-purple-600 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:border-white"
+                  />
                 </div>
 
                 {/* 播放控制 */}
                 <div className="flex items-center justify-center gap-3">
+                  <audio ref={(el) => { audioRef.current = el; }} preload="auto" />
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={playPrev}
+                    disabled={meditationTracks.length === 0}
                     className="w-9 h-9 text-indigo-300 hover:text-white hover:bg-slate-700/50 transition-smooth"
                   >
                     <SkipBack className="w-4 h-4" />
@@ -290,9 +496,12 @@ export default function HealingPageNew() {
                   
                   <Button
                     onClick={togglePlay}
+                    disabled={meditationTracks.length === 0}
                     className="w-12 h-12 rounded-full bg-white hover:bg-gray-100 shadow-2xl transition-smooth"
                   >
-                    {isPlaying ? (
+                    {buffering ? (
+                      <span className="w-6 h-6 rounded-full border-2 border-slate-900/25 border-t-slate-900 animate-spin" />
+                    ) : isPlaying ? (
                       <Pause className="w-6 h-6 text-slate-900" fill="currentColor" />
                     ) : (
                       <Play className="w-6 h-6 text-slate-900 ml-0.5" fill="currentColor" />
@@ -302,11 +511,19 @@ export default function HealingPageNew() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={playNext}
+                    disabled={meditationTracks.length === 0}
                     className="w-9 h-9 text-indigo-300 hover:text-white hover:bg-slate-700/50 transition-smooth"
                   >
                     <SkipForward className="w-4 h-4" />
                   </Button>
                 </div>
+
+                {playError && (
+                  <div className="mt-3 text-center text-[10px] text-rose-200/90">
+                    {playError}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

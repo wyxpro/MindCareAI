@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { createAssessment, updateAssessment, chatCompletion, multimodalAnalysis, speechRecognition } from '@/db/api';
+import { Brain, FileText, Image as ImageIcon, Loader2, Mic, Send, Video } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Send, Mic, Image as ImageIcon, Video, FileText, Loader2, Brain } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { chatCompletion, createAssessment, multimodalAnalysis, speechRecognition, updateAssessment } from '@/db/api';
 import type { Assessment, ChatMessage } from '@/types';
 
 interface Message {

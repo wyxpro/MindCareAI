@@ -1,15 +1,16 @@
+import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 import { getRiskAlerts, handleRiskAlert } from '@/db/api';
-import { toast } from 'sonner';
-import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { generateMockAlerts } from '@/utils/mockData';
 import type { RiskAlert } from '@/types';
 
 export default function AlertsPage() {
@@ -32,11 +33,31 @@ export default function AlertsPage() {
         getRiskAlerts(false),
         getRiskAlerts(true),
       ]);
-      setUnhandledAlerts(unhandled);
-      setHandledAlerts(handled);
+      
+      // 如果没有真实数据，使用模拟数据
+      if (unhandled.length === 0 && handled.length === 0) {
+        const mockAlerts = generateMockAlerts(25);
+        const mockUnhandled = mockAlerts.filter(alert => !alert.is_handled);
+        const mockHandled = mockAlerts.filter(alert => alert.is_handled);
+        
+        setUnhandledAlerts(mockUnhandled);
+        setHandledAlerts(mockHandled);
+      } else {
+        setUnhandledAlerts(unhandled);
+        setHandledAlerts(handled);
+      }
     } catch (error) {
       console.error('加载预警失败:', error);
-      toast.error('加载预警失败');
+      
+      // 出错时使用模拟数据
+      const mockAlerts = generateMockAlerts(25);
+      const mockUnhandled = mockAlerts.filter(alert => !alert.is_handled);
+      const mockHandled = mockAlerts.filter(alert => alert.is_handled);
+      
+      setUnhandledAlerts(mockUnhandled);
+      setHandledAlerts(mockHandled);
+      
+      toast.error('加载预警失败，显示模拟数据');
     } finally {
       setLoading(false);
     }

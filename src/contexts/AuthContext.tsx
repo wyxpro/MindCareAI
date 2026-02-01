@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { supabase } from '@/db/supabase';
 import type { User } from '@supabase/supabase-js';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/db/supabase';
 import type { Profile } from '@/types';
 
 export async function getProfile(userId: string): Promise<Profile | null> {

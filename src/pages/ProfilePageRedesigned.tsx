@@ -1,25 +1,24 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { getProfile } from '@/contexts/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Activity, 
+  ArrowRight, Award,Bell, Calendar, ChevronRight, Copy, Crown, 
+  Edit, FileText, Fingerprint, Globe,Heart, HelpCircle, Loader2, Lock, LogOut, MessageSquare, 
+  Moon, 
+  Settings, Shield, ShieldCheck, Smartphone, Sparkles, Stethoscope, TrendingUp, User 
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { updateProfile, getAssessments, getEmotionDiaries } from '@/db/api';
+import { getProfile, useAuth } from '@/contexts/AuthContext';
+import { getAssessments, getEmotionDiaries, updateProfile } from '@/db/api';
 import { supabase } from '@/db/supabase';
-import { toast } from 'sonner';
-import { 
-  Edit, LogOut, Activity, FileText, Heart, Bell, Shield, 
-  Settings, ChevronRight, User, Calendar, TrendingUp, Award,
-  Moon, Smartphone, HelpCircle, MessageSquare, Lock, Globe,
-  ArrowRight, ShieldCheck, Crown, Fingerprint, Copy, Sparkles, Stethoscope, Loader2
-} from 'lucide-react';
 
 export default function ProfilePageRedesigned() {
   const { user, profile, signOut, refreshProfile, signInWithUsername } = useAuth();
@@ -150,7 +149,7 @@ export default function ProfilePageRedesigned() {
         { icon: Stethoscope, label: '对接医生', value: '专业专家问诊', color: 'text-rose-600', bgColor: 'bg-rose-50', onClick: () => navigate('/profile/connect-doctor') },
         { icon: Crown, label: '会员订阅', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
         { icon: ShieldCheck, label: '隐私安全', value: '账号安全加固', color: 'text-emerald-600', bgColor: 'bg-emerald-50', onClick: () => navigate('/profile/privacy') },
-        { icon: HelpCircle, label: '关于我们', color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => navigate('/profile/about') },
+        { icon: HelpCircle, label: '关于我们', value: '版本v1.0',color: 'text-slate-600', bgColor: 'bg-slate-50', onClick: () => navigate('/profile/about') },
         {
           icon: Settings,
           label: profile?.role === 'doctor' || profile?.role === 'admin' ? '医生后台' : '医生后台登录',
@@ -220,7 +219,7 @@ export default function ProfilePageRedesigned() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-100 via-pink-100 to-rose-200 border border-rose-200"
+          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-50 via-pink-100 to-rose-200 ring-1 ring-rose-200/60 shadow-rose-100"
           onClick={() => {
             if (reportLoading) return;
             setReportLoading(true);
@@ -231,18 +230,18 @@ export default function ProfilePageRedesigned() {
           }}
         >
           <div className="absolute inset-0">
-            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-rose-300/40 blur-3xl" />
-            <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-pink-300/30 blur-2xl" />
+            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-rose-300/30 blur-3xl" />
+            <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-pink-300/25 blur-2xl" />
           </div>
           <div className="flex justify-between items-center relative z-10">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-rose-900 font-black text-lg">查看健康报告</span>
+                <span className="text-rose-900 font-black text-lg drop-shadow-sm">查看健康报告</span>
               </div>
               <p className="text-rose-700/80 text-xs mt-1">多模态评估结果与康复建议</p>
             </div>
             <Button 
-              className="bg-rose-500 hover:bg-rose-600 text-white rounded-full text-[10px] font-black h-7 px-3 disabled:opacity-60"
+              className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white rounded-full text-[10px] font-black h-7 px-3 shadow-md shadow-rose-200 transition-all active:scale-95 disabled:opacity-60"
               onClick={(e) => {
                 e.stopPropagation();
                 if (reportLoading) return;

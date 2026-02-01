@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { createEmotionDiary, getEmotionDiaries, updateEmotionDiary, speechRecognition } from '@/db/api';
-import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Plus, Smile, Loader2, Mic, Image as ImageIcon, X, Trash2, Edit2, Check, StopCircle, Sparkles, Cloud, Sun, CloudRain, Wind } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
+import { addMonths, eachDayOfInterval, endOfMonth, format, isSameDay, startOfMonth, subMonths } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import { convertWebmToWav, blobToBase64 } from '@/utils/audio';
-import type { EmotionDiary, EmotionLevel } from '@/types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Check, ChevronLeft, ChevronRight, Cloud, CloudRain, Edit2, Image as ImageIcon, Loader2, Mic, Plus, Smile, Sparkles, StopCircle, Sun, Trash2, Wind, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import MoodFeedbackOverlay, { MoodFeedbackType } from '@/components/record/MoodFeedbackOverlay';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
+import { createEmotionDiary, getEmotionDiaries, speechRecognition, updateEmotionDiary } from '@/db/api';
+import type { EmotionDiary, EmotionLevel } from '@/types';
+import { blobToBase64, convertWebmToWav } from '@/utils/audio';
 
 const EMOTIONS = [
   { level: 'very_good' as EmotionLevel, label: '极好', emoji: '😄', color: 'bg-gradient-to-br from-success/20 to-success/10 text-success border-success/30 hover:border-success/50 hover:shadow-success-glow' },

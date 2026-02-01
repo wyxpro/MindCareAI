@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Gamepad2, ClipboardList, Info, ChevronRight, 
-  Sparkles, Moon, Brain, Users, LineChart, 
-  Heart, Star, Zap, Coffee
+  Info
 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getEmotionDiaries } from '@/db/api';
 import EmotionAvatar from '@/components/home/EmotionAvatar';
 
 export default function HomePage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [currentEmotion, setCurrentEmotion] = useState<'very_good' | 'good' | 'neutral' | 'bad' | 'very_bad'>('neutral');
-  const [moodIndex, setMoodIndex] = useState<number | string>('--');
 
   useEffect(() => {
     if (user) {
@@ -31,26 +26,10 @@ export default function HomePage() {
       if (diaries && diaries.length > 0) {
         const latest = diaries[0];
         setCurrentEmotion(latest.emotion_level as any);
-        
-        // 计算模拟指数
-        const scoreMap = { very_good: 95, good: 80, neutral: 60, bad: 40, very_bad: 20 };
-        setMoodIndex(scoreMap[latest.emotion_level as keyof typeof scoreMap] || 60);
       }
     } catch (error) {
       setCurrentEmotion('neutral');
-      setMoodIndex('--');
     }
-  };
-
-  const getTitle = () => {
-    const titles = {
-      very_good: '元气满满 ✨',
-      good: '状态不错 🍀',
-      neutral: '蓄势待发 ☁️',
-      bad: '需要抱抱 💧',
-      very_bad: '火山预警 💢'
-    };
-    return titles[currentEmotion] || titles.neutral;
   };
 
   const miniGames = [
@@ -118,27 +97,26 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24">
-      {/* 顶部标题栏 */}
-      <div className="px-6 pt-12 text-center space-y-2">
-        <motion.h1 
-          key={getTitle()}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-2"
-        >
-          {getTitle()}
-          <ChevronRight className="w-6 h-6 text-slate-300" />
-        </motion.h1>
-        <div className="flex items-center justify-center gap-1 text-slate-400 text-sm font-medium">
-          <span>心情指数:</span>
-          <span className="text-slate-600 dark:text-slate-200 font-bold">{moodIndex}</span>
-          <Info className="w-3 h-3 cursor-help" />
+      {/* 核心 3D 情绪 Avatar 和心情指数 */}
+      <section className="pt-16 pb-8 relative overflow-hidden">
+        <div className="flex items-center justify-center gap-6 max-w-sm mx-auto px-4">
+          {/* 3D Avatar */}
+          <div className="flex-shrink-0">
+            <EmotionAvatar emotion={currentEmotion} />
+          </div>
+          
+          {/* 心情指数信息 */}
+          <div className="flex flex-col items-start space-y-3">
+            <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
+              状态不错
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">心情指数:</span>
+              <span className="text-3xl font-black text-slate-800 dark:text-slate-100">86</span>
+              <Info className="w-4 h-4 cursor-help text-slate-400 hover:text-slate-600 transition-colors" />
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* 核心 3D 情绪 Avatar */}
-      <section className="py-8 relative overflow-hidden">
-        <EmotionAvatar emotion={currentEmotion} />
       </section>
 
       <div className="max-w-md mx-auto px-4 space-y-8">
@@ -148,7 +126,7 @@ export default function HomePage() {
             解压小游戏
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            {miniGames.map((game, idx) => (
+            {miniGames.map((game) => (
               <motion.div
                 key={game.title}
                 whileHover={{ scale: 1.02 }}
@@ -181,7 +159,7 @@ export default function HomePage() {
             趣味测评
           </h2>
           <div className="space-y-3">
-            {funAssessments.map((assessment, idx) => (
+            {funAssessments.map((assessment) => (
               <motion.div
                 key={assessment.title}
                 whileHover={{ x: 5 }}

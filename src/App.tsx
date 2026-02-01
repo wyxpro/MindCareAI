@@ -1,11 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import routes from './routes';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { RouteGuard } from '@/components/common/RouteGuard';
-import { Toaster } from '@/components/ui/sonner';
-import UserLayout from '@/components/layouts/UserLayout';
-import DoctorLayout from '@/components/layouts/DoctorLayout';
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { RouteGuard } from '@/components/common/RouteGuard';
+import DoctorLayout from '@/components/layouts/DoctorLayout';
+import UserLayout from '@/components/layouts/UserLayout';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/contexts/AuthContext';
+import routes from './routes';
 
 // 布局包装器组件
 const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {

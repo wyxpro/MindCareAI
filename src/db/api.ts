@@ -1,20 +1,21 @@
 // Supabase API封装
-import { supabase } from './supabase';
+
 import type {
-  Profile,
-  EmotionDiary,
   Assessment,
-  WearableData,
-  HealingContent,
-  UserHealingRecord,
-  CommunityPost,
-  CommunityComment,
-  DoctorPatient,
-  RiskAlert,
-  KnowledgeBase,
   ChatMessage,
+  CommunityComment,
+  CommunityPost,
+  DoctorPatient,
+  EmotionDiary,
+  HealingContent,
+  KnowledgeBase,
   MultimodalMessage,
+  Profile,
+  RiskAlert,
+  UserHealingRecord,
+  WearableData,
 } from '@/types';
+import { supabase } from './supabase';
 
 // ==================== 用户档案 ====================
 export const getProfile = async (userId: string) => {

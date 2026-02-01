@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Sparkles, Send, Eye, MessageSquare, ArrowRight, X, Droplets, Leaf } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, Droplets, Eye, Heart, Leaf, MessageSquare, Send, Sparkles, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export type MoodFeedbackType = 'giver' | 'receiver' | 'observer' | null;
 

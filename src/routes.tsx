@@ -1,20 +1,21 @@
-import HomePage from './pages/HomePage';
-import RecordPageNew from './pages/RecordPageNew';
+import type { ReactNode } from 'react';
+import AboutUsPage from './pages/AboutUsPage';
+import ConnectDoctorPage from './pages/ConnectDoctorPage';
+import DoctorAlertsPage from './pages/doctor/AlertsPage';
+import DoctorDashboardPage from './pages/doctor/DashboardPage';
+import DoctorKnowledgePage from './pages/doctor/KnowledgePage';
+import DoctorPatientsPage from './pages/doctor/PatientsPage';
 import EnhancedAssessmentPage from './pages/EnhancedAssessmentPage';
 import HealingPageNew from './pages/HealingPageNew';
-import ProfilePageRedesigned from './pages/ProfilePageRedesigned';
+import HealingPlanPage from './pages/HealingPlanPage';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import PersonalInfoPage from './pages/PersonalInfoPage';
 import PrivacySettingsPage from './pages/PrivacySettingsPage';
+import ProfilePageRedesigned from './pages/ProfilePageRedesigned';
+import RecordPageNew from './pages/RecordPageNew';
 import SubscriptionPage from './pages/SubscriptionPage';
-import HealingPlanPage from './pages/HealingPlanPage';
-import ConnectDoctorPage from './pages/ConnectDoctorPage';
-import AboutUsPage from './pages/AboutUsPage';
-import DoctorDashboardPage from './pages/doctor/DashboardPage';
-import DoctorPatientsPage from './pages/doctor/PatientsPage';
-import DoctorKnowledgePage from './pages/doctor/KnowledgePage';
-import DoctorAlertsPage from './pages/doctor/AlertsPage';
-import type { ReactNode } from 'react';
+import VoiceTest from './components/test/VoiceTest';
 
 interface RouteConfig {
   name: string;
@@ -91,6 +92,13 @@ const routes: RouteConfig[] = [
     name: '登录',
     path: '/login',
     element: <LoginPage />,
+    visible: false,
+  },
+  // 测试路由
+  {
+    name: '语音测试',
+    path: '/test/voice',
+    element: <VoiceTest />,
     visible: false,
   },
   // 医生后台路由

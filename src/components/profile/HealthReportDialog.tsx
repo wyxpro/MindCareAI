@@ -1,27 +1,27 @@
-import React, { useRef, useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { 
-  Download, Share2, TrendingUp, Heart, Shield, Activity, 
-  ChevronRight, FileText, Sparkles, Loader2, Calendar,
-  PieChart, BarChart3, LineChart, Check, X, Droplets, Zap, Moon
-} from 'lucide-react';
-import { 
-  ResponsiveContainer, RadarChart, PolarGrid, 
-  PolarAngleAxis, PolarRadiusAxis, Radar,
-  LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  BarChart, Bar, Cell
-} from 'recharts';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import html2canvas from 'html2canvas';
+import { Activity, BarChart3, Calendar,Check, 
+  ChevronRight, 
+  Download, Droplets, FileText, Heart, LineChart, Loader2, Moon, 
+  PieChart, Share2, Shield, Sparkles, TrendingUp, X, Zap 
+} from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bar, 
+  BarChart, CartesianGrid, Cell, Line, 
+  PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar,RadarChart, 
+  LineChart as ReLineChart, 
+  ResponsiveContainer, Tooltip as ReTooltip,XAxis, YAxis 
+} from 'recharts';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAssessments, getEmotionDiaries } from '@/db/api';
 import type { Assessment, EmotionDiary } from '@/types';

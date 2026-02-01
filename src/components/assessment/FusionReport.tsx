@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, TrendingUp, History, Download, Printer, Share2, 
-  ChevronDown, ChevronUp, ChevronRight, AlertCircle, CheckCircle2, 
-  BarChart3, Brain, Mic, Video, ClipboardList, Calendar, Search, Filter
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, 
+  BarChart3, Brain, Calendar, CheckCircle2, 
+  ChevronDown, ChevronRight, ChevronUp, ClipboardList, Download, 
+  FileText, Filter, History, Mic, Printer, Search, Share2, TrendingUp, Video 
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
 
 interface FusionReportProps {
   scaleData: any;

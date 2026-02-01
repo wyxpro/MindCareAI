@@ -1,6 +1,6 @@
+import {type SupabaseClient} from '@supabase/supabase-js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { type FileError, type FileRejection, useDropzone } from 'react-dropzone'
-import {type SupabaseClient} from '@supabase/supabase-js'
 
 interface FileWithPreview extends File {
   preview?: string

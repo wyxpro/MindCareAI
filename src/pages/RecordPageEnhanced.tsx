@@ -1,21 +1,21 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
-import { 
-  getEmotionDiaries, 
-  createEmotionDiary, 
-  updateEmotionDiary,
-  deleteEmotionDiary 
-} from '@/db/api';
-import { toast } from 'sonner';
-import { Calendar as CalendarIcon, BookOpen } from 'lucide-react';
-import type { EmotionDiary, EmotionLevel } from '@/types';
 import { zhCN } from 'date-fns/locale';
-import QuickNote from '@/components/record/QuickNote';
+import { BookOpen, Calendar as CalendarIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import NoteDetailDialog from '@/components/record/NoteDetailDialog';
+import QuickNote from '@/components/record/QuickNote';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  createEmotionDiary, 
+  deleteEmotionDiary, 
+  getEmotionDiaries, 
+  updateEmotionDiary
+} from '@/db/api';
+import type { EmotionDiary, EmotionLevel } from '@/types';
 
 export default function RecordPageEnhanced() {
   const { user } = useAuth();

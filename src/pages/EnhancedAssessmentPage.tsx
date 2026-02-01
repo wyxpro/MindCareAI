@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import StepNavigation, { AssessmentStep } from '@/components/assessment/StepNavigation';
-import ScaleStep from '@/components/assessment/ScaleStep';
-import VoiceStep from '@/components/assessment/VoiceStep';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ExpressionStep from '@/components/assessment/ExpressionStep';
 import FusionReport from '@/components/assessment/FusionReport';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import ScaleStep from '@/components/assessment/ScaleStep';
+import StepNavigation, { AssessmentStep } from '@/components/assessment/StepNavigation';
+import VoiceStep from '@/components/assessment/VoiceStep';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function EnhancedAssessmentPage() {
   const { user } = useAuth();

@@ -1,5 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface EmotionAvatarProps {
   emotion: 'very_good' | 'good' | 'neutral' | 'bad' | 'very_bad';
@@ -48,7 +48,7 @@ export default function EmotionAvatar({ emotion }: EmotionAvatarProps) {
   const config = emotionConfig[emotion] || emotionConfig.neutral;
 
   return (
-    <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+    <div className="relative w-32 h-32 flex items-center justify-center">
       {/* 背景光晕 */}
       <motion.div
         animate={{
@@ -60,30 +60,30 @@ export default function EmotionAvatar({ emotion }: EmotionAvatarProps) {
           repeat: Infinity,
           ease: "easeInOut"
         }}
-        className={`absolute inset-0 rounded-full blur-3xl bg-gradient-to-tr ${config.color} opacity-30`}
+        className={`absolute inset-0 rounded-full blur-2xl bg-gradient-to-tr ${config.color} opacity-30`}
       />
 
       {/* 3D 球体主体 */}
       <motion.div
         whileHover={{ scale: 1.05, rotate: 5 }}
-        className={`relative w-40 h-40 rounded-full bg-gradient-to-tr ${config.color} shadow-2xl flex flex-col items-center justify-center overflow-hidden border-b-4 border-black/10`}
+        className={`relative w-28 h-28 rounded-full bg-gradient-to-tr ${config.color} shadow-2xl flex flex-col items-center justify-center overflow-hidden border-b-4 border-black/10`}
       >
         {/* 高光 */}
-        <div className="absolute top-4 left-8 w-12 h-6 bg-white/30 rounded-full blur-sm rotate-[-20deg]" />
+        <div className="absolute top-3 left-6 w-8 h-4 bg-white/30 rounded-full blur-sm rotate-[-20deg]" />
         
         {/* 眼睛 */}
-        <div className="flex gap-8 mb-2">
+        <div className="flex gap-6 mb-1">
           <motion.div 
             animate={emotion === 'neutral' ? { scaleY: [1, 0.2, 1] } : {}}
             transition={{ duration: 3, repeat: Infinity, times: [0, 0.1, 0.2] }}
-            className="w-4 h-4 flex items-center justify-center text-2xl font-bold text-slate-800/80"
+            className="w-3 h-3 flex items-center justify-center text-lg font-bold text-slate-800/80"
           >
             {config.eyes[0]}
           </motion.div>
           <motion.div 
             animate={emotion === 'neutral' ? { scaleY: [1, 0.2, 1] } : {}}
             transition={{ duration: 3, repeat: Infinity, times: [0, 0.1, 0.2] }}
-            className="w-4 h-4 flex items-center justify-center text-2xl font-bold text-slate-800/80"
+            className="w-3 h-3 flex items-center justify-center text-lg font-bold text-slate-800/80"
           >
             {config.eyes[1]}
           </motion.div>
@@ -95,23 +95,23 @@ export default function EmotionAvatar({ emotion }: EmotionAvatarProps) {
           transition={{ duration: 2, repeat: Infinity }}
         >
           {config.mouth === 'smile' && (
-            <div className="w-8 h-4 border-b-4 border-slate-800/80 rounded-full" />
+            <div className="w-6 h-3 border-b-3 border-slate-800/80 rounded-full" />
           )}
           {config.mouth === 'neutral' && (
-            <div className="w-6 h-1 bg-slate-800/80 rounded-full" />
+            <div className="w-4 h-1 bg-slate-800/80 rounded-full" />
           )}
           {config.mouth === 'sad' && (
-            <div className="w-8 h-4 border-t-4 border-slate-800/80 rounded-full mt-4" />
+            <div className="w-6 h-3 border-t-3 border-slate-800/80 rounded-full mt-3" />
           )}
           {config.mouth === 'angry' && (
-            <div className="w-8 h-2 bg-slate-800/80 rounded-sm" />
+            <div className="w-6 h-1 bg-slate-800/80 rounded-sm" />
           )}
         </motion.div>
 
         {/* 腮红 */}
-        <div className="absolute inset-x-0 bottom-10 flex justify-between px-8 opacity-40">
-          <div className="w-4 h-2 bg-pink-400 rounded-full blur-[2px]" />
-          <div className="w-4 h-2 bg-pink-400 rounded-full blur-[2px]" />
+        <div className="absolute inset-x-0 bottom-6 flex justify-between px-6 opacity-40">
+          <div className="w-3 h-1 bg-pink-400 rounded-full blur-[1px]" />
+          <div className="w-3 h-1 bg-pink-400 rounded-full blur-[1px]" />
         </div>
       </motion.div>
 
@@ -120,7 +120,7 @@ export default function EmotionAvatar({ emotion }: EmotionAvatarProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-4 -right-4 text-4xl"
+          className="absolute -top-2 -right-2 text-2xl"
         >
           {config.decoration}
         </motion.div>
@@ -128,18 +128,18 @@ export default function EmotionAvatar({ emotion }: EmotionAvatarProps) {
 
       {/* 睡眠气泡 (针对中性/无聊情绪) */}
       {emotion === 'neutral' && (
-        <div className="absolute -top-8 -left-4 space-y-[-10px]">
+        <div className="absolute -top-6 -left-3 space-y-[-8px]">
           <motion.span
-            animate={{ y: [-10, -30], x: [0, 10], opacity: [0, 1, 0] }}
+            animate={{ y: [-8, -24], x: [0, 8], opacity: [0, 1, 0] }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="block text-2xl font-bold text-purple-400"
+            className="block text-lg font-bold text-purple-400"
           >
             Z
           </motion.span>
           <motion.span
-            animate={{ y: [-10, -30], x: [0, 15], opacity: [0, 1, 0] }}
+            animate={{ y: [-8, -24], x: [0, 12], opacity: [0, 1, 0] }}
             transition={{ duration: 3, repeat: Infinity, delay: 1 }}
-            className="block text-xl font-bold text-purple-300"
+            className="block text-sm font-bold text-purple-300"
           >
             z
           </motion.span>
