@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
+import { StepFunFilesService } from './stepfun-files.service';
 
 /**
  * AI 服务模块
@@ -10,7 +11,7 @@ import { AiService } from './ai.service';
 @Module({
   imports: [ConfigModule],
   controllers: [AiController],
-  providers: [AiService],
-  exports: [AiService],
+  providers: [AiService, StepFunFilesService],
+  exports: [AiService, StepFunFilesService],
 })
 export class AiModule {}

@@ -218,10 +218,16 @@ export interface MultimodalData {
 }
 
 export interface MultimodalContent {
-  type: 'text' | 'image_url';
+  type: 'text' | 'image_url' | 'video_url' | 'input_audio';
   text?: string;
   image_url?: {
     url: string;
+  };
+  video_url?: {
+    url: string;
+  };
+  input_audio?: {
+    data: string;
   };
 }
 

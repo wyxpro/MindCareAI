@@ -1,38 +1,64 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, StopCircle, Upload, Play, Info, Check, Download, ChevronRight, Activity, BarChart3, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Mic, StopCircle, Upload, Info, Check, Activity, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { speechRecognition, chatCompletion } from '@/db/api';
-import { convertWebmToWav } from '@/utils/audio';
+import { audioEmotionAnalysis } from '@/db/api';
+
+// 常量定义
+const MAX_DURATION = 10;
+const WAVEFORM_BARS = 40;
+const FFT_SIZE = 256;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 interface VoiceStepProps {
-  onComplete: (data: any) => void;
+  onComplete: (data: VoiceStepData) => void;
 }
 
 interface VoiceStepData {
   duration: number;
   audioBlob?: Blob;
-  recognizedText?: string;
   emotionAnalysis?: string;
+  recognizedText?: string;
+  emotionType?: 'positive' | 'negative' | 'neutral';
   waveform?: number[];
 }
 
+/**
+ * 解析 AI 返回的分析结果，提取情绪类型和可能识别的文字
+ */
+function parseAnalysisResult(analysis: string): {
+  emotionType: 'positive' | 'negative' | 'neutral';
+  recognizedText?: string;
+} {
+  const text = analysis.toLowerCase();
+
+  // 判断情绪类型
+  if (text.includes('积极') || text.includes('正面') || text.includes('乐观') ||
+      text.includes('开心') || text.includes('愉悦') || text.includes('平静') && !text.includes('焦虑')) {
+    return { emotionType: 'positive' };
+  }
+  if (text.includes('消极') || text.includes('负面') || text.includes('焦虑') ||
+      text.includes('抑郁') || text.includes('压力') || text.includes('悲伤')) {
+    return { emotionType: 'negative' };
+  }
+  return { emotionType: 'neutral' };
+}
+
 export default function VoiceStep({ onComplete }: VoiceStepProps) {
-  const MAX_DURATION = 10;
   const [isRecording, setIsRecording] = useState(false);
   const [duration, setDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const [waveform, setWaveform] = useState<number[]>(Array(40).fill(5));
+  const [waveform, setWaveform] = useState<number[]>(Array(WAVEFORM_BARS).fill(5));
   const [emotionTrend, setEmotionTrend] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
-  const [recognizedText, setRecognizedText] = useState('');
   const [emotionAnalysis, setEmotionAnalysis] = useState('');
+  const [emotionType, setEmotionType] = useState<'positive' | 'negative' | 'neutral'>('neutral');
+  const [recognizedText, setRecognizedText] = useState<string | undefined>(undefined);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -41,15 +67,51 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
   const animationFrameRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // 清理资源
   useEffect(() => {
     return () => {
-      stopRecording();
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-      // 清理音频流
+      // 停止录音
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      // 清理定时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      // 取消动画帧
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      // 停止音频流
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
+  }, []);
+
+  // 情绪类型显示文本
+  const emotionTypeLabel = useMemo(() => {
+    if (emotionType === 'positive') return '积极';
+    if (emotionType === 'negative') return '消极';
+    return '中性';
+  }, [emotionType]);
+
+  // 处理分析结果（提取重复代码）
+  const handleAnalysisResult = useCallback((result: { recognizedText?: string; text?: string; emotionAnalysis?: string; analysis?: string }) => {
+    setRecognizedText(result.recognizedText || result.text || '');
+    setEmotionAnalysis(result.emotionAnalysis || result.analysis || '语音情绪分析完成。');
+    const parsed = parseAnalysisResult(result.emotionAnalysis || result.analysis || '');
+    setEmotionType(parsed.emotionType);
+    setShowReport(true);
+  }, []);
+
+  // 获取文件扩展名
+  const getFileExtension = useCallback((mimeType: string): string => {
+    if (mimeType.includes('webm')) return 'webm';
+    if (mimeType.includes('wav')) return 'wav';
+    if (mimeType.includes('m4a')) return 'm4a';
+    if (mimeType.includes('mp3')) return 'mp3';
+    return 'webm';
   }, []);
 
   const startRecording = async () => {
@@ -84,7 +146,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       const audioContext = new AudioContext();
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
+      analyser.fftSize = FFT_SIZE;
       source.connect(analyser);
       analyserRef.current = analyser;
 
@@ -111,14 +173,17 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       mediaRecorder.start(1000); // 每秒触发一次 ondataavailable
       setIsRecording(true);
       setDuration(0);
-      setRecognizedText('');
       setEmotionAnalysis('');
+      setEmotionType('neutral');
+      setRecognizedText(undefined);
 
       // 录音计时
       timerRef.current = setInterval(() => {
         setDuration(prev => {
           if (prev >= MAX_DURATION) {
-            stopRecording();
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+              mediaRecorderRef.current.stop();
+            }
           }
           return prev + 1;
         });
@@ -134,24 +199,28 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      clearInterval(timerRef.current!);
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     }
-  };
+  }, [isRecording]);
 
-  const updateWaveform = () => {
+  const updateWaveform = useCallback(() => {
     if (!analyserRef.current) return;
 
     try {
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       analyserRef.current.getByteFrequencyData(dataArray);
 
-      // 取前40个频率的平均值作为波形高度
-      const newWave = Array.from(dataArray.slice(0, 40)).map(v => Math.max(5, v / 4));
+      // 取前 WAVEFORM_BARS 个频率的平均值作为波形高度
+      const newWave = Array.from(dataArray.slice(0, WAVEFORM_BARS)).map(v => Math.max(5, v / 4));
       setWaveform(newWave);
 
       // 模拟情绪波动数据
@@ -163,126 +232,59 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
     } catch (e) {
       // 忽略音频上下文已关闭的错误
     }
-  };
+  }, []);
 
-  // 处理录音：转换为 WAV 并调用后端 API
-  const processRecording = async (blob: Blob) => {
+  // 处理录音：使用后端 API 进行语音识别 + 情绪分析
+  const processRecording = useCallback(async (blob: Blob) => {
     setLoading(true);
-    toast.info('正在处理录音...');
+    toast.info('正在分析语音情绪...');
 
     try {
-      // 转换为 WAV 格式
-      const wavBlob = await convertWebmToWav(blob);
-
-      // 调用后端语音识别 API
-      const result = await speechRecognition(wavBlob, 'wav', 'zh');
-
-      if (result?.text) {
-        setRecognizedText(result.text);
-
-        // 调用 AI 分析语音内容的情绪
-        try {
-          const analysisResponse = await chatCompletion([
-            {
-              role: 'system',
-              content: `你是灵愈AI心理助手，正在分析用户的语音情绪。
-
-请分析以下语音识别文本中的情绪状态，并给出专业评估：
-"${result.text}"
-
-请从以下维度评估：
-1. 整体情绪倾向（积极/消极/中性）
-2. 是否有焦虑、抑郁、压力等负面情绪的迹象
-3. 语气和措辞反映的心理状态
-
-请用简练、专业的语言总结（100字以内），给出建设性的反馈。`
-            },
-          ]);
-
-          const analysis = analysisResponse?.choices?.[0]?.message?.content ||
-                          analysisResponse?.choices?.[0]?.delta?.content ||
-                          '语音内容情绪分析：内容表达清晰，情绪状态相对平稳。';
-
-          setEmotionAnalysis(analysis);
-        } catch (aiError) {
-          console.error('情绪分析失败:', aiError);
-          setEmotionAnalysis('语音识别成功，但情绪分析暂时不可用。从内容来看，表达较为平和。');
-        }
-
-        setShowReport(true);
-      } else {
-        throw new Error('语音识别失败，未返回文本结果');
-      }
-    } catch (error) {
-      console.error('处理录音失败:', error);
-      toast.error('语音处理失败，请重试或尝试上传音频文件');
+      const mimeType = blob.type || 'audio/webm';
+      const ext = getFileExtension(mimeType);
+      const result = await audioEmotionAnalysis(blob, `recording.${ext}`);
+      handleAnalysisResult(result);
+    } catch (error: any) {
+      console.error('语音情绪分析失败:', error);
+      toast.error(error.message || '语音情绪分析失败，请重试');
+      setEmotionAnalysis('语音情绪分析暂时不可用，请稍后再试。');
+      setShowReport(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getFileExtension, handleAnalysisResult]);
 
   // 上传音频文件处理
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       toast.error('音频文件大小不能超过 10MB');
       return;
     }
 
     setLoading(true);
-    toast.info('正在处理音频文件...');
+    toast.info('正在分析音频文件情绪...');
 
     try {
-      const wavBlob = file.type.includes('wav') ? file : await convertWebmToWav(file);
-
-      const result = await speechRecognition(wavBlob, 'wav', 'zh');
-
-      if (result?.text) {
-        setRecognizedText(result.text);
-
-        // 调用 AI 分析情绪
-        try {
-          const analysisResponse = await chatCompletion([
-            {
-              role: 'system',
-              content: `你是灵愈AI心理助手，正在分析用户上传的音频内容。
-
-语音识别内容："${result.text}"
-
-请分析用户的情绪状态，给出专业评估（100字以内）。`
-            },
-          ]);
-
-          const analysis = analysisResponse?.choices?.[0]?.message?.content ||
-                          analysisResponse?.choices?.[0]?.delta?.content ||
-                          '音频内容分析完成。';
-
-          setEmotionAnalysis(analysis);
-        } catch (aiError) {
-          console.error('情绪分析失败:', aiError);
-          setEmotionAnalysis('语音识别成功，情绪分析暂时不可用。');
-        }
-
-        setShowReport(true);
-      } else {
-        throw new Error('语音识别失败');
-      }
-    } catch (error) {
+      const result = await audioEmotionAnalysis(file, file.name);
+      handleAnalysisResult(result);
+    } catch (error: any) {
       console.error('文件上传处理失败:', error);
-      toast.error('音频处理失败，请重试');
+      toast.error(error.message || '音频情绪分析失败，请重试');
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleAnalysisResult]);
 
   const handleComplete = () => {
     const data: VoiceStepData = {
       duration,
       audioBlob: audioBlob || undefined,
-      recognizedText,
       emotionAnalysis,
+      emotionType,
+      recognizedText,
       waveform,
     };
     onComplete(data);
@@ -298,8 +300,8 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
             <Mic className={`w-10 h-10 ${isRecording ? 'text-rose-500 animate-pulse' : 'text-primary'}`} />
           )}
         </div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">语音情绪识别</h2>
-        <p className="text-slate-500 text-sm">请朗读一段文字或随意诉说 10 秒，系统将分析您的语速、音调及情绪。</p>
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white">语音情绪分析</h2>
+        <p className="text-slate-500 text-sm">请随意诉说 10 秒，AI 将直接分析您的语调、情绪及心理特征。</p>
       </div>
 
       {/* 状态面板 */}
@@ -309,7 +311,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
           <div className="h-24 flex items-center justify-center gap-1">
             {waveform.map((h, i) => (
               <motion.div
-                key={i}
+                key={`wave-${i}`}
                 animate={{ height: isRecording ? h : 5 }}
                 transition={{ duration: 0.1 }}
                 className="w-1 bg-primary/40 rounded-full"
@@ -372,43 +374,49 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       <div className="p-4 bg-primary/5 rounded-2xl flex gap-3 items-start">
         <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <p className="text-xs text-primary/70 leading-relaxed font-medium">
-          提示：请在安静环境下录音。系统会自动识别语音内容并分析情绪特征。支持 wav/m4a/mp3 格式，最大 10MB。
+          提示：请在安静环境下录音。AI 将直接分析您的语音情绪和语调特征，无需预先转文字。支持 wav/m4a/mp3 格式，最大 10MB。
         </p>
       </div>
 
       {/* 报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
         <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-8 text-center text-white space-y-4">
+          <div className={`bg-gradient-to-br p-8 text-center text-white space-y-4 ${
+            emotionType === 'positive' ? 'from-emerald-500 to-teal-600' :
+            emotionType === 'negative' ? 'from-rose-500 to-pink-600' :
+            'from-indigo-600 to-purple-600'
+          }`}>
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-md">
-              <Activity className="w-10 h-10" />
+              <Sparkles className="w-10 h-10" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-2xl font-black">语音识别完成</h2>
-              <p className="text-white/70 text-sm">AI 语音识别与情绪分析</p>
+              <h2 className="text-2xl font-black">语音情绪分析完成</h2>
+              <p className="text-white/70 text-sm">AI 多模态语音情绪与心理特征分析</p>
             </div>
           </div>
 
           <div className="p-8 space-y-6 bg-white dark:bg-slate-950">
-            {/* 识别文本 */}
-            <div className="space-y-2">
+            {/* 情绪分析 - 主要内容 */}
+            <div className="space-y-3">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-500" /> 识别内容
+                <Activity className="w-4 h-4 text-indigo-500" /> 情绪分析
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900 p-3 rounded-xl">
-                {recognizedText || '未识别到语音内容'}
-              </p>
-            </div>
-
-            {/* 情绪分析 */}
-            <div className="space-y-2">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-indigo-500" /> 情绪分析
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900 p-3 rounded-xl">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900 p-4 rounded-xl">
                 {emotionAnalysis || '分析中...'}
               </p>
             </div>
+
+            {/* 识别文本 - 可选显示（仅当 AI 提供了文字时显示） */}
+            {recognizedText && (
+              <div className="space-y-2">
+                <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" /> 语音内容
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900 p-3 rounded-xl">
+                  {recognizedText}
+                </p>
+              </div>
+            )}
 
             {/* 数据统计 */}
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -417,8 +425,14 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                 <p className="font-bold text-slate-700 dark:text-slate-200">{duration} 秒</p>
               </div>
               <div className="space-y-1">
-                <p className="text-slate-400 text-xs">采样率</p>
-                <p className="font-bold text-slate-700 dark:text-slate-200">16 kHz</p>
+                <p className="text-slate-400 text-xs">情绪状态</p>
+                <p className={`font-bold ${
+                  emotionType === 'positive' ? 'text-emerald-600 dark:text-emerald-400' :
+                  emotionType === 'negative' ? 'text-rose-600 dark:text-rose-400' :
+                  'text-indigo-600 dark:text-indigo-400'
+                }`}>
+                  {emotionTypeLabel}
+                </p>
               </div>
             </div>
 

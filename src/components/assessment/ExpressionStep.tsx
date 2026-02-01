@@ -1,15 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, StopCircle, RefreshCcw, Info, Check, Download, Video, Shield, ScanFace, Activity, Maximize } from 'lucide-react';
+import { Camera, StopCircle, RefreshCcw, Info, Check, Download, Video, Shield, ScanFace, Activity, Maximize, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { multimodalAnalysis, uploadFile } from '@/db/api';
+import { imageToBase64 } from '@/utils/audio';
 
 interface ExpressionStepProps {
   onComplete: (data: any) => void;
+}
+
+interface ExpressionStepData {
+  capturedImageUrl?: string;
+  uploadedImageUrl?: string;  // 上传后的图片 URL
+  emotionAnalysis?: string;
+  detectedEmotion?: string;
+  confidence?: number;
+  radarData?: Record<string, number>;
 }
 
 export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
@@ -19,17 +30,23 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const [countdown, setCountdown] = useState(DETECT_DURATION);
   const [fps, setFps] = useState(0);
   const [showReport, setShowReport] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [noFaceCount, setNoFaceCount] = useState(0);
   const [currentEmotion, setCurrentEmotion] = useState('中性');
-  const [confidence, setConfidence] = useState(0.62);
-  const [microSignals, setMicroSignals] = useState({ brow: 0.12, mouthDown: 0.08, blink: 0.32 });
+  const [confidence, setConfidence] = useState(0);
+  const [microSignals, setMicroSignals] = useState({ brow: 0, mouthDown: 0, blink: 0 });
+  const [analysisResult, setAnalysisResult] = useState('');
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
-  
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTimeRef = useRef<number>(performance.now());
   const analysisRef = useRef<NodeJS.Timeout | null>(null);
+  const captureFrameRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     startCamera();
@@ -38,14 +55,15 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
       }
-      // FPS
+
+      // FPS 计算
       const updateFps = () => {
         const now = performance.now();
         const delta = Math.max(1, now - lastTimeRef.current);
@@ -56,6 +74,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       };
       updateFps();
     } catch (error) {
+      console.error('摄像头启动失败:', error);
       toast.error('无法启动摄像头，请授予权限');
     }
   };
@@ -63,23 +82,56 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const stopCamera = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (analysisRef.current) clearInterval(analysisRef.current);
+    if (captureFrameRef.current) clearTimeout(captureFrameRef.current);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
   };
 
+  const captureFrame = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    // 设置 canvas 尺寸与视频一致
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      toast.error('无法获取画布上下文');
+      return;
+    }
+
+    // 绘制当前帧
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // 转换为 base64
+    const base64 = canvas.toDataURL('image/jpeg', 0.9);
+    setCapturedImage(base64);
+  };
+
   const startCapture = () => {
     setIsCapturing(true);
     setCountdown(DETECT_DURATION);
     setNoFaceCount(0);
-    setConfidence(0.6);
+    setConfidence(0);
     setCurrentEmotion('中性');
-    setMicroSignals({ brow: 0.12, mouthDown: 0.08, blink: 0.32 });
+    setMicroSignals({ brow: 0, mouthDown: 0, blink: 0 });
+    setCapturedImage(null);
 
     if (analysisRef.current) clearInterval(analysisRef.current);
+
+    // 每 2 秒捕获一帧进行分析
+    captureFrameRef.current = setInterval(() => {
+      captureFrame();
+    }, 2000);
+
+    // 模拟人脸检测状态
     analysisRef.current = setInterval(() => {
-      const detected = Math.random() > 0.08;
+      const detected = Math.random() > 0.05; // 95% 的检测率
       if (!detected) {
         setNoFaceCount((c) => {
           const next = c + 1;
@@ -90,19 +142,20 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       }
       setNoFaceCount(0);
 
-      const emotions = ['中性', '高兴', '悲伤', '愤怒', '惊讶', '恐惧', '厌恶', '轻蔑', '痛苦'];
+      // 模拟检测到的情绪
+      const emotions = ['中性', '高兴', '悲伤', '焦虑', '平静', '疲惫', '惊讶'];
       const picked = emotions[Math.floor(Math.random() * emotions.length)];
       setCurrentEmotion(picked);
-      setConfidence(0.55 + Math.random() * 0.4);
+      setConfidence(0.7 + Math.random() * 0.25);
       setMicroSignals({
-        brow: Math.random() * 0.4,
-        mouthDown: Math.random() * 0.4,
-        blink: Math.random() * 0.8,
+        brow: Math.random() > 0.7 ? 1 : 0,
+        mouthDown: Math.random() > 0.7 ? 1 : 0,
+        blink: Math.random() > 0.8 ? 1 : 0,
       });
-    }, 250);
+    }, 500);
 
     timerRef.current = setInterval(() => {
-      setCountdown(prev => {
+      setCountdown((prev) => {
         if (prev <= 1) {
           handleComplete();
           return 0;
@@ -112,15 +165,111 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     }, 1000);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (analysisRef.current) clearInterval(analysisRef.current);
+    if (captureFrameRef.current) clearTimeout(captureFrameRef.current);
     setIsCapturing(false);
-    setShowReport(true);
+
+    // 捕获最后一帧
+    await captureFrame();
+
+    if (capturedImage) {
+      setLoading(true);
+      toast.info('正在分析面部表情...');
+
+      try {
+        // 上传图片到后端并进行分析
+        // 将 base64 转换为 Blob
+        const base64Data = capturedImage.split(',')[1]; // 移除 data:image/jpeg;base64, 前缀
+        const byteCharacters = atob(base64Data);
+        const byteArrays = [];
+
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+          const slice = byteCharacters.slice(offset, offset + 512);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          byteArrays.push(byteArray);
+        }
+
+        const blob = new Blob(byteArrays, { type: 'image/jpeg' });
+        const file = new File([blob], 'expression.jpg', { type: 'image/jpeg' });
+
+        // 先上传图片获取 URL
+        const uploadResult = await uploadFile(file);
+        setUploadedImageUrl(uploadResult.url);  // 保存上传后的 URL
+
+        // 调用多模态分析 API
+        const response = await multimodalAnalysis([
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: '请分析这张照片中的面部表情，识别用户的情绪状态。重点关注：' },
+              { type: 'text', text: '1. 主要情绪（如：高兴、悲伤、焦虑、平静、疲惫）' },
+              { type: 'text', text: '2. 情绪强度（低/中/高）' },
+              { type: 'text', text: '3. 是否有压力、焦虑或抑郁的微表情特征（如眉心皱纹、嘴角下垂、眼神呆滞等）' },
+              { type: 'text', text: '4. 给出专业的心理健康评估建议。' },
+              { type: 'image_url', image_url: { url: uploadResult.url } },
+            ],
+          },
+        ]);
+
+        // 解析 AI 分析结果
+        const analysis = response?.choices?.[0]?.message?.content ||
+                        response?.choices?.[0]?.delta?.content ||
+                        '表情分析完成';
+
+        setAnalysisResult(analysis);
+
+        // 从分析结果中提取结构化信息（如果可能的话）
+        if (analysis) {
+          // 尝试提取情绪关键词
+          const emotionMap: Record<string, string> = {
+            '高兴': '高兴', '积极': '高兴', '开心': '高兴',
+            '悲伤': '悲伤', '消极': '悲伤', '难过': '悲伤',
+            '焦虑': '焦虑', '紧张': '焦虑', '不安': '焦虑',
+            '平静': '平静', '放松': '平静', '中性': '中性',
+            '疲惫': '疲惫', '疲劳': '疲惫',
+            '惊讶': '惊讶',
+          };
+
+          for (const [key, value] of Object.entries(emotionMap)) {
+            if (analysis.includes(key)) {
+              setCurrentEmotion(value);
+              break;
+            }
+          }
+        }
+
+        setShowReport(true);
+      } catch (error) {
+        console.error('表情分析失败:', error);
+        toast.error('表情分析失败，请重试');
+        // 即使失败也显示报告，使用模拟数据
+        setShowReport(true);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setShowReport(true);
+    }
   };
 
-  const RADAR_LABELS = ['高兴','悲伤','愤怒','惊讶','恐惧','厌恶','中性','轻蔑','痛苦'];
-  const radarValues = RADAR_LABELS.map(() => Math.floor(Math.random() * 100));
+  const RADAR_LABELS = ['高兴', '悲伤', '焦虑', '平静', '疲惫', '惊讶', '中性'];
+
+  // 根据当前情绪生成雷达图数据
+  const generateRadarValues = () => {
+    // 如果有 AI 分析结果，可以从中提取；否则使用模拟数据
+    const baseValues = RADAR_LABELS.map(() => Math.floor(Math.random() * 60) + 20);
+    const currentIndex = RADAR_LABELS.indexOf(currentEmotion);
+    if (currentIndex >= 0) {
+      baseValues[currentIndex] = Math.floor(Math.random() * 30) + 70; // 当前情绪得分更高
+    }
+    return baseValues;
+  };
 
   function RadarChart({ labels, values }: { labels: string[]; values: number[] }) {
     const size = 260;
@@ -135,8 +284,8 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     }).join(' ');
     return (
       <svg width={size} height={size} className="mx-auto">
-        {[20,40,60,80,100].map((n,i) => (
-          <circle key={i} cx={center} cy={center} r={(n/100)*radius} className="stroke-white/10 fill-none" />
+        {[20, 40, 60, 80, 100].map((n, i) => (
+          <circle key={i} cx={center} cy={center} r={(n / 100) * radius} className="stroke-white/10 fill-none" />
         ))}
         {labels.map((label, i) => {
           const angle = (Math.PI * 2 * i) / labels.length - Math.PI / 2;
@@ -149,8 +298,26 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     );
   }
 
+  const handleNextStep = () => {
+    const data: ExpressionStepData = {
+      capturedImageUrl: capturedImage || undefined,
+      uploadedImageUrl: uploadedImageUrl || undefined,  // 传递上传后的 URL
+      emotionAnalysis: analysisResult,
+      detectedEmotion: currentEmotion,
+      confidence,
+      radarData: Object.fromEntries(
+        RADAR_LABELS.map((label, i) => [label, generateRadarValues()[i]])
+      ),
+    };
+    onComplete(data);
+  };
+
   return (
     <div className="fixed inset-0 bg-slate-950 flex flex-col z-40 overflow-hidden">
+      {/* 隐藏的 canvas 用于截图 */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* 顶部状态栏 */}
       <div className="absolute top-20 left-0 right-0 z-50 px-6 py-4 flex justify-between items-start pointer-events-none">
         <div className="space-y-2">
           <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 flex items-center gap-2 px-3 py-1.5 rounded-full">
@@ -158,8 +325,8 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             LIVE FEED
           </Badge>
           <div className="text-[10px] text-white/50 font-mono leading-4">
-            FPS: <span className={fps < 15 ? 'text-rose-400' : 'text-emerald-400'}>{fps}</span> · MODEL: EMO-9 · WIN: 3s<br />
-            FACE: <span className={noFaceCount > 0 ? 'text-rose-400' : 'text-emerald-400'}>{noFaceCount > 0 ? 'LOST' : 'LOCKED'}</span>
+            FPS: <span className={fps < 15 ? 'text-rose-400' : 'text-emerald-400'}>{fps}</span> · AI 表情识别<br />
+            FACE: <span className={noFaceCount > 0 ? 'text-rose-400' : 'text-emerald-400'}>{noFaceCount > 0 ? 'NOT DETECTED' : 'LOCKED'}</span>
           </div>
         </div>
 
@@ -186,7 +353,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
           muted
           className="w-full h-full object-cover"
         />
-        
+
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-slate-950/45" />
           <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(rgba(59,130,246,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.10) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
@@ -218,7 +385,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                     <span className="text-white/40 text-xs font-mono">{Math.round(confidence * 100)}%</span>
                   </div>
                   <div className="text-[10px] text-white/40 font-mono">
-                    Brow: {(microSignals.brow * 100).toFixed(0)} · Mouth: {(microSignals.mouthDown * 100).toFixed(0)} · Blink: {(microSignals.blink * 100).toFixed(0)}
+                    {microSignals.brow ? '眉心' : ''} · {microSignals.mouthDown ? '嘴角' : ''} · {microSignals.blink ? '眨眼' : ''}
                   </div>
                 </div>
                 <div className="w-20">
@@ -226,7 +393,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                     <div className="h-full bg-primary rounded-full" style={{ width: `${Math.round(confidence * 100)}%` }} />
                   </div>
                   <div className="mt-1 text-[9px] text-white/40 font-mono text-right">
-                    {isCapturing ? 'ANALYZING' : 'READY'}
+                    {loading ? 'ANALYZING' : isCapturing ? 'CAPTURING' : 'READY'}
                   </div>
                 </div>
               </div>
@@ -242,9 +409,9 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
       {/* 底部控制 */}
       <div className="absolute bottom-10 left-0 right-0 px-8 flex items-center justify-center gap-6 z-50">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')}
           className="w-14 h-14 rounded-full text-white/70 hover:text-white hover:bg-white/20"
         >
@@ -253,17 +420,24 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
         <Button
           onClick={isCapturing ? handleComplete : startCapture}
+          disabled={loading}
           className={`
             w-24 h-24 rounded-full border-4 flex items-center justify-center transition-all shadow-lg
             ${isCapturing ? 'bg-rose-500 border-rose-500/30 scale-90' : 'bg-primary border-primary/30'}
           `}
         >
-          {isCapturing ? <StopCircle className="w-10 h-10 text-white" /> : <Video className="w-10 h-10 text-white" />}
+          {loading ? (
+            <Loader2 className="w-10 h-10 text-white animate-spin" />
+          ) : isCapturing ? (
+            <StopCircle className="w-10 h-10 text-white" />
+          ) : (
+            <Video className="w-10 h-10 text-white" />
+          )}
         </Button>
 
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="w-14 h-14 rounded-full text-white/70 hover:text-white hover:bg-white/20"
         >
           <Maximize className="w-6 h-6" />
@@ -272,7 +446,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
       {/* 报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none bg-slate-950 text-white">
+        <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none bg-slate-950 text-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="sr-only">表情分析完成报告</DialogTitle>
           </DialogHeader>
@@ -282,36 +456,51 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             </div>
             <div className="space-y-1">
               <h2 className="text-2xl font-black">表情分析完成</h2>
-              <p className="text-white/40 text-sm">微表情特征与抑郁风险关联分析</p>
+              <p className="text-white/40 text-sm">AI 多模态面部表情与情绪分析</p>
             </div>
           </div>
 
-          <div className="p-8 space-y-8">
-            <div className="space-y-4">
+          <div className="p-8 space-y-6">
+            {/* AI 分析结果 */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" /> AI 情绪分析
+              </h3>
+              <div className="bg-slate-800 rounded-xl p-4 text-sm leading-relaxed">
+                {analysisResult || '分析中...'}
+              </div>
+            </div>
+
+            {/* 表情雷达图 */}
+            <div className="space-y-3">
               <h3 className="font-bold text-white flex items-center gap-2">
                 <Activity className="w-4 h-4 text-primary" /> 表情雷达图
               </h3>
-              <RadarChart labels={RADAR_LABELS} values={radarValues} />
+              <RadarChart labels={RADAR_LABELS} values={generateRadarValues()} />
             </div>
 
+            {/* 核心发现 */}
             <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 flex gap-3">
-              <Shield className="w-5 h-5 text-primary shrink-0" />
+              <Shield className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="text-xs font-bold text-primary">核心发现：微表情检测</p>
+                <p className="text-xs font-bold text-primary">核心发现</p>
                 <p className="text-[10px] text-white/60 leading-relaxed">
-                  检测到眉心皱纹频率偏高 (0.8次/分) 以及嘴角下垂征兆，这与中度抑郁特征高度相关。
+                  {currentEmotion === '焦虑' || currentEmotion === '悲伤'
+                    ? '检测到明显的负面情绪特征，建议进一步关注心理健康。'
+                    : '面部表情相对自然，未发现明显的情绪异常。'}
                 </p>
               </div>
             </div>
 
-            <Button 
+            <Button
               onClick={() => {
                 setShowReport(false);
-                navigate('/profile?openReport=1');
+                handleNextStep();
               }}
+              disabled={loading}
               className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/40 bg-primary hover:bg-primary/90"
             >
-              查看多模态融合报告
+              {loading ? '处理中...' : '下一步：生成融合报告'}
             </Button>
           </div>
         </DialogContent>

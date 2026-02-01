@@ -128,15 +128,23 @@ export class RagRetrievalDto {
  */
 export class MultimodalFusionDto {
   @ApiProperty({ description: '文本输入', required: false })
+  @IsOptional()
+  @IsString()
   textInput?: string;
 
   @ApiProperty({ description: '语音 URL', required: false })
+  @IsOptional()
+  @IsString()
   voiceUrl?: string;
 
   @ApiProperty({ description: '图片 URL', required: false })
+  @IsOptional()
+  @IsString()
   imageUrl?: string;
 
   @ApiProperty({ description: '视频 URL', required: false })
+  @IsOptional()
+  @IsString()
   videoUrl?: string;
 
   @ApiProperty({
@@ -144,5 +152,7 @@ export class MultimodalFusionDto {
     required: false,
     default: true,
   })
-  enableAI?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  enableAI?: boolean = true;
 }

@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { json, urlencoded } from 'express';
+import { join } from 'path';
 
 /**
  * 应用程序入口
@@ -17,6 +18,9 @@ async function bootstrap() {
   // 语音/多模态等大体积请求体需要更高上限
   app.use(json({ limit: '20mb' }));
   app.use(urlencoded({ extended: true, limit: '20mb' }));
+
+  // 静态文件服务 - 提供 uploads 目录中的文件
+  app.use('/uploads', json({ limit: '20mb' }), require('express').static(join(__dirname, '..', 'uploads')));
 
   // 语音识别日志在服务层输出，这里不重复记录
 

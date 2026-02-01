@@ -9,7 +9,7 @@ export interface User {
   role: string;
 }
 
-export async function getProfile(userId: string): Promise<Profile | null> {
+export async function getProfile(_userId: string): Promise<Profile | null> {
   const token = localStorage.getItem('mindcare_token');
   if (!token) return null;
 

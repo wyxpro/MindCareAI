@@ -322,6 +322,33 @@ export const speechRecognition = async (audio: Blob, format: 'wav' | 'm4a' = 'wa
   return response.json();
 };
 
+/**
+ * 音频情绪分析
+ * 使用语音识别 + 文本情绪分析
+ * @param audio 音频 Blob
+ * @param filename 文件名（带扩展名）
+ */
+export const audioEmotionAnalysis = async (audio: Blob, filename: string = 'audio.webm') => {
+  const formData = new FormData();
+  formData.append('file', audio, filename);
+
+  const token = localStorage.getItem('mindcare_token');
+  const response = await fetch(`${API_BASE_URL}/ai/audio-emotion-analysis`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`API Error: ${response.status} - ${errorBody}`);
+  }
+
+  return response.json();
+};
+
 // RAG检索 - 主动式对话
 export const ragRetrieval = async (query: string, conversationHistory: ChatMessage[], assessmentType: string = 'PHQ-9') => {
   return fetchFromApi('/ai/rag-retrieval', {
@@ -368,4 +395,38 @@ export const uploadFile = async (file: File) => {
   }
 
   return response.json();
+};
+
+// 上传视频到 StepFun 存储（用于视频理解）
+export const uploadVideoToStepFun = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const token = localStorage.getItem('mindcare_token');
+  const response = await fetch(`${API_BASE_URL}/ai/upload-to-stepfun`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Upload Error: ${response.status} - ${errorBody}`);
+  }
+
+  return response.json();
+};
+
+// 视频理解分析
+export const videoUnderstanding = async (params: {
+  fileId: string;
+  prompt?: string;
+  questions?: string[];
+}) => {
+  return fetchFromApi('/ai/video-understanding', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
 };

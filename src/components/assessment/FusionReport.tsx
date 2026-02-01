@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, TrendingUp, History, Download, Printer, Share2, 
-  ChevronDown, ChevronUp, ChevronRight, AlertCircle, CheckCircle2, 
-  BarChart3, Brain, Mic, Video, ClipboardList, Calendar, Search, Filter
+import {
+  FileText, TrendingUp, History, Download, Printer, Share2,
+  ChevronDown, ChevronUp, ChevronRight, AlertCircle, CheckCircle2,
+  BarChart3, Brain, Mic, Video, ClipboardList, Calendar, Search, Filter, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { multimodalFusion } from '@/db/api';
 
 interface FusionReportProps {
   scaleData: any;
@@ -23,48 +24,122 @@ export default function FusionReport({ scaleData, voiceData, expressionData, onC
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [fusionScore, setFusionScore] = useState(0);
   const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('low');
+  const [loading, setLoading] = useState(true);
+  const [fusionResult, setFusionResult] = useState<{
+    integrated_report: string;
+    risk_score: number;
+    recommendation: string;
+  } | null>(null);
 
   useEffect(() => {
-    // 模拟加权融合算法: 量表 50%, 语音 20%, 表情 30%
-    const scaleScore = scaleData?.score || 10;
-    const voiceScore = 40; // 模拟分值
-    const expressionScore = 60; // 模拟分值
-    
-    const finalScore = Math.round(scaleScore * 0.5 + voiceScore * 0.2 + expressionScore * 0.3);
-    setFusionScore(finalScore);
+    const generateFusionReport = async () => {
+      setLoading(true);
+      try {
+        // 构建融合分析输入
+        const textInput = voiceData?.recognizedText ||
+                         scaleData?.aiResponse ||
+                         '用户完成了多模态评估';
 
-    if (finalScore >= 70) {
-      setRiskLevel('high');
-      // 模拟高风险预警推送
-      toast.error('检测到极高抑郁风险，已自动推送至您的主治医生！', { duration: 5000 });
-    } else if (finalScore >= 40) {
-      setRiskLevel('medium');
-    } else {
-      setRiskLevel('low');
-    }
+        // 构建文本描述，包含所有三个维度的信息
+        const fusionText = `## 多模态心理健康评估数据汇总
+
+### 1. 量表评估（文本对话）
+${scaleData?.aiResponse || `量表评分: ${scaleData?.score || 0}分`}
+
+### 2. 语音情绪分析
+语音识别内容: ${voiceData?.recognizedText || '无'}
+语音情绪分析: ${voiceData?.emotionAnalysis || '无'}
+录音时长: ${voiceData?.duration || 0}秒
+
+### 3. 面部表情分析
+检测到的情绪: ${expressionData?.detectedEmotion || '中性'}
+置信度: ${Math.round((expressionData?.confidence || 0) * 100)}%
+表情情绪分析: ${expressionData?.emotionAnalysis || '无'}`;
+
+        // 调用多模态融合 API
+        const response = await multimodalFusion({
+          textInput: fusionText,
+          imageUrl: expressionData?.uploadedImageUrl,  // 使用上传后的图片 URL
+          enableAI: true,
+        });
+
+        if (response) {
+          setFusionResult({
+            integrated_report: response.integrated_report || '融合分析完成',
+            risk_score: response.risk_score || 0,
+            recommendation: response.recommendation || '建议保持良好的生活习惯',
+          });
+
+          // 设置风险分数
+          const score = response.risk_score || 0;
+          setFusionScore(score);
+
+          // 设置风险等级
+          if (score >= 70) {
+            setRiskLevel('high');
+            toast.error('检测到较高风险，建议咨询专业心理医生', { duration: 5000 });
+          } else if (score >= 40) {
+            setRiskLevel('medium');
+          } else {
+            setRiskLevel('low');
+          }
+        }
+      } catch (error) {
+        console.error('多模态融合分析失败:', error);
+
+        // 检查是否是 429 错误（速率限制）
+        const errorMessage = error instanceof Error ? error.message : '';
+        if (errorMessage.includes('429')) {
+          toast.error('请求过于频繁，请稍后再试，使用模拟数据', { duration: 4000 });
+        } else {
+          toast.error('融合分析失败，使用模拟数据');
+        }
+
+        // 使用模拟数据作为降级方案
+        const fallbackScore = scaleData?.score || 20;
+        setFusionScore(fallbackScore);
+        setRiskLevel(fallbackScore >= 40 ? 'medium' : 'low');
+        setFusionResult({
+          integrated_report: '由于服务暂时不可用，当前使用模拟数据。多模态融合分析结合了量表、语音和表情三个维度的评估结果。',
+          risk_score: fallbackScore,
+          recommendation: '建议稍后重试，或联系专业心理医生进行详细评估。',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    generateFusionReport();
   }, [scaleData, voiceData, expressionData]);
 
+  // 根据真实数据构建子报告内容
   const sections = [
-    { 
-      id: 'scale', 
-      title: '量表评估结果 (50%)', 
-      icon: ClipboardList, 
+    {
+      id: 'scale',
+      title: '量表评估结果 (50%)',
+      icon: ClipboardList,
       color: 'text-primary',
-      content: 'PHQ-9 评估总分 18 分。关键发现：睡眠障碍与食欲不振症状显著。自杀意念筛查为阴性。'
+      content: scaleData?.aiResponse
+        ? `AI 分析：${scaleData.aiResponse}`
+        : `PHQ-9 评估总分 ${scaleData?.score || 0} 分。${scaleData?.score >= 20 ? '提示有较高抑郁风险，建议寻求专业帮助。' : '心理状态相对稳定。'}`,
     },
-    { 
-      id: 'voice', 
-      title: '语音情绪分析 (20%)', 
-      icon: Mic, 
+    {
+      id: 'voice',
+      title: '语音情绪分析 (20%)',
+      icon: Mic,
       color: 'text-indigo-500',
-      content: '语速偏慢 (162音节/分)，基频方差极低 (8.4Hz)，反映出显著的动力不足与情感淡漠。'
+      content: voiceData?.emotionAnalysis
+        ? `AI 分析：${voiceData.emotionAnalysis}`
+        : `录音时长 ${voiceData?.duration || 0} 秒。语音识别内容：${voiceData?.recognizedText || '未识别到内容'}`,
     },
-    { 
-      id: 'expression', 
-      title: '表情特征识别 (30%)', 
-      icon: Video, 
+    {
+      id: 'expression',
+      title: '表情特征识别 (30%)',
+      icon: Video,
       color: 'text-purple-500',
-      content: '中性表情占比 78%。微表情检测到频繁的眉心皱纹及嘴角下垂，符合典型抑郁面容特征。'
+      content: expressionData?.emotionAnalysis
+        ? `AI 分析：${expressionData.emotionAnalysis}`
+        : `检测到主要情绪：${expressionData?.detectedEmotion || '中性'}，置信度：${Math.round((expressionData?.confidence || 0) * 100)}%`,
     },
   ];
 
@@ -117,18 +192,33 @@ export default function FusionReport({ scaleData, voiceData, expressionData, onC
             <div className="flex-1 space-y-4">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-slate-400">AI 综合诊断</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  多模态融合分析显示，您的情绪指标在三个维度上均表现出一定的相关性，建议优先关注睡眠调节。
-                </p>
+                {loading ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    正在生成融合分析报告...
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {fusionResult?.integrated_report || '分析中...'}
+                  </p>
+                )}
               </div>
+              {!loading && fusionResult?.recommendation && (
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-slate-400">健康建议</p>
+                  <p className="text-sm text-primary leading-relaxed">
+                    {fusionResult.recommendation}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="mt-8 flex gap-2">
-            <Button className="flex-1 rounded-2xl h-12 font-bold shadow-lg shadow-primary/20">
+            <Button className="flex-1 rounded-2xl h-12 font-bold shadow-lg shadow-primary/20" disabled={loading}>
               <Download className="w-4 h-4 mr-2" /> 导出完整 PDF
             </Button>
-            <Button variant="outline" size="icon" className="w-12 h-12 rounded-2xl border-slate-100 dark:border-slate-800">
+            <Button variant="outline" size="icon" className="w-12 h-12 rounded-2xl border-slate-100 dark:border-slate-800" disabled={loading}>
               <Share2 className="w-5 h-5" />
             </Button>
           </div>

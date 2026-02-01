@@ -71,7 +71,7 @@ export const configuration = (): AllConfig => ({
       process.env.MULTIMODAL_API_URL ||
       'https://api.stepfun.com/v1/chat/completions',
     multimodalModel:
-      process.env.MULTIMODAL_MODEL || 'step-1o-turbo-vision',
+      process.env.MULTIMODAL_MODEL || 'step-1o',
   },
   auth: {
     jwtSecret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production'

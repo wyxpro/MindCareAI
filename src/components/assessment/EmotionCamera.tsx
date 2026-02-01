@@ -292,10 +292,10 @@ export default function EmotionCamera({ onClose, onEmotionDetected }: EmotionCam
 
             {/* 提示信息 */}
             <div className="mt-4 p-3 bg-info/10 border border-info/20 rounded-lg">
-              <p className="text-sm text-info flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-info animate-pulse" />
-                系统每3秒自动分析一次表情,请保持面部清晰可见
-              </p>
+              <div className="text-sm text-info flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-info animate-pulse" />
+                <span>系统每10秒自动分析一次表情,请保持面部清晰可见</span>
+              </div>
             </div>
           </>
         )}
