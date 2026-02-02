@@ -37,7 +37,7 @@ const routes: RouteConfig[] = [
     element: <RecordPageNew />,
   },
   {
-    name: '评估',
+    name: 'AI评估',
     path: '/assessment',
     element: <EnhancedAssessmentPage />,
   },

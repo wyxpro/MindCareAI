@@ -9,7 +9,7 @@ interface UserLayoutProps {
 const navItems = [
   { path: '/', label: '首页', icon: Home },
   { path: '/record', label: '记录', icon: BookOpen },
-  { path: '/assessment', label: '评估', icon: Activity },
+  { path: '/assessment', label: 'AI评估', icon: Activity },
   { path: '/healing', label: '疗愈', icon: Heart },
   { path: '/profile', label: '我的', icon: User },
 ];

@@ -143,9 +143,9 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
   if (!started) {
     return (
-      <div className="pt-20 px-4 max-w-md mx-auto space-y-8 pb-10">
+      <div className="pt-28 px-4 max-w-md mx-auto space-y-8 pb-10">
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">选择测评量表</h2>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">AI主动式对话量表评估</h2>
           <p className="text-slate-500 text-sm">您可以选择一个或多个量表进行综合评估</p>
         </div>
 
@@ -198,7 +198,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-40">
+    <div className="fixed inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-40 pb-20">
       {/* 沉浸式顶部 */}
       <div className="pt-20 px-4 pb-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
         <div className="max-w-md mx-auto space-y-3">
@@ -212,7 +212,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
       {/* 对话区域 */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="max-w-md mx-auto space-y-6 pb-10">
+        <div className="max-w-md mx-auto space-y-6 pb-6">
           <AnimatePresence>
             {messages.map((msg, i) => (
               <motion.div
@@ -247,7 +247,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       </ScrollArea>
 
       {/* 输入区域 */}
-      <div className="p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 pb-10">
+      <div className="absolute bottom-20 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-md mx-auto flex gap-2">
           <input
             value={inputText}
