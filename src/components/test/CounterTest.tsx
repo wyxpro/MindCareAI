@@ -102,7 +102,7 @@ export default function CounterTest() {
             <div className="counter text-purple-600 text-4xl font-bold mb-2" data-target="24h">
               0
             </div>
-            <p className="text-gray-600 dark:text-gray-400 font-medium">心理咨询</p>
+            <p className="text-gray-600 dark:text-gray-400 font-medium">AI赋能咨询</p>
           </div>
         </div>
 
