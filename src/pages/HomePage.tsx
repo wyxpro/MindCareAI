@@ -7,12 +7,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getEmotionDiaries } from '@/db/api';
-import EmotionAvatar from '@/components/home/EmotionAvatar';
+import EmotionImageCarousel from '@/components/home/EmotionImageCarousel';
 
 export default function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentEmotion, setCurrentEmotion] = useState<'very_good' | 'good' | 'neutral' | 'bad' | 'very_bad'>('neutral');
+  const [moodScore, setMoodScore] = useState(86);
+  const [moodStatus, setMoodStatus] = useState('状态不错');
 
   useEffect(() => {
     if (user) {
@@ -25,11 +26,25 @@ export default function HomePage() {
       const diaries = await getEmotionDiaries(user!.id, 1);
       if (diaries && diaries.length > 0) {
         const latest = diaries[0];
-        setCurrentEmotion(latest.emotion_level as any);
+        // Set initial mood score based on emotion level
+        const emotionScores = {
+          'very_good': 95,
+          'good': 85,
+          'neutral': 75,
+          'bad': 40,
+          'very_bad': 20
+        };
+        setMoodScore(emotionScores[latest.emotion_level as keyof typeof emotionScores] || 75);
       }
     } catch (error) {
-      setCurrentEmotion('neutral');
+      setMoodScore(75);
     }
+  };
+
+  // Handle emotion change from carousel
+  const handleEmotionChange = (status: string, score: number) => {
+    setMoodStatus(status);
+    setMoodScore(score);
   };
 
   const miniGames = [
@@ -100,19 +115,32 @@ export default function HomePage() {
       {/* 核心 3D 情绪 Avatar 和心情指数 */}
       <section className="pt-16 pb-8 relative overflow-hidden">
         <div className="flex items-center justify-center gap-6 max-w-sm mx-auto px-4">
-          {/* 3D Avatar */}
+          {/* Emotion Image Carousel */}
           <div className="flex-shrink-0">
-            <EmotionAvatar emotion={currentEmotion} />
+            <EmotionImageCarousel onEmotionChange={handleEmotionChange} />
           </div>
           
           {/* 心情指数信息 */}
           <div className="flex flex-col items-start space-y-3">
-            <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
-              状态不错
-            </div>
+            <motion.div 
+              key={moodStatus}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-lg font-bold text-slate-800 dark:text-slate-200"
+            >
+              {moodStatus}
+            </motion.div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-slate-600 dark:text-slate-400">心情指数:</span>
-              <span className="text-3xl font-black text-slate-800 dark:text-slate-100">86</span>
+              <motion.span 
+                key={moodScore}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="text-3xl font-black text-slate-800 dark:text-slate-100"
+              >
+                {moodScore}
+              </motion.span>
               <Info className="w-4 h-4 cursor-help text-slate-400 hover:text-slate-600 transition-colors" />
             </div>
           </div>
