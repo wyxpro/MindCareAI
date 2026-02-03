@@ -543,6 +543,41 @@
         }
       }
 
+      /* GitHub按钮样式 */
+      .github-btn {
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .github-btn:hover {
+        transform: scale(1.1);
+      }
+
+      .github-btn:active {
+        transform: scale(0.95);
+        transition: all 0.1s ease;
+      }
+
+      /* 移动端GitHub按钮 */
+      @media (max-width: 768px) {
+        .github-btn-mobile {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 1000;
+          padding: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .github-btn-mobile:hover {
+          transform: scale(1.1);
+        }
+
+        .github-btn-mobile:active {
+          transform: scale(0.95);
+        }
+      }
+
       /* 立即使用按钮 - 红色到深红色渐变 */
       .btn-primary {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -551,17 +586,6 @@
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
         border: none;
-        background-size: 200% 200%;
-        animation: redGradientShift 4s ease-in-out infinite;
-      }
-
-      @keyframes redGradientShift {
-        0%, 100% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
       }
 
       .btn-primary::before {
@@ -588,17 +612,6 @@
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
         border: none;
-        background-size: 200% 200%;
-        animation: greenGradientShift 4s ease-in-out infinite;
-      }
-
-      @keyframes greenGradientShift {
-        0%, 100% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
       }
 
       .btn-docs::before {
@@ -955,6 +968,18 @@
                 class="hidden md:inline-flex btn-primary text-white px-6 py-2 rounded-full font-semibold shadow-lg"
                 >立即体验</a
               >
+              <!-- GitHub按钮 -->
+              <a
+                href="https://github.com/wyxpro/MindCareAI/tree/main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="github-btn p-2 hover:bg-gray-100 rounded-lg transition-all duration-300"
+                title="查看GitHub源码"
+              >
+                <svg class="w-6 h-6 text-gray-800 hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </a>
             </div>
 
             <!-- 移动端菜单按钮 -->
@@ -1002,6 +1027,17 @@
               class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
               >登录</a
             >
+            <a
+              href="https://github.com/wyxpro/MindCareAI/tree/main"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center py-2 text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub源码
+            </a>
           </div>
         </div>
       </nav>
@@ -2044,7 +2080,7 @@
                 <h3 class="text-white font-semibold mb-3">联系方式</h3>
                 <ul class="space-y-2">
                   <li>开发者：晓叶</li>
-                  <li>地址：南京建邺</li>
+                  <li>微信：wyx200265</li>
                   <li>赞助：模法黑客松</li>
                 </ul>
               </div>
@@ -2053,7 +2089,8 @@
 
           <div class="border-t border-gray-800 pt-8 text-center text-sm">
             <p>
-              &copy; 2026 MindCare. All rights reserved.
+              &copy; 2026 MindCare All rights reserved.   
+              <br>   
               由AI技术驱动，为心理健康而生。
             </p>
           </div>
@@ -2256,15 +2293,15 @@
         const applyButtonStyles = () => {
           document.querySelectorAll('.btn-primary, .btn-docs').forEach(button => {
             if (isMobile()) {
-              // 移动端颜色交换
+              // 移动端颜色交换：立即使用(btn-primary)显示红色，项目文档(btn-docs)显示绿色
               if (button.classList.contains('btn-primary')) {
-                // 立即使用按钮在移动端显示绿色
-                button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                button.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
-              } else if (button.classList.contains('btn-docs')) {
-                // 项目文档按钮在移动端显示红色
+                // 立即使用按钮在移动端显示红色
                 button.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
                 button.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.3)';
+              } else if (button.classList.contains('btn-docs')) {
+                // 项目文档按钮在移动端显示绿色
+                button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                button.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
               }
             } else {
               // 桌面端保持原始CSS颜色
@@ -2315,11 +2352,11 @@
             // 根据按钮类型和设备类型创建不同颜色的成功反馈粒子
             let particleColors;
             if (isMobile()) {
-              // 移动端：立即使用(btn-primary)用绿色粒子，项目文档(btn-docs)用红色粒子
+              // 移动端：立即使用(btn-primary)用红色粒子，项目文档(btn-docs)用绿色粒子
               const isMobilePrimaryButton = this.classList.contains('btn-primary');
               particleColors = isMobilePrimaryButton 
-                ? ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7']
-                : ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5'];
+                ? ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5']
+                : ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
             } else {
               // 桌面端：立即使用(btn-primary)用红色粒子，项目文档(btn-docs)用绿色粒子
               const isDesktopPrimaryButton = this.classList.contains('btn-primary');
@@ -2380,13 +2417,13 @@
             const isMobilePrimaryButton = this.classList.contains('btn-primary');
             
             if (isMobilePrimaryButton) {
-              // 移动端立即使用按钮悬停时的绿色效果
-              this.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%)';
-              this.style.boxShadow = '0 15px 35px rgba(16, 185, 129, 0.5), 0 0 20px rgba(52, 211, 153, 0.3)';
-            } else {
-              // 移动端项目文档按钮悬停时的红色效果
+              // 移动端立即使用按钮悬停时的红色效果
               this.style.background = 'linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)';
               this.style.boxShadow = '0 15px 35px rgba(239, 68, 68, 0.5), 0 0 20px rgba(248, 113, 113, 0.3)';
+            } else {
+              // 移动端项目文档按钮悬停时的绿色效果
+              this.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%)';
+              this.style.boxShadow = '0 15px 35px rgba(16, 185, 129, 0.5), 0 0 20px rgba(52, 211, 153, 0.3)';
             }
             
             this.style.filter = 'brightness(1.1) saturate(1.2)';
@@ -2396,13 +2433,13 @@
             const isMobilePrimaryButton = this.classList.contains('btn-primary');
             
             if (isMobilePrimaryButton) {
-              // 移动端立即使用按钮恢复绿色
-              this.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-              this.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
-            } else {
-              // 移动端项目文档按钮恢复红色
+              // 移动端立即使用按钮恢复红色
               this.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
               this.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.3)';
+            } else {
+              // 移动端项目文档按钮恢复绿色
+              this.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+              this.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
             }
             
             this.style.filter = 'brightness(1) saturate(1)';
@@ -2413,13 +2450,13 @@
             const isMobilePrimaryButton = this.classList.contains('btn-primary');
             
             if (isMobilePrimaryButton) {
-              // 移动端立即使用按钮按下时的深绿色效果
-              this.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
-              this.style.boxShadow = '0 5px 15px rgba(16, 185, 129, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
-            } else {
-              // 移动端项目文档按钮按下时的深红色效果
+              // 移动端立即使用按钮按下时的深红色效果
               this.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
               this.style.boxShadow = '0 5px 15px rgba(239, 68, 68, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+            } else {
+              // 移动端项目文档按钮按下时的深绿色效果
+              this.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
+              this.style.boxShadow = '0 5px 15px rgba(16, 185, 129, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
             }
             
             this.style.transform = 'translateY(-2px) scale(0.98)';
