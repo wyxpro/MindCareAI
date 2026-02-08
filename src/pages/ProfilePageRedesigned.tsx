@@ -312,7 +312,7 @@ export default function ProfilePageRedesigned() {
         {/* 版本信息 */}
         <div className="text-center space-y-1 py-4">
           <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.2em]">
-            MindCare AI v1.0.0
+            灵愈AI v1.0.0
           </p>
           <p className="text-[9px] text-slate-200 dark:text-slate-800">
             © 2026 灵愈AI数字化医疗团队

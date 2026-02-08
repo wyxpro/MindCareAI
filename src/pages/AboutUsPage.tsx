@@ -35,7 +35,7 @@ export default function AboutUsPage() {
             >
               <Brain className="w-10 h-10 text-white" />
             </motion.div>
-            <h2 className="text-2xl font-black tracking-tight">MindCare AI</h2>
+            <h2 className="text-2xl font-black tracking-tight">灵愈AI</h2>
             <p className="text-white/80 text-xs font-medium uppercase tracking-[0.25em]">灵愈AI · 数字化心理医疗</p>
             <p className="text-sm text-white/90 leading-relaxed max-w-[300px] mx-auto">
               用多模态AI与人文关怀，打造专业、私密、温暖的心理健康服务。
@@ -130,7 +130,7 @@ export default function AboutUsPage() {
             Made with ❤️ for Mental Health
           </p>
           <p className="text-[9px] text-slate-200 dark:text-slate-800 mt-2">
-            MindCare AI v1.0.0
+            灵愈AI v1.0.0
           </p>
         </div>
       </div>
