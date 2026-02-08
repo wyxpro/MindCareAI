@@ -2860,16 +2860,17 @@
         });
       </script>
     </div>
-    <div id="root" style="display: none"></div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       (function () {
         const landing = document.getElementById("landing");
         const root = document.getElementById("root");
         const syncView = () => {
-          const isApp = !!location.hash && location.hash.startsWith("#/");
-          if (landing) landing.style.display = isApp ? "none" : "";
-          if (root) root.style.display = isApp ? "" : "none";
+          // 默认显示React应用，只有明确访问/#/landing时才显示静态官网
+          const showLanding = location.hash === "#/landing";
+          if (landing) landing.style.display = showLanding ? "" : "none";
+          if (root) root.style.display = showLanding ? "none" : "";
         };
         window.addEventListener("hashchange", syncView);
         syncView();

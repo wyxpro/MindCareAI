@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="MindCare AI - 智能抑郁检测与疗愈助手，提供24/7心理健康评估与辅助治疗服务"
+      content="灵愈AI - 智能心理检测与疗愈助手，提供24/7心理健康评估与辅助治疗服务"
     />
-    <title>MindCare AI -智能抑郁检测与疗愈助手</title>
+    <title>灵愈AI-智能心理检测与疗愈助手</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23f093fb;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Cg fill='white'%3E%3Ccircle cx='50' cy='35' r='12' fill='white' opacity='0.9'/%3E%3Cpath d='M35 50 Q50 40 65 50 Q50 60 35 50' fill='white' opacity='0.8'/%3E%3Ccircle cx='42' cy='52' r='2' fill='white'/%3E%3Ccircle cx='58' cy='52' r='2' fill='white'/%3E%3Cpath d='M40 65 Q50 75 60 65' stroke='white' stroke-width='3' fill='none' opacity='0.9'/%3E%3Cpath d='M25 25 L30 30 M75 25 L70 30 M25 75 L30 70 M75 75 L70 70' stroke='white' stroke-width='2' opacity='0.6'/%3E%3C/g%3E%3C/svg%3E">
@@ -188,7 +188,7 @@
         position: absolute;
         top: -5px;
         right: -85px; /* 向右平移约两个空格距离 */
-        background: linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #ff9ff3 100%);
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
         color: white;
         padding: 6px 12px;
         border-radius: 15px;
@@ -196,14 +196,14 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
         animation: badgePulse 2s ease-in-out infinite, badgeFloat 4s ease-in-out infinite;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         z-index: 10;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         white-space: nowrap;
       }
 
@@ -214,7 +214,7 @@
         left: -2px;
         right: -2px;
         bottom: -2px;
-        background: linear-gradient(45deg, #ff6b6b, #feca57, #ff9ff3, #48cae4);
+        background: linear-gradient(45deg, #4f46e5, #7c3aed, #ec4899, #06b6d4);
         border-radius: 17px;
         z-index: -1;
         animation: badgeGlow 3s linear infinite;
@@ -227,16 +227,17 @@
         right: -6px;
         font-size: 0.8rem;
         animation: sparkle 1.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
       }
 
       @keyframes badgePulse {
         0%, 100% {
           transform: scale(1);
-          box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+          box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
         }
         50% {
           transform: scale(1.05);
-          box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+          box-shadow: 0 12px 35px rgba(79, 70, 229, 0.6);
         }
       }
 
@@ -280,8 +281,8 @@
 
       .launch-badge:hover {
         transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 15px 40px rgba(255, 107, 107, 0.7);
-        background: linear-gradient(135deg, #ff5252 0%, #ffc107 50%, #e91e63 100%);
+        box-shadow: 0 15px 40px rgba(79, 70, 229, 0.7);
+        background: linear-gradient(135deg, #3730a3 0%, #6d28d9 50%, #db2777 100%);
       }
 
       .launch-badge:hover::after {
@@ -543,17 +544,78 @@
         }
       }
 
-      /* 立即使用按钮 - 简洁优雅设计 */
+      /* GitHub按钮样式 */
+      .github-btn {
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .github-btn:hover {
+        transform: scale(1.1);
+      }
+
+      .github-btn:active {
+        transform: scale(0.95);
+        transition: all 0.1s ease;
+      }
+
+      /* 移动端GitHub按钮 */
+      @media (max-width: 768px) {
+        .github-btn-mobile {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 1000;
+          padding: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .github-btn-mobile:hover {
+          transform: scale(1.1);
+        }
+
+        .github-btn-mobile:active {
+          transform: scale(0.95);
+        }
+      }
+
+      /* 立即使用按钮 - 红色到深红色渐变 */
       .btn-primary {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         position: relative;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
         border: none;
       }
 
       .btn-primary::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.6s ease;
+      }
+
+      /* 项目文档按钮 - 绿色到青绿色渐变 */
+      .btn-docs {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        border: none;
+      }
+
+      .btn-docs::before {
         content: "";
         position: absolute;
         top: 0;
@@ -585,18 +647,62 @@
 
       .btn-primary:hover {
         transform: translateY(-6px) scale(1.05);
-        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+        box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4), 0 0 30px rgba(248, 113, 113, 0.3);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        animation: redPulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes redPulse {
+        0%, 100% {
+          box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4), 0 0 30px rgba(248, 113, 113, 0.3);
+        }
+        50% {
+          box-shadow: 0 25px 50px rgba(239, 68, 68, 0.6), 0 0 40px rgba(248, 113, 113, 0.5);
+        }
       }
 
       .btn-primary:hover::before {
         left: 100%;
       }
 
+      .btn-docs::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s ease, height 0.3s ease;
+        pointer-events: none;
+      }
+
+      .btn-docs:hover {
+        transform: translateY(-6px) scale(1.05);
+        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4), 0 0 30px rgba(52, 211, 153, 0.3);
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        animation: greenPulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes greenPulse {
+        0%, 100% {
+          box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4), 0 0 30px rgba(52, 211, 153, 0.3);
+        }
+        50% {
+          box-shadow: 0 25px 50px rgba(16, 185, 129, 0.6), 0 0 40px rgba(52, 211, 153, 0.5);
+        }
+      }
+
+      .btn-docs:hover::before {
+        left: 100%;
+      }
+
       .btn-primary:active {
         transform: translateY(-2px) scale(1.02);
         transition: all 0.15s ease;
-        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.6);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.6);
       }
 
       /* 点击波纹效果增强 */
@@ -795,8 +901,8 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-DQ16lCO_.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BoGA2q9M.css">
+    <script type="module" crossorigin src="/assets/index-DUFjvp3V.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DxHdskiz.css">
     <script>
               (function () {
                 const redirect = new URLSearchParams(location.search).get('redirect');
@@ -837,7 +943,7 @@
                   ></path>
                 </svg>
               </div>
-              <span class="text-xl font-bold gradient-text">MindCare AI</span>
+              <span class="text-xl font-bold gradient-text">灵愈AI</span>
             </div>
 
             <div class="hidden md:flex items-center space-x-8">
@@ -874,6 +980,18 @@
                 class="hidden md:inline-flex btn-primary text-white px-6 py-2 rounded-full font-semibold shadow-lg"
                 >立即体验</a
               >
+              <!-- GitHub按钮 -->
+              <a
+                href="https://github.com/wyxpro/MindCareAI/tree/main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="github-btn p-2 hover:bg-gray-100 rounded-lg transition-all duration-300"
+                title="查看GitHub源码"
+              >
+                <svg class="w-6 h-6 text-gray-800 hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </a>
             </div>
 
             <!-- 移动端菜单按钮 -->
@@ -921,6 +1039,17 @@
               class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
               >登录</a
             >
+            <a
+              href="https://github.com/wyxpro/MindCareAI/tree/main"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center py-2 text-gray-700 hover:text-purple-600 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+              </svg>
+              GitHub源码
+            </a>
           </div>
         </div>
       </nav>
@@ -932,13 +1061,6 @@
       >
         <!-- 鼠标跟随光效 -->
         <div class="mouse-glow" id="mouseGlow"></div>
-        
-        <!-- 顶部情绪图片轮播 -->
-        <div class="hero-image-carousel">
-          <div class="hero-carousel-wrapper" id="heroImageCarousel">
-            <div class="hero-image-loader" id="heroImageLoader"></div>
-          </div>
-        </div>
         <div
           class="container mx-auto px-6 text-center text-white relative z-10"
         >
@@ -960,7 +1082,7 @@
             <p
               class="hero-subtitle text-xl md:text-2xl mb-8 max-w-3xl mx-auto font-light leading-relaxed text-white opacity-90 drop-shadow-md"
             >
-              新一代多模态情绪识别、主动式AI对话量表评估、个性化疗愈解决方案
+              新一代主动式AI对话量表评估、多模态情绪识别、个性化疗愈解决方案
             </p>
           </div>
 
@@ -968,15 +1090,15 @@
             data-aos="fade-up"
             data-aos-delay="400"
             data-aos-duration="1000"
-            class="flex items-center justify-center mb-16"
+            class="flex flex-row items-center justify-center gap-3 sm:gap-6 mb-16 px-4"
           >
             <a
               href="/#/"
-              class="btn-primary text-white px-16 py-6 rounded-full text-xl font-bold shadow-2xl inline-flex items-center space-x-3 hover:scale-105 transition-all duration-300 hover:shadow-3xl"
+              class="btn-primary text-white px-6 sm:px-16 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 sm:space-x-3 hover:scale-105 transition-all duration-300 hover:shadow-3xl flex-1 sm:flex-none justify-center max-w-[160px] sm:max-w-none"
             >
               <span>立即使用</span>
               <svg
-                class="w-6 h-6"
+                class="w-4 h-4 sm:w-6 sm:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -986,6 +1108,27 @@
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M13 7l5 5m0 0l-5 5m5-5H6"
+                ></path>
+              </svg>
+            </a>
+            <a
+              href="https://my.feishu.cn/wiki/DH7gw3RumiZLNikKj6zcKFNpnuh"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-docs text-white px-6 sm:px-16 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 sm:space-x-3 hover:scale-105 transition-all duration-300 hover:shadow-3xl flex-1 sm:flex-none justify-center max-w-[160px] sm:max-w-none"
+            >
+              <span>项目文档</span>
+              <svg
+                class="w-4 h-4 sm:w-6 sm:h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 ></path>
               </svg>
             </a>
@@ -1789,7 +1932,7 @@
             <p
               class="text-xl md:text-2xl text-white opacity-90 mb-12 max-w-3xl mx-auto"
             >
-              立即体验MindCare AI，让专业的AI技术为您的心理健康护航
+              立即体验灵愈AI，让专业的AI技术为您的心理健康护航
             </p>
           </div>
 
@@ -1875,7 +2018,7 @@
                     ></path>
                   </svg>
                 </div>
-                <span class="text-xl font-bold text-white">MindCare AI</span>
+                <span class="text-xl font-bold text-white">灵愈AI</span>
               </div>
               <p class="text-sm leading-relaxed">
                 智能心理检测与疗愈助手，为您的心理健康护航
@@ -1949,7 +2092,7 @@
                 <h3 class="text-white font-semibold mb-3">联系方式</h3>
                 <ul class="space-y-2">
                   <li>开发者：晓叶</li>
-                  <li>地址：南京建邺</li>
+                  <li>微信：wyx200265</li>
                   <li>赞助：模法黑客松</li>
                 </ul>
               </div>
@@ -1958,7 +2101,8 @@
 
           <div class="border-t border-gray-800 pt-8 text-center text-sm">
             <p>
-              &copy; 2026 MindCare. All rights reserved.
+              &copy; 2026 MindCare All rights reserved.   
+              <br>   
               由AI技术驱动，为心理健康而生。
             </p>
           </div>
@@ -2154,8 +2298,46 @@
           });
         });
 
+        // 移动端检测
+        const isMobile = () => window.innerWidth < 768;
+        
+        // 窗口大小变化时重新应用按钮样式
+        const applyButtonStyles = () => {
+          document.querySelectorAll('.btn-primary, .btn-docs').forEach(button => {
+            if (isMobile()) {
+              // 移动端颜色交换：立即使用(btn-primary)显示红色，项目文档(btn-docs)显示绿色
+              if (button.classList.contains('btn-primary')) {
+                // 立即使用按钮在移动端显示红色
+                button.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                button.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.3)';
+              } else if (button.classList.contains('btn-docs')) {
+                // 项目文档按钮在移动端显示绿色
+                button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                button.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
+              }
+            } else {
+              // 桌面端保持原始CSS颜色
+              if (button.classList.contains('btn-primary')) {
+                // 立即使用按钮在桌面端保持红色（CSS原始样式）
+                button.style.background = '';
+                button.style.boxShadow = '';
+              } else if (button.classList.contains('btn-docs')) {
+                // 项目文档按钮在桌面端保持绿色（CSS原始样式）
+                button.style.background = '';
+                button.style.boxShadow = '';
+              }
+            }
+          });
+        };
+        
+        // 监听窗口大小变化
+        window.addEventListener('resize', applyButtonStyles);
+        
         // 按钮点击波纹效果增强
-        document.querySelectorAll('.btn-primary').forEach(button => {
+        document.querySelectorAll('.btn-primary, .btn-docs').forEach(button => {
+          // 初始化按钮样式
+          applyButtonStyles();
+          
           button.addEventListener('click', function(e) {
             // 创建波纹元素
             const ripple = document.createElement('span');
@@ -2179,16 +2361,32 @@
               this.style.animation = '';
             }, 600);
             
-            // 创建成功反馈粒子
-            for (let i = 0; i < 8; i++) {
+            // 根据按钮类型和设备类型创建不同颜色的成功反馈粒子
+            let particleColors;
+            if (isMobile()) {
+              // 移动端：立即使用(btn-primary)用红色粒子，项目文档(btn-docs)用绿色粒子
+              const isMobilePrimaryButton = this.classList.contains('btn-primary');
+              particleColors = isMobilePrimaryButton 
+                ? ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5']
+                : ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
+            } else {
+              // 桌面端：立即使用(btn-primary)用红色粒子，项目文档(btn-docs)用绿色粒子
+              const isDesktopPrimaryButton = this.classList.contains('btn-primary');
+              particleColors = isDesktopPrimaryButton 
+                ? ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5']
+                : ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
+            }
+            
+            for (let i = 0; i < 12; i++) {
               const particle = document.createElement('div');
               particle.style.position = 'absolute';
-              particle.style.width = '4px';
-              particle.style.height = '4px';
-              particle.style.background = '#6366f1';
+              particle.style.width = '6px';
+              particle.style.height = '6px';
+              particle.style.background = particleColors[Math.floor(Math.random() * particleColors.length)];
               particle.style.borderRadius = '50%';
               particle.style.pointerEvents = 'none';
               particle.style.zIndex = '1000';
+              particle.style.boxShadow = `0 0 10px ${particleColors[0]}`;
               
               const centerX = rect.left + rect.width / 2;
               const centerY = rect.top + rect.height / 2;
@@ -2197,8 +2395,9 @@
               
               document.body.appendChild(particle);
               
-              const angle = (i / 8) * Math.PI * 2;
-              const distance = 30 + Math.random() * 20;
+              const angle = (i / 12) * Math.PI * 2;
+              const distance = 40 + Math.random() * 30;
+              const duration = 600 + Math.random() * 400;
               
               particle.animate([
                 {
@@ -2210,12 +2409,73 @@
                   opacity: 0
                 }
               ], {
-                duration: 500,
+                duration: duration,
                 easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
               }).onfinish = () => {
                 particle.remove();
               };
             }
+          });
+          
+          // 只在桌面端禁用动态颜色变化，移动端保持交互效果
+          if (!isMobile()) {
+            // 桌面端：移除所有动态颜色变化事件监听器，保持原始颜色
+            return;
+          }
+          
+          // 移动端：保持颜色交互效果
+          // 鼠标悬停时的颜色渐变动画（移动端）
+          button.addEventListener('mouseenter', function() {
+            const isMobilePrimaryButton = this.classList.contains('btn-primary');
+            
+            if (isMobilePrimaryButton) {
+              // 移动端立即使用按钮悬停时的红色效果
+              this.style.background = 'linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)';
+              this.style.boxShadow = '0 15px 35px rgba(239, 68, 68, 0.5), 0 0 20px rgba(248, 113, 113, 0.3)';
+            } else {
+              // 移动端项目文档按钮悬停时的绿色效果
+              this.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%)';
+              this.style.boxShadow = '0 15px 35px rgba(16, 185, 129, 0.5), 0 0 20px rgba(52, 211, 153, 0.3)';
+            }
+            
+            this.style.filter = 'brightness(1.1) saturate(1.2)';
+          });
+          
+          button.addEventListener('mouseleave', function() {
+            const isMobilePrimaryButton = this.classList.contains('btn-primary');
+            
+            if (isMobilePrimaryButton) {
+              // 移动端立即使用按钮恢复红色
+              this.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+              this.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.3)';
+            } else {
+              // 移动端项目文档按钮恢复绿色
+              this.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+              this.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
+            }
+            
+            this.style.filter = 'brightness(1) saturate(1)';
+          });
+          
+          // 鼠标按下时的效果（移动端）
+          button.addEventListener('mousedown', function() {
+            const isMobilePrimaryButton = this.classList.contains('btn-primary');
+            
+            if (isMobilePrimaryButton) {
+              // 移动端立即使用按钮按下时的深红色效果
+              this.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
+              this.style.boxShadow = '0 5px 15px rgba(239, 68, 68, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+            } else {
+              // 移动端项目文档按钮按下时的深绿色效果
+              this.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
+              this.style.boxShadow = '0 5px 15px rgba(16, 185, 129, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+            }
+            
+            this.style.transform = 'translateY(-2px) scale(0.98)';
+          });
+          
+          button.addEventListener('mouseup', function() {
+            this.style.transform = 'translateY(-6px) scale(1.05)';
           });
         });
 
@@ -2462,7 +2722,79 @@
           console.log('缓存图片:', heroPreloadedImages.size, '张');
         }, 3000);
 
-        // 全国首发徽章交互效果
+        // 颜色交互演示功能
+        function createColorDemo() {
+          const buttons = document.querySelectorAll('.btn-primary, .btn-docs');
+          
+          buttons.forEach(button => {
+            // 添加颜色变化指示器
+            const colorIndicator = document.createElement('div');
+            colorIndicator.style.position = 'absolute';
+            colorIndicator.style.top = '-8px';
+            colorIndicator.style.right = '-8px';
+            colorIndicator.style.width = '16px';
+            colorIndicator.style.height = '16px';
+            colorIndicator.style.borderRadius = '50%';
+            colorIndicator.style.border = '2px solid white';
+            colorIndicator.style.zIndex = '10';
+            colorIndicator.style.transition = 'all 0.3s ease';
+            
+            const isGreenButton = button.classList.contains('btn-primary');
+            colorIndicator.style.background = isGreenButton ? '#10b981' : '#ef4444';
+            
+            button.style.position = 'relative';
+            button.appendChild(colorIndicator);
+            
+            // 鼠标悬停时改变指示器颜色
+            button.addEventListener('mouseenter', function() {
+              colorIndicator.style.background = isGreenButton ? '#34d399' : '#f87171';
+              colorIndicator.style.transform = 'scale(1.2)';
+              colorIndicator.style.boxShadow = `0 0 15px ${isGreenButton ? '#10b981' : '#ef4444'}`;
+            });
+            
+            button.addEventListener('mouseleave', function() {
+              colorIndicator.style.background = isGreenButton ? '#10b981' : '#ef4444';
+              colorIndicator.style.transform = 'scale(1)';
+              colorIndicator.style.boxShadow = 'none';
+            });
+            
+            // 点击时的颜色爆炸效果
+            button.addEventListener('click', function() {
+              colorIndicator.style.transform = 'scale(0)';
+              setTimeout(() => {
+                colorIndicator.style.transform = 'scale(1.5)';
+                setTimeout(() => {
+                  colorIndicator.style.transform = 'scale(1)';
+                }, 200);
+              }, 100);
+            });
+          });
+        }
+        
+        // 初始化颜色演示
+        setTimeout(createColorDemo, 1000);
+        
+        // 自动颜色循环演示（可选）
+        function startColorCycle() {
+          const buttons = document.querySelectorAll('.btn-primary, .btn-docs');
+          let cycleIndex = 0;
+          
+          setInterval(() => {
+            buttons.forEach((button, index) => {
+              if (index === cycleIndex % buttons.length) {
+                // 触发悬停效果
+                button.dispatchEvent(new Event('mouseenter'));
+                setTimeout(() => {
+                  button.dispatchEvent(new Event('mouseleave'));
+                }, 1500);
+              }
+            });
+            cycleIndex++;
+          }, 3000);
+        }
+        
+        // 5秒后开始自动颜色循环演示
+        setTimeout(startColorCycle, 5000);
         const launchBadge = document.getElementById("launchBadge");
         if (launchBadge) {
           // 点击徽章特效
@@ -2540,15 +2872,16 @@
         });
       </script>
     </div>
-    <div id="root" style="display: none"></div>
+    <div id="root"></div>
     <script>
       (function () {
         const landing = document.getElementById("landing");
         const root = document.getElementById("root");
         const syncView = () => {
-          const isApp = !!location.hash && location.hash.startsWith("#/");
-          if (landing) landing.style.display = isApp ? "none" : "";
-          if (root) root.style.display = isApp ? "" : "none";
+          // 默认显示React应用，只有明确访问/#/landing时才显示静态官网
+          const showLanding = location.hash === "#/landing";
+          if (landing) landing.style.display = showLanding ? "" : "none";
+          if (root) root.style.display = showLanding ? "none" : "";
         };
         window.addEventListener("hashchange", syncView);
         syncView();

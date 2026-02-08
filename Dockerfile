@@ -13,7 +13,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # 复制预构建的前端资源到 Nginx 根目录
-COPY dist /usr/share/nginx/html
+COPY dist/ /usr/share/nginx/html/
 
 # 设置正确的文件权限
 RUN chmod -R 755 /usr/share/nginx/html
@@ -23,7 +23,7 @@ EXPOSE 7860
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:7860/ || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:7860/ || exit 1
 
 # 启动 Nginx (前台运行)
 CMD ["nginx", "-g", "daemon off;"]

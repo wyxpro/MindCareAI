@@ -55,6 +55,9 @@ doc/
 *.md
 !README_DEPLOY.md
 
+# 根目录的官网index.html（不要复制到dist）
+/index.html
+
 # 环境配置
 .env
 .env.*
