@@ -16,14 +16,49 @@ import type { EmotionDiary, EmotionLevel } from '@/types';
 import { blobToBase64, convertWebmToWav } from '@/utils/audio';
 
 const EMOTIONS = [
-  { level: 'very_good' as EmotionLevel, label: '极好', emoji: '😄', color: 'bg-gradient-to-br from-success/20 to-success/10 text-success border-success/30 hover:border-success/50 hover:shadow-success-glow' },
-  { level: 'good' as EmotionLevel, label: '不错', emoji: '😊', color: 'bg-gradient-to-br from-info/20 to-info/10 text-info border-info/30 hover:border-info/50 hover:shadow-glow' },
-  { level: 'neutral' as EmotionLevel, label: '一般', emoji: '😐', color: 'bg-gradient-to-br from-muted to-muted/50 text-muted-foreground border-border hover:border-muted-foreground/30' },
-  { level: 'bad' as EmotionLevel, label: '难过', emoji: '😔', color: 'bg-gradient-to-br from-warning/20 to-warning/10 text-warning border-warning/30 hover:border-warning/50' },
-  { level: 'very_bad' as EmotionLevel, label: '糟糕', emoji: '😢', color: 'bg-gradient-to-br from-destructive/20 to-destructive/10 text-destructive border-destructive/30 hover:border-destructive/50' },
+  {
+    level: 'very_good' as EmotionLevel,
+    label: '极好',
+    emoji: '😄',
+    colorActive: 'bg-gradient-to-br from-success/20 to-success/10 text-success border-success/40 hover:border-success/60 hover:shadow-success-glow',
+    colorBase: 'bg-success/10 text-success border-success/20 hover:bg-success/20'
+  },
+  {
+    level: 'good' as EmotionLevel,
+    label: '不错',
+    emoji: '😊',
+    colorActive: 'bg-gradient-to-br from-info/20 to-info/10 text-info border-info/40 hover:border-info/60 hover:shadow-glow',
+    colorBase: 'bg-info/10 text-info border-info/20 hover:bg-info/20'
+  },
+  {
+    level: 'neutral' as EmotionLevel,
+    label: '一般',
+    emoji: '😐',
+    colorActive: 'bg-gradient-to-br from-muted to-muted/50 text-muted-foreground border-border hover:border-muted-foreground/30',
+    colorBase: 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+  },
+  {
+    level: 'bad' as EmotionLevel,
+    label: '难过',
+    emoji: '😔',
+    colorActive: 'bg-gradient-to-br from-warning/20 to-warning/10 text-warning border-warning/40 hover:border-warning/60',
+    colorBase: 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20'
+  },
+  {
+    level: 'very_bad' as EmotionLevel,
+    label: '糟糕',
+    emoji: '😢',
+    colorActive: 'bg-gradient-to-br from-destructive/20 to-destructive/10 text-destructive border-destructive/40 hover:border-destructive/60',
+    colorBase: 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
+  },
 ];
 
-const TRIGGERS = ['睡眠不足', '工作压力', '家庭琐事', '运动', '社交活动', '天气阴郁', '身体不适', '学习困难', '人际关系', '经济压力', '饮食不规律', '其他'];
+const POSITIVE_TRIGGERS = [
+  '好消息', '与朋友相聚', '顺利完成任务', '感恩时刻', '运动', '社交活动', '阳光/好天气', '音乐', '阅读', '兴趣爱好', '宠物陪伴', '冥想', '健康饮食'
+];
+const NEGATIVE_TRIGGERS = [
+  '睡眠不足', '工作压力', '家庭琐事', '天气阴郁', '身体不适', '学习困难', '人际关系', '经济压力', '饮食不规律', '通勤拥堵', '争执/冲突', '其他'
+];
 
 const getEmotionColor = (level: EmotionLevel) => {
   const colors = { 
@@ -46,6 +81,10 @@ export default function RecordPageNew() {
   const [loading, setLoading] = useState(false);
   const [emotionLevel, setEmotionLevel] = useState<EmotionLevel>('neutral');
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
+  const [positiveExtra, setPositiveExtra] = useState<string[]>([]);
+  const [negativeExtra, setNegativeExtra] = useState<string[]>([]);
+  const [newPositiveTag, setNewPositiveTag] = useState('');
+  const [newNegativeTag, setNewNegativeTag] = useState('');
   const [content, setContent] = useState('');
   const [dayDialogOpen, setDayDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,12 +93,17 @@ export default function RecordPageNew() {
   const [isRecording, setIsRecording] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
   const [feedbackType, setFeedbackType] = useState<MoodFeedbackType>(null);
+  const recognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef(false);
+  const speechBaseContentRef = useRef('');
+  const speechCommittedRef = useRef('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (user) loadDiaries(); }, [user, currentMonth]);
+  useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
 
   const loadDiaries = async () => {
     if (!user) return;
@@ -78,6 +122,50 @@ export default function RecordPageNew() {
   const emptyDays = Array(firstDayOfWeek).fill(null);
 
   const getDiariesForDate = (date: Date) => diaries.filter(d => isSameDay(new Date(d.diary_date), date));
+  const getLatestDiaryForDate = (date: Date) => {
+    const list = getDiariesForDate(date);
+    if (list.length === 0) return null;
+    return list.slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  };
+
+  const handleDiaryImageUpload = async (diaryId: string, files: FileList, replaceIndex?: number) => {
+    const target = diaries.find(d => d.id === diaryId);
+    if (!target || !files || files.length === 0) return;
+    try {
+      const newBase64List: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} 超过10MB，已跳过`, { duration: 1000 }); continue; }
+        const base64 = await blobToBase64(file);
+        newBase64List.push(base64);
+      }
+      const currentUrls = Array.isArray(target.image_urls) ? target.image_urls.slice() : [];
+      let nextUrls: string[] = [];
+      if (typeof replaceIndex === 'number') {
+        nextUrls = currentUrls.slice();
+        nextUrls[replaceIndex] = newBase64List[0];
+      } else {
+        nextUrls = [...currentUrls, ...newBase64List];
+      }
+      await updateEmotionDiary(diaryId, { image_urls: nextUrls });
+      toast.success('图片已更新', { duration: 1000 });
+      await loadDiaries();
+    } catch {
+      toast.error('图片更新失败', { duration: 1000 });
+    }
+  };
+
+  const promptUploadForDiary = (diaryId: string, replaceIndex?: number) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = !Number.isFinite(replaceIndex as number);
+    input.onchange = (e: any) => {
+      const files = e.target.files as FileList;
+      handleDiaryImageUpload(diaryId, files, replaceIndex);
+    };
+    input.click();
+  };
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -87,7 +175,12 @@ export default function RecordPageNew() {
     const list = getDiariesForDate(date);
     if (list.length > 0) {
       setDayDialogOpen(true);
-      setEditingId(null);
+      const latest = getLatestDiaryForDate(date);
+      setEditingId(latest?.id || null);
+      setEmotionLevel(latest?.emotion_level || 'neutral');
+      setSelectedTriggers(latest?.tags || []);
+      setContent(latest?.content || '');
+      setImageUrls(latest?.image_urls || []);
       setEditContent('');
     } else {
       setEmotionLevel('neutral');
@@ -99,21 +192,55 @@ export default function RecordPageNew() {
 
   const handleStartRecording = async () => {
     try {
+      const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recog = new SpeechRecognition();
+        recognitionRef.current = recog;
+        recog.lang = 'zh-CN';
+        recog.continuous = true;
+        recog.interimResults = true;
+        speechBaseContentRef.current = content;
+        speechCommittedRef.current = '';
+        recog.onresult = (event: any) => {
+          let committedAdd = '';
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            const text = result[0].transcript;
+            if (result.isFinal) {
+              committedAdd += text;
+            } else {
+              interim += text;
+            }
+          }
+          if (committedAdd) {
+            speechCommittedRef.current = (speechCommittedRef.current + committedAdd).trim();
+          }
+          const base = speechBaseContentRef.current;
+          const committed = speechCommittedRef.current;
+          const combined = `${committed}${interim}`.trim();
+          const next = base ? [base, combined].filter(Boolean).join('\n') : combined;
+          setContent(next);
+        };
+        recog.onend = () => { if (isRecordingRef.current) recog.start(); };
+        recog.onerror = () => {};
+        recog.start();
+        isRecordingRef.current = true;
+        setIsRecording(true);
+        toast.info('语音识别中...', { duration: 1000 });
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
+      mediaRecorder.ondataavailable = (event) => { audioChunksRef.current.push(event.data); };
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         await processAudioRecording(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
-
       mediaRecorder.start();
       setIsRecording(true);
       toast.info('正在录音...', { duration: 1000 });
@@ -123,9 +250,16 @@ export default function RecordPageNew() {
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (!isRecording) return;
+    isRecordingRef.current = false;
+    setIsRecording(false);
+    const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition && recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      return;
+    }
+    if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
     }
   };
 
@@ -228,19 +362,46 @@ export default function RecordPageNew() {
     setSelectedTriggers(prev => prev.includes(trigger) ? prev.filter(t => t !== trigger) : [...prev, trigger]);
   };
 
+  const addPositiveTag = () => {
+    const t = newPositiveTag.trim();
+    if (!t) return;
+    setPositiveExtra(prev => (prev.includes(t) || POSITIVE_TRIGGERS.includes(t)) ? prev : [...prev, t]);
+    setSelectedTriggers(prev => prev.includes(t) ? prev : [...prev, t]);
+    setNewPositiveTag('');
+  };
+
+  const addNegativeTag = () => {
+    const t = newNegativeTag.trim();
+    if (!t) return;
+    setNegativeExtra(prev => (prev.includes(t) || NEGATIVE_TRIGGERS.includes(t)) ? prev : [...prev, t]);
+    setSelectedTriggers(prev => prev.includes(t) ? prev : [...prev, t]);
+    setNewNegativeTag('');
+  };
+
   const handleSave = async () => {
     if (!user) { toast.error('请先登录', { duration: 1000 }); return; }
     if (!content.trim() && imageUrls.length === 0) { toast.error('请写下你的心情或上传图片', { duration: 1000 }); return; }
     setLoading(true);
     try {
-      const saved = await createEmotionDiary({ 
-        user_id: user.id, 
-        diary_date: format(selectedDate, 'yyyy-MM-dd'), 
-        emotion_level: emotionLevel, 
-        content,
-        tags: selectedTriggers,
-        image_urls: imageUrls
-      });
+      let saved: EmotionDiary;
+      if (editingId) {
+        saved = await updateEmotionDiary(editingId, {
+          emotion_level: emotionLevel,
+          content,
+          tags: selectedTriggers,
+          image_urls: imageUrls
+        });
+      } else {
+        saved = await createEmotionDiary({ 
+          user_id: user.id, 
+          diary_date: format(selectedDate, 'yyyy-MM-dd'), 
+          emotion_level: emotionLevel, 
+          content,
+          tags: selectedTriggers,
+          image_urls: imageUrls
+        });
+        setEditingId(saved.id);
+      }
 
       // 触发反馈
       if (emotionLevel === 'very_good' || emotionLevel === 'good') {
@@ -251,15 +412,9 @@ export default function RecordPageNew() {
         setFeedbackType('observer');
       }
 
-      try {
-        const ics = buildDiaryIcs(saved);
-        downloadTextFile(`mindcare-diary-${saved.diary_date}.ics`, ics, 'text/calendar');
-      } catch {
-      }
-      toast.success('记录已保存', { duration: 1000 });
-      setContent('');
-      setSelectedTriggers([]);
-      setImageUrls([]);
+      // 取消自动下载 .ics（如需导出可在页面手动触发）
+      toast.success(editingId ? '记录已更新' : '记录已保存', { duration: 1000 });
+      // 编辑模式下不清空，便于重复编辑；新增后进入编辑模式
       await loadDiaries();
     } catch (error) {
       console.error('保存失败:', error);
@@ -363,19 +518,14 @@ export default function RecordPageNew() {
                 <h4 className="text-sm font-medium mb-3">今天感觉如何?</h4>
                 <div className="grid grid-cols-5 gap-2">
                   {EMOTIONS.map(emotion => (
-                    <button key={emotion.level} onClick={() => setEmotionLevel(emotion.level)} className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${emotionLevel === emotion.level ? emotion.color + ' scale-110 shadow-md' : 'bg-muted hover:bg-muted/80'}`}>
+                    <button key={emotion.level} onClick={() => setEmotionLevel(emotion.level)} className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${emotionLevel === emotion.level ? emotion.colorActive + ' scale-110 shadow-md' : emotion.colorBase}`}>
                       <span className="text-2xl">{emotion.emoji}</span>
                       <span className="text-xs font-medium">{emotion.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
-              <div>
-                <h4 className="text-sm font-medium mb-3">触发因素 (可选)</h4>
-                <div className="flex flex-wrap gap-2">
-                  {TRIGGERS.map(trigger => <Badge key={trigger} variant={selectedTriggers.includes(trigger) ? 'default' : 'outline'} className="cursor-pointer hover:scale-105 transition-transform" onClick={() => toggleTrigger(trigger)}>{trigger}</Badge>)}
-                </div>
-              </div>
+
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-medium">随手记</h4>
@@ -384,7 +534,7 @@ export default function RecordPageNew() {
                       variant="ghost"
                       size="sm"
                       onClick={isRecording ? handleStopRecording : handleStartRecording}
-                      disabled={loading || recognizing}
+                      disabled={loading}
                       className={isRecording ? 'text-red-500 animate-pulse' : ''}
                     >
                       {isRecording ? <StopCircle className="w-4 h-4 mr-1" /> : <Mic className="w-4 h-4 mr-1" />}
@@ -410,23 +560,13 @@ export default function RecordPageNew() {
                   </div>
                 </div>
                 
-                <div className="relative group">
-                  <Textarea 
-                    placeholder="写下点什么..." 
-                    value={content} 
-                    onChange={(e) => setContent(e.target.value)} 
-                    rows={6} 
-                    className="resize-none transition-all duration-300 focus:shadow-inner-glow" 
-                  />
-                  {recognizing && (
-                    <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span className="text-sm font-medium">识别中...</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <Textarea 
+                  placeholder="写下点什么..." 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)} 
+                  rows={6} 
+                  className="resize-none transition-all duration-300 focus:shadow-inner-glow" 
+                />
 
                 {imageUrls.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -474,6 +614,68 @@ export default function RecordPageNew() {
             </div>
           </div>
           <div className="space-y-4 p-6">
+            {isSameDay(selectedDate, new Date()) && (
+              <div className="rounded-2xl border bg-white shadow-sm p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold">编辑当天情绪</h4>
+                  {(() => {
+                    const latest = getLatestDiaryForDate(selectedDate);
+                    return latest ? <span className="text-xs text-muted-foreground">最近记录：{format(new Date(latest.created_at), 'HH:mm')}</span> : null;
+                  })()}
+                </div>
+                <div className="grid grid-cols-5 gap-2 mb-3">
+                  {EMOTIONS.map(emotion => (
+                    <button
+                      key={emotion.level}
+                      onClick={async () => {
+                        const latest = getLatestDiaryForDate(selectedDate);
+                        if (!latest) return;
+                        setLoading(true);
+                        try {
+                          await updateEmotionDiary(latest.id, { emotion_level: emotion.level });
+                          toast.success('当天情绪已更新', { duration: 1000 });
+                          await loadDiaries();
+                        } catch {
+                          toast.error('更新失败', { duration: 1000 });
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all ${emotion.colorActive}`}
+                    >
+                      <span className="text-2xl">{emotion.emoji}</span>
+                      <span className="text-xs font-medium">{emotion.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">切换图片</h4>
+                  <div className="grid grid-cols-6 gap-2">
+                    {['开心_1.png','喜悦恋爱_1.png','治愈温暖_1.png','惊讶_1.png','困倦_1.png','悲伤_1.png','生气_1.png','害怕_1.png'].map((name) => {
+                      const src = `/srcs/enjoy/${encodeURIComponent(name)}`;
+                      return (
+                        <button key={name} onClick={async () => {
+                          const latest = getLatestDiaryForDate(selectedDate);
+                          if (!latest) return;
+                          setLoading(true);
+                          try {
+                            await updateEmotionDiary(latest.id, { image_urls: [src] });
+                            toast.success('图片已切换', { duration: 1000 });
+                            await loadDiaries();
+                          } catch {
+                            toast.error('切换失败', { duration: 1000 });
+                          } finally {
+                            setLoading(false);
+                          }
+                        }} className="aspect-square rounded-lg overflow-hidden border hover:shadow">
+                          <img src={src} alt={name} className="w-full h-full object-cover" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
             {getDiariesForDate(selectedDate).map((d) => (
               <div key={d.id} className="rounded-2xl border bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
                 <div className="flex gap-4 p-4">
@@ -531,10 +733,12 @@ export default function RecordPageNew() {
                     {d.image_urls && d.image_urls.length > 0 && (
                       <div className="grid grid-cols-3 gap-2">
                         {d.image_urls.map((url, idx) => (
-                          <div key={idx} className="aspect-square rounded-lg overflow-hidden border">
+                          <button key={idx} className="aspect-square rounded-lg overflow-hidden border hover:shadow" onClick={() => promptUploadForDiary(d.id, idx)} title="点击替换此图片">
                             <img src={url} alt={`dimg-${idx}`} className="w-full h-full object-cover" />
-                          </div>
+                          </button>
                         ))}
+                        <button className="aspect-square rounded-lg overflow-hidden border-dashed border-2 border-muted-foreground/30 flex items-center justify-center text-xs text-muted-foreground hover:border-primary hover:text-primary" onClick={() => promptUploadForDiary(d.id)} title="添加图片">+
+                        </button>
                       </div>
                     )}
                   </div>

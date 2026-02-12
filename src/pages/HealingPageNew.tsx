@@ -40,20 +40,21 @@ const CONTENT_GRADIENTS = [
   'from-amber-500 to-amber-600',
 ];
 
-const meditationMusicModules = import.meta.glob('/srcs/music/*.{mp3,ogg,wav,m4a}', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-});
+const rawMusicFiles = [
+  'Lisure .mp3',
+  '叹云兮 - 鞠婧祎.mp3',
+  '相思遥 (Live版) - 郁可唯_弦子.mp3',
+  '落了白 - 蒋雪儿Snow.J.mp3',
+] as const;
 
-const meditationTracks = Object.entries(meditationMusicModules)
-  .map(([path, url]) => {
-    const fileName = path.split('/').pop() || path;
+const meditationTracks = rawMusicFiles
+  .map((fileName) => {
     const nameWithoutExt = fileName.replace(/\.(mp3|ogg|wav|m4a)$/i, '');
     const [title, artist] = nameWithoutExt.split(' - ');
+    const url = `/srcs/music/${encodeURIComponent(fileName)}`;
     return {
-      id: path,
-      url: url as string,
+      id: fileName,
+      url,
       title: (title || nameWithoutExt).trim(),
       artist: (artist || '').trim(),
       fileName,

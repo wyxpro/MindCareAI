@@ -10,6 +10,7 @@ export default function EmotionImageCarousel({ className = '', onEmotionChange }
   const [currentImage, setCurrentImage] = useState<{ src: string, emotion: string } | null>(null);
   const [currentEmotion, setCurrentEmotion] = useState<string>('');
   const [imageList, setImageList] = useState<{ src: string, emotion: string }[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
@@ -98,6 +99,7 @@ export default function EmotionImageCarousel({ className = '', onEmotionChange }
         const firstImage = workingImages[0];
         setCurrentImage(firstImage);
         setCurrentEmotion(firstImage.emotion);
+        setCurrentIndex(0);
         
         const config = emotionConfig[firstImage.emotion as keyof typeof emotionConfig];
         onEmotionChange?.(config?.status || '状态不错', config?.score || 75);
@@ -139,19 +141,35 @@ export default function EmotionImageCarousel({ className = '', onEmotionChange }
   }, [generateImageList, emotionConfig, onEmotionChange]);
 
   // Change image with emotion and mood update
-  const changeImage = useCallback(() => {
+  const changeImage = useCallback(async () => {
     if (imageList.length > 0) {
-      const randomIndex = Math.floor(Math.random() * imageList.length);
-      const selectedImage = imageList[randomIndex];
-      setCurrentImage(selectedImage);
-      setCurrentEmotion(selectedImage.emotion);
-      
-      const config = emotionConfig[selectedImage.emotion as keyof typeof emotionConfig];
+      const nextIndex = (currentIndex + 1) % imageList.length;
+      const nextImage = imageList[nextIndex];
+
+      // 预加载下一张以保证切换流畅
+      await new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        img.src = nextImage.src;
+      });
+
+      setCurrentIndex(nextIndex);
+      setCurrentImage(nextImage);
+      setCurrentEmotion(nextImage.emotion);
+
+      const config = emotionConfig[nextImage.emotion as keyof typeof emotionConfig];
       onEmotionChange?.(config?.status || '状态不错', config?.score || 75);
-      
-      console.log('🔄 Changed to image:', selectedImage.src, 'Emotion:', selectedImage.emotion);
+
+      // 继续预加载下一张（后台）
+      const preloadIndex = (nextIndex + 1) % imageList.length;
+      const preloadImage = imageList[preloadIndex];
+      const preImg = new Image();
+      preImg.src = preloadImage.src;
+
+      console.log('🔄 Changed to image:', nextImage.src, 'Emotion:', nextImage.emotion);
     }
-  }, [imageList, emotionConfig, onEmotionChange]);
+  }, [imageList, currentIndex, emotionConfig, onEmotionChange]);
 
   // Initialize
   useEffect(() => {

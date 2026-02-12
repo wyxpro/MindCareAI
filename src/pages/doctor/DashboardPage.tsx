@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getAllProfiles, getAssessments, getEmotionDiaries, getRiskAlerts } from '@/db/api';
 import ImageCarousel from '@/components/common/ImageCarousel';
 import { generateMockAlerts, generateEmotionTrendData, generateAssessmentDistribution } from '@/utils/mockData';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import type { Profile, RiskAlert } from '@/types';
 
 export default function DoctorDashboardPage() {
@@ -45,7 +45,7 @@ export default function DoctorDashboardPage() {
         avgEmotionScore: 3.2 + Math.random() * 0.8, // 模拟数据
       });
 
-      setRecentAlerts(mockAlerts.slice(0, 5));
+      setRecentAlerts(mockAlerts.slice(0, 3));
       
       // 生成图表数据
       setEmotionTrendData(generateEmotionTrendData());
@@ -61,7 +61,7 @@ export default function DoctorDashboardPage() {
         todayAssessments: 24,
         avgEmotionScore: 3.6,
       });
-      setRecentAlerts(mockAlerts.slice(0, 5));
+      setRecentAlerts(mockAlerts.slice(0, 3));
       setEmotionTrendData(generateEmotionTrendData());
       setAssessmentData(generateAssessmentDistribution());
     } finally {
@@ -83,22 +83,22 @@ export default function DoctorDashboardPage() {
       </div>
 
       {/* 统计卡片 - 渐变发光效果 */}
-      <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:gap-6 grid-cols-2 lg:grid-cols-4">
         <Card className="glass border-primary/20 shadow-glow card-hover-glow animate-fade-in-up">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">患者总数</CardTitle>
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-primary to-info flex items-center justify-center shadow-glow">
-              <Users className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">患者总数</CardTitle>
+            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-primary to-info flex items-center justify-center shadow-glow">
+              <Users className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
             {loading ? (
-              <Skeleton className="h-8 md:h-10 w-24 bg-muted rounded-lg" />
+              <Skeleton className="h-7 md:h-10 w-16 md:w-24 bg-muted rounded-lg" />
             ) : (
               <>
-                <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stats.totalPatients}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                <div className="text-xl md:text-3xl font-bold text-foreground mb-0.5 md:mb-1">{stats.totalPatients}</div>
+                <p className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-success animate-pulse" />
                   活跃用户
                 </p>
               </>
@@ -107,20 +107,20 @@ export default function DoctorDashboardPage() {
         </Card>
 
         <Card className="glass border-destructive/20 shadow-glow card-hover-glow animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">待处理预警</CardTitle>
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-destructive to-destructive/70 flex items-center justify-center shadow-glow animate-pulse-glow">
-              <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">待处理预警</CardTitle>
+            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-destructive to-destructive/70 flex items-center justify-center shadow-glow animate-pulse-glow">
+              <AlertTriangle className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
             {loading ? (
-              <Skeleton className="h-8 md:h-10 w-24 bg-muted rounded-lg" />
+              <Skeleton className="h-7 md:h-10 w-16 md:w-24 bg-muted rounded-lg" />
             ) : (
               <>
-                <div className="text-2xl md:text-3xl font-bold text-destructive mb-1">{stats.activeAlerts}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+                <div className="text-xl md:text-3xl font-bold text-destructive mb-0.5 md:mb-1">{stats.activeAlerts}</div>
+                <p className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-destructive animate-pulse" />
                   需要关注
                 </p>
               </>
@@ -129,20 +129,20 @@ export default function DoctorDashboardPage() {
         </Card>
 
         <Card className="glass border-info/20 shadow-glow card-hover-glow animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">今日评估</CardTitle>
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-info to-info/70 flex items-center justify-center shadow-glow">
-              <Activity className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">今日评估</CardTitle>
+            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-info to-info/70 flex items-center justify-center shadow-glow">
+              <Activity className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
             {loading ? (
-              <Skeleton className="h-8 md:h-10 w-24 bg-muted rounded-lg" />
+              <Skeleton className="h-7 md:h-10 w-16 md:w-24 bg-muted rounded-lg" />
             ) : (
               <>
-                <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stats.todayAssessments}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
+                <div className="text-xl md:text-3xl font-bold text-foreground mb-0.5 md:mb-1">{stats.todayAssessments}</div>
+                <p className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-info animate-pulse" />
                   完成评估
                 </p>
               </>
@@ -151,20 +151,20 @@ export default function DoctorDashboardPage() {
         </Card>
 
         <Card className="glass border-success/20 shadow-success-glow card-hover-glow animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">平均情绪分数</CardTitle>
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-success to-success/70 flex items-center justify-center shadow-success-glow">
-              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="text-[10px] md:text-sm font-medium text-muted-foreground">完成评估</CardTitle>
+            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-success to-success/70 flex items-center justify-center shadow-success-glow">
+              <TrendingUp className="w-3.5 h-3.5 md:w-5 md:h-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 md:p-6 pt-0 md:pt-0">
             {loading ? (
-              <Skeleton className="h-8 md:h-10 w-24 bg-muted rounded-lg" />
+              <Skeleton className="h-7 md:h-10 w-16 md:w-24 bg-muted rounded-lg" />
             ) : (
               <>
-                <div className="text-2xl md:text-3xl font-bold gradient-text mb-1">{stats.avgEmotionScore.toFixed(1)}</div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                <div className="text-xl md:text-3xl font-bold gradient-text mb-0.5 md:mb-1">{stats.avgEmotionScore.toFixed(1)}</div>
+                <p className="text-[10px] md:text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-success animate-pulse" />
                   满分5.0
                 </p>
               </>
@@ -290,7 +290,7 @@ export default function DoctorDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border-primary/20 shadow-glow animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+        <Card className="glass border-primary/20 shadow-glow animate-fade-in-up overflow-hidden" style={{ animationDelay: '0.7s' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-lg md:text-xl">
               <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-chart-3 to-chart-4 flex items-center justify-center shadow-glow">
@@ -299,51 +299,63 @@ export default function DoctorDashboardPage() {
               评估分布
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-8">
             {loading ? (
-              <div className="h-48 md:h-64 flex flex-col items-center justify-center text-muted-foreground bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-dashed border-border">
+              <div className="h-64 md:h-72 flex flex-col items-center justify-center text-muted-foreground bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-dashed border-border">
                 <Skeleton className="w-full h-full rounded-xl" />
               </div>
             ) : (
-              <div className="h-48 md:h-64">
+              <div className="h-72 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                     <Pie
                       data={assessmentData}
                       cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={2}
+                      cy="38%"
+                      innerRadius={42}
+                      outerRadius={70}
+                      paddingAngle={3}
                       dataKey="value"
+                      label={false}
+                      labelLine={false}
                     >
                       {assessmentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                       ))}
                     </Pie>
                     <Tooltip 
                       contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px'
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                       }}
                       formatter={(value: any) => [`${value}次`, '评估次数']}
                     />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      align="center" 
+                      content={(props: any) => {
+                        const items = (props?.payload || []).map((p: any) => ({ name: p.value, color: p.color }));
+                        return (
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-3 mt-4 px-4">
+                            {items.map((it: any, idx: number) => {
+                              const found = assessmentData.find((d: any) => d.name === it.name);
+                              return (
+                                <div key={idx} className="flex items-center gap-2 text-[11px] md:text-xs">
+                                  <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: it.color }} />
+                                  <span className="text-muted-foreground truncate max-w-[80px] md:max-w-none">{it.name}</span>
+                                  <span className="font-bold text-foreground ml-auto">{found?.value ?? ''}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      }} 
+                    />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  {assessmentData.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-muted-foreground">{item.name}</span>
-                      <span className="font-medium ml-auto">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
           </CardContent>

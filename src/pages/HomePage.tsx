@@ -113,7 +113,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24">
       {/* 核心 3D 情绪 Avatar 和心情指数 */}
-      <section className="pt-16 pb-8 relative overflow-hidden">
+      <section className="pt-8 md:pt-16 pb-8 relative overflow-hidden">
         <div className="flex items-center justify-center gap-6 max-w-sm mx-auto px-4">
           {/* Emotion Image Carousel */}
           <div className="flex-shrink-0">

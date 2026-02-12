@@ -1,5 +1,4 @@
 import ImageCarousel from '@/components/common/ImageCarousel';
-import DoctorDashboard from '@/components/home/DoctorDashboard';
 
 export default function CarouselTest() {
   return (
@@ -9,10 +8,6 @@ export default function CarouselTest() {
           轮播图组件测试
         </h1>
         
-        {/* 医生端数据看板（包含轮播图） */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg">
-          <DoctorDashboard />
-        </div>
         
         {/* 单独的轮播图测试 */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg">

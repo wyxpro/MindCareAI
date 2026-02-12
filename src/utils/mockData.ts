@@ -169,7 +169,7 @@ const generateHandlingNotes = (alertType: string): string => {
  */
 export const generateEmotionTrendData = () => {
   const days = 30;
-  const data = [];
+  const data: { date: string; score: number; label: string }[] = [];
   
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();

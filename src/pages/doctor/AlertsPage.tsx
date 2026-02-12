@@ -37,13 +37,13 @@ export default function AlertsPage() {
       // 如果没有真实数据，使用模拟数据
       if (unhandled.length === 0 && handled.length === 0) {
         const mockAlerts = generateMockAlerts(25);
-        const mockUnhandled = mockAlerts.filter(alert => !alert.is_handled);
+        const mockUnhandled = mockAlerts.filter(alert => !alert.is_handled).slice(0, 3);
         const mockHandled = mockAlerts.filter(alert => alert.is_handled);
         
         setUnhandledAlerts(mockUnhandled);
         setHandledAlerts(mockHandled);
       } else {
-        setUnhandledAlerts(unhandled);
+        setUnhandledAlerts(unhandled.slice(0, 3));
         setHandledAlerts(handled);
       }
     } catch (error) {
@@ -51,7 +51,7 @@ export default function AlertsPage() {
       
       // 出错时使用模拟数据
       const mockAlerts = generateMockAlerts(25);
-      const mockUnhandled = mockAlerts.filter(alert => !alert.is_handled);
+      const mockUnhandled = mockAlerts.filter(alert => !alert.is_handled).slice(0, 3);
       const mockHandled = mockAlerts.filter(alert => alert.is_handled);
       
       setUnhandledAlerts(mockUnhandled);

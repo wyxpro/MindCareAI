@@ -74,12 +74,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithUsername = async (username: string, password: string) => {
     try {
       const email = `${username}@miaoda.com`;
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      let { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        const { error: fnErr } = await supabase.functions.invoke('auth-username-signup', { body: { username, password } });
+        if (!fnErr) {
+          const retry = await supabase.auth.signInWithPassword({ email, password });
+          error = retry.error;
+        }
+      }
       if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (uid) {
+        await supabase.rpc('link_username_to_user', { uid, uname: username });
+      }
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -88,13 +96,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUpWithUsername = async (username: string, password: string) => {
     try {
+      const { error: fnErr } = await supabase.functions.invoke('auth-username-signup', { body: { username, password } });
+      if (fnErr) {
+        const email = `${username}@miaoda.com`;
+        const { error: regErr } = await supabase.auth.signUp({ email, password });
+        if (regErr) throw regErr;
+      }
       const email = `${username}@miaoda.com`;
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      const { error: signErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (signErr) throw signErr;
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (uid) {
+        await supabase.rpc('link_username_to_user', { uid, uname: username });
+      }
       return { error: null };
     } catch (error) {
       return { error: error as Error };
