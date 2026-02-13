@@ -79,7 +79,7 @@ export const getEmotionDiaryByDate = async (userId: string, date: string) => {
 export const createEmotionDiary = async (diary: Partial<EmotionDiary>) => {
   const { data, error } = await supabase
     .from('emotion_diaries')
-    .insert(diary)
+    .upsert(diary, { onConflict: 'user_id,diary_date' })
     .select()
     .maybeSingle();
   
@@ -574,8 +574,13 @@ export const speechRecognition = async (audioBase64: string, format: 'wav' | 'm4
       len,
     },
   });
-  
-  if (error) throw error;
+  if (error) {
+    const msg = String((error as any)?.message || 'speech_recognition_error');
+    if (/API密钥未配置|apikey|authorization/i.test(msg)) {
+      throw new Error('语音识别未配置 API Key，请在 Supabase Functions 环境中设置 INTEGRATIONS_API_KEY');
+    }
+    throw error;
+  }
   return data;
 };
 

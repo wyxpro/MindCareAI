@@ -19,7 +19,11 @@ BEGIN
     uname,
     NEW.email,
     NEW.phone,
-    CASE WHEN user_count = 0 THEN 'admin'::public.user_role ELSE 'user'::public.user_role END
+    CASE 
+      WHEN user_count = 0 THEN 'admin'::public.user_role
+      WHEN COALESCE(NEW.raw_user_meta_data->>'role','') = 'doctor' THEN 'doctor'::public.user_role
+      ELSE 'user'::public.user_role
+    END
   )
   ON CONFLICT (username) DO NOTHING;
   RETURN NEW;
@@ -35,4 +39,3 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION handle_new_user();
-

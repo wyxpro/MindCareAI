@@ -194,6 +194,10 @@ export default function RecordPageNew() {
     try {
       const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+          toast.error('浏览器语音识别需要在 HTTPS 下使用');
+          // 继续尝试使用麦克风录音 + 服务端识别
+        } else {
         const recog = new SpeechRecognition();
         recognitionRef.current = recog;
         recog.lang = 'zh-CN';
@@ -229,6 +233,7 @@ export default function RecordPageNew() {
         setIsRecording(true);
         toast.info('语音识别中...', { duration: 1000 });
         return;
+        }
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -275,8 +280,15 @@ export default function RecordPageNew() {
         setContent(prev => prev + (prev ? '\n' : '') + response.text);
         toast.success('语音识别成功', { duration: 1000 });
       }
-    } catch (error) {
-      toast.error('语音识别服务暂不可用', { duration: 1000 });
+    } catch (error: any) {
+      const msg = String(error?.message || '');
+      if (/API Key|API密钥|未配置/i.test(msg)) {
+        toast.error('语音识别未配置，请在 Supabase Functions 设置 INTEGRATIONS_API_KEY', { duration: 2000 });
+      } else if (/NotAllowedError|permission/i.test(msg)) {
+        toast.error('麦克风权限被拒绝，请允许浏览器访问麦克风', { duration: 2000 });
+      } else {
+        toast.error('语音识别服务暂不可用', { duration: 1000 });
+      }
     } finally {
       setRecognizing(false);
     }

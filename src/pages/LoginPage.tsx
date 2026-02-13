@@ -28,8 +28,8 @@ export default function LoginPage() {
       toast.error('请输入用户名和密码');
       return;
     }
-    if (role === 'doctor' && password.length < 8) {
-      toast.error('医生端密码至少需要8个字符');
+    if (role === 'doctor' && password.length < 6) {
+      toast.error('医生端密码至少需要6个字符');
       return;
     }
 
@@ -73,18 +73,13 @@ export default function LoginPage() {
       toast.error('请输入用户名和密码');
       return;
     }
-
-    if (role === 'doctor') {
-      toast.error('医生账号由管理员开通，请联系管理员');
-      return;
-    }
     if (password.length < 6) {
       toast.error('密码至少需要6个字符');
       return;
     }
 
     setLoading(true);
-    const { error } = await signUpWithUsername(username, password);
+    const { error } = await signUpWithUsername(username, password, role);
     setLoading(false);
 
     if (error) {
@@ -143,7 +138,7 @@ export default function LoginPage() {
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder={role === 'doctor' ? '医生端至少8位密码' : '请输入密码'}
+                    placeholder={role === 'doctor' ? '医生端至少6位密码' : '请输入密码'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
@@ -162,7 +157,7 @@ export default function LoginPage() {
                   <Input
                     id="signup-username"
                     type="text"
-                    placeholder="请输入用户名（仅支持注册用户端账号）"
+                    placeholder="请输入用户名"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
@@ -181,7 +176,7 @@ export default function LoginPage() {
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {role === 'doctor' ? '医生账号由管理员开通' : '注册'}
+                  注册
                 </Button>
               </form>
             </TabsContent>

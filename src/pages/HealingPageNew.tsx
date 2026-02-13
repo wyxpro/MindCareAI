@@ -125,21 +125,31 @@ export default function HealingPageNew() {
     const audio = audioRef.current;
     if (!audio) return;
     if (meditationTracks.length === 0) return;
-
-    audio.preload = 'auto';
-    audio.src = meditationTracks[trackIndex].url;
-    audio.volume = muted ? 0 : volume;
-    audio.load();
-    if (wantPlayRef.current) {
-      audio.play().catch(() => {});
-    }
-
-    const nextIndex = (trackIndex + 1) % meditationTracks.length;
-    const preloader = new Audio();
-    preloader.preload = 'auto';
-    preloader.src = meditationTracks[nextIndex].url;
-    preloader.load();
-    preloadRef.current = preloader;
+    const current = meditationTracks[trackIndex];
+    const tryLoad = async () => {
+      try {
+        const res = await fetch(current.url, { method: 'HEAD' });
+        if (!res.ok) throw new Error('head_failed');
+        audio.preload = 'auto';
+        audio.src = current.url;
+        audio.volume = muted ? 0 : volume;
+        audio.load();
+        if (wantPlayRef.current) {
+          audio.play().catch(() => {});
+        }
+        const nextIndex = (trackIndex + 1) % meditationTracks.length;
+        const preloader = new Audio();
+        preloader.preload = 'auto';
+        preloader.src = meditationTracks[nextIndex].url;
+        preloader.load();
+        preloadRef.current = preloader;
+        setPlayError(null);
+      } catch {
+        setPlayError(`音乐文件不可用：${current.fileName}`);
+        toast.error('音乐文件未找到或不可访问');
+      }
+    };
+    tryLoad();
 
     return () => {
       preloadRef.current = null;

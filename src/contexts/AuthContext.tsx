@@ -87,10 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUpWithUsername = async (username: string, password: string) => {
+  const signUpWithUsername = async (username: string, password: string, desiredRole: 'user' | 'doctor' = 'user') => {
     try {
       const email = `${username}@miaoda.com`;
-      const { error: regErr } = await supabase.auth.signUp({ email, password });
+      const { error: regErr } = await supabase.auth.signUp({ email, password, options: { data: { username, role: desiredRole } } });
       if (regErr) throw regErr;
       const { error: signErr } = await supabase.auth.signInWithPassword({ email, password });
       if (signErr) throw signErr;
@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try { await supabase.auth.signOut(); } catch { /* ignore network errors */ }
     setUser(null);
     setProfile(null);
   };
