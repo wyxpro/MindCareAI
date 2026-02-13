@@ -75,13 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const email = `${username}@miaoda.com`;
       let { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        const { error: fnErr } = await supabase.functions.invoke('auth-username-signup', { body: { username, password } });
-        if (!fnErr) {
-          const retry = await supabase.auth.signInWithPassword({ email, password });
-          error = retry.error;
-        }
-      }
       if (error) throw error;
       const { data: { session } } = await supabase.auth.getSession();
       const uid = session?.user?.id;
@@ -96,13 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUpWithUsername = async (username: string, password: string) => {
     try {
-      const { error: fnErr } = await supabase.functions.invoke('auth-username-signup', { body: { username, password } });
-      if (fnErr) {
-        const email = `${username}@miaoda.com`;
-        const { error: regErr } = await supabase.auth.signUp({ email, password });
-        if (regErr) throw regErr;
-      }
       const email = `${username}@miaoda.com`;
+      const { error: regErr } = await supabase.auth.signUp({ email, password });
+      if (regErr) throw regErr;
       const { error: signErr } = await supabase.auth.signInWithPassword({ email, password });
       if (signErr) throw signErr;
       const { data: { session } } = await supabase.auth.getSession();
