@@ -1,1 +1,6 @@
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+{
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "outputDirectory": "dist"
+}
