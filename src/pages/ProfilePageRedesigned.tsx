@@ -8,7 +8,7 @@ import { Activity,
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { HealthReportDialog } from '@/components/profile/HealthReportDialog';
+import FusionReport from '@/components/assessment/FusionReport';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -456,7 +456,9 @@ export default function ProfilePageRedesigned() {
         </DialogContent>
       </Dialog>
 
-      <HealthReportDialog open={reportOpen} onOpenChange={setReportOpen} />
+      {reportOpen && (
+        <FusionReport onClose={() => setReportOpen(false)} />
+      )}
     </div>
   );
 }

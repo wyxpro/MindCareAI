@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ragRetrieval, getKnowledgeBase } from '@/db/api';
+import { getKnowledgeBase } from '@/db/api';
+import { volcResponses } from '@/db/volc';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -202,13 +203,31 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     setLoading(true);
 
     try {
-      const response = await ragRetrieval(
-        inputText, 
-        messages.map(m => ({ role: m.role, content: m.content })),
-        selectedScales.join(',')
-      );
+      // 构建RAG上下文（简版）
+      let kbText = '';
+      try {
+        const kb = await getKnowledgeBase('assessment');
+        kbText = (kb || []).slice(0, 5)
+          .map(k => `【${k.title}】\n${(k.content || '').slice(0, 400)}`)
+          .join('\n\n');
+      } catch {}
 
-      let aiContent = response?.choices?.[0]?.delta?.content || '';
+      const systemPrompt = `你是一位专业的心理咨询师，正在进行抑郁量表对话评估。量表：${selectedScales.join(',')}。请以温暖、共情的方式逐步引导，必要时进行澄清与安全提醒。每次回复尽量控制在80字以内。\n\n【知识库参考】\n${kbText || '暂无相关知识库'}`;
+
+      const response = await volcResponses({
+        model: 'doubao-seed-1-8-251228',
+        input: [
+          { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
+          {
+            role: 'user',
+            content: [
+              { type: 'input_text', text: inputText }
+            ]
+          }
+        ]
+      });
+
+      let aiContent = response?.text || '';
       if (!aiContent) {
         const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
         aiContent = `好的，我理解了。下面我们继续：${nextQ}`;
@@ -249,7 +268,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
     } catch (error) {
       console.error('Scale assessment error:', error);
-      toast.error('网络响应较慢，请稍后');
+      toast.error('服务暂时不可用，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -423,7 +442,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
             </div>
           </div>
 
-          <div className="p-8 space-y-8 bg-white dark:bg-slate-950">
+          <div className="p-8 space-y-8 bg-white dark:bg-slate-950" id="assessment-report-card">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl text-center space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score</span>
@@ -453,11 +472,43 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
             <div className="pt-4 space-y-3">
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 rounded-xl h-12 border-slate-100 dark:border-slate-800">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl h-12 border-slate-100 dark:border-slate-800"
+                  onClick={async () => {
+                    const el = document.getElementById('assessment-report-card');
+                    if (!el) return;
+                    const html2canvas = (await import('html2canvas')).default;
+                    const canvas = await html2canvas(el, { backgroundColor: null, scale: 2 });
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = await import('jspdf');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const imgWidth = pageWidth;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    const y = Math.max(10, (pageHeight - imgHeight) / 2);
+                    pdf.addImage(imgData, 'PNG', 0, y, imgWidth, imgHeight);
+                    pdf.save('assessment-report.pdf');
+                  }}
+                >
                   <Download className="w-4 h-4 mr-2" /> PDF
                 </Button>
-                <Button variant="outline" className="flex-1 rounded-xl h-12 border-slate-100 dark:border-slate-800">
-                  <Printer className="w-4 h-4 mr-2" /> 打印
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl h-12 border-slate-100 dark:border-slate-800"
+                  onClick={async () => {
+                    const el = document.getElementById('assessment-report-card');
+                    if (!el) return;
+                    const html2canvas = (await import('html2canvas')).default;
+                    const canvas = await html2canvas(el, { backgroundColor: null, scale: 2 });
+                    const a = document.createElement('a');
+                    a.href = canvas.toDataURL('image/png');
+                    a.download = 'assessment-report.png';
+                    a.click();
+                  }}
+                >
+                  <Printer className="w-4 h-4 mr-2" /> PNG
                 </Button>
               </div>
               <Button 

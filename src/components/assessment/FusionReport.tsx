@@ -1,235 +1,451 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, 
-  BarChart3, Brain, Calendar, CheckCircle2, 
-  ChevronDown, ChevronRight, ChevronUp, ClipboardList, Download, 
-  FileText, Filter, History, Mic, Printer, Search, Share2, TrendingUp, Video 
+import { 
+  Activity, Calendar, ChevronRight, Clock, Download, FileText, 
+  History, Mic, RefreshCw, User, Video, X 
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/contexts/AuthContext';
+import { createRiskAlert, getAssessments, syncReport } from '@/db/api';
+import { cn } from '@/lib/utils';
 
 interface FusionReportProps {
-  scaleData: any;
-  voiceData: any;
-  expressionData: any;
-  onClose: () => void;
+  scaleData?: any;
+  voiceData?: any;
+  expressionData?: any;
+  onClose?: () => void;
+  assessmentId?: string; // If viewing history
 }
 
-export default function FusionReport({ scaleData, voiceData, expressionData, onClose }: FusionReportProps) {
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+export default function FusionReport({ 
+  scaleData, 
+  voiceData, 
+  expressionData, 
+  onClose,
+  assessmentId 
+}: FusionReportProps) {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  // State
   const [fusionScore, setFusionScore] = useState(0);
-  const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('low');
+  const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high' | 'extreme'>('low');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [weights, setWeights] = useState({ scale: 0.5, voice: 0.2, expression: 0.3 });
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
 
+  // State for data (either from props or fetched)
+  const [data, setData] = useState<{
+    scale: any;
+    voice: any;
+    expression: any;
+  }>({ scale: scaleData, voice: voiceData, expression: expressionData });
+
+  // Calculations
   useEffect(() => {
-    // 模拟加权融合算法: 量表 50%, 语音 20%, 表情 30%
-    const scaleScore = scaleData?.score || 10;
-    const voiceScore = 40; // 模拟分值
-    const expressionScore = 60; // 模拟分值
-    
-    const finalScore = Math.round(scaleScore * 0.5 + voiceScore * 0.2 + expressionScore * 0.3);
-    setFusionScore(finalScore);
-
-    if (finalScore >= 70) {
-      setRiskLevel('high');
-      // 模拟高风险预警推送
-      toast.error('检测到极高抑郁风险，已自动推送至您的主治医生！', { duration: 5000 });
-    } else if (finalScore >= 40) {
-      setRiskLevel('medium');
+    if (assessmentId) {
+      loadAssessment(assessmentId);
+    } else if (!scaleData && !voiceData && !expressionData) {
+      fetchLatestAssessment();
     } else {
-      setRiskLevel('low');
+      calculateFusion(scaleData, voiceData, expressionData);
     }
-  }, [scaleData, voiceData, expressionData]);
+  }, [scaleData, voiceData, expressionData, weights, assessmentId]);
 
-  const sections = [
-    { 
-      id: 'scale', 
-      title: '量表评估结果 (50%)', 
-      icon: ClipboardList, 
-      color: 'text-primary',
-      content: 'PHQ-9 评估总分 18 分。关键发现：睡眠障碍与食欲不振症状显著。自杀意念筛查为阴性。'
-    },
-    { 
-      id: 'voice', 
-      title: '语音情绪分析 (20%)', 
-      icon: Mic, 
-      color: 'text-indigo-500',
-      content: '语速偏慢 (162音节/分)，基频方差极低 (8.4Hz)，反映出显著的动力不足与情感淡漠。'
-    },
-    { 
-      id: 'expression', 
-      title: '表情特征识别 (30%)', 
-      icon: Video, 
-      color: 'text-purple-500',
-      content: '中性表情占比 78%。微表情检测到频繁的眉心皱纹及嘴角下垂，符合典型抑郁面容特征。'
-    },
-  ];
+  const fetchLatestAssessment = async () => {
+    if (!user) return;
+    try {
+      const assessments = await getAssessments(user.id, 1);
+      if (assessments.length > 0) {
+        const latest = assessments[0];
+        if (latest.report?.scaleData || latest.report?.voiceData || latest.report?.expressionData) {
+           const newData = {
+             scale: latest.report.scaleData,
+             voice: latest.report.voiceData,
+             expression: latest.report.expressionData
+           };
+           setData(newData);
+           calculateFusion(newData.scale, newData.voice, newData.expression);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const loadAssessment = async (id: string) => {
+    // Implementation to load historical assessment
+    // For now, we assume data is passed or we fetch it
+    // If fetching, we would use getAssessmentById(id)
+  };
+
+  const calculateFusion = (sData: any, vData: any, eData: any) => {
+    const scaleRaw = sData?.score || 0;
+    let scaleNormalized = 0;
+    if (scaleRaw <= 4) scaleNormalized = scaleRaw * 5;
+    else if (scaleRaw <= 9) scaleNormalized = 20 + (scaleRaw - 5) * 4;
+    else if (scaleRaw <= 14) scaleNormalized = 40 + (scaleRaw - 10) * 4;
+    else if (scaleRaw <= 19) scaleNormalized = 60 + (scaleRaw - 15) * 4;
+    else scaleNormalized = 80 + (scaleRaw - 20) * 2.5; // Cap at 100
+
+    const voiceNormalized = vData?.score || 0; // Assume 0-100
+    const expressionNormalized = eData?.depression_risk_score || 0; // Assume 0-100
+
+    const score = Math.round(
+      scaleNormalized * weights.scale + 
+      voiceNormalized * weights.voice + 
+      expressionNormalized * weights.expression
+    );
+
+    setFusionScore(score);
+
+    // Determine Risk Level
+    let level: 'low' | 'medium' | 'high' | 'extreme' = 'low';
+    if (score >= 80) level = 'extreme';
+    else if (score >= 60) level = 'high';
+    else if (score >= 40) level = 'medium';
+    else level = 'low';
+
+    setRiskLevel(level);
+
+    // Check for High Risk Warning
+    checkHighRisk(score, scaleRaw, voiceNormalized, expressionNormalized);
+
+    // Auto Sync
+    if (syncStatus === 'idle' && !assessmentId && (sData || vData || eData)) {
+      handleSync(score, level, { scale: scaleNormalized, voice: voiceNormalized, expression: expressionNormalized }, sData, vData, eData);
+    }
+  };
+
+  const checkHighRisk = async (score: number, scaleRaw: number, voiceScore: number, expressionScore: number) => {
+    const isHighRisk = 
+      score >= 80 || 
+      scaleRaw >= 20 || 
+      (voiceScore >= 80 && expressionScore >= 80);
+
+    if (isHighRisk && !assessmentId) {
+      // Create Risk Alert
+      try {
+        await createRiskAlert({
+          patient_id: user?.id,
+          alert_type: 'fusion_risk_high',
+          risk_level: score,
+          description: `融合风险分值 ${score} (PHQ-9: ${scaleRaw}, Voice: ${voiceScore}, Expression: ${expressionScore})`,
+          is_handled: false,
+          data_source: 'fusion_report'
+        });
+        toast.error('检测到高风险指标，已自动推送至医生工作台');
+      } catch (e) {
+        console.error('Failed to create risk alert', e);
+      }
+    }
+  };
+
+  const handleSync = async (score: number, level: string, normalizedScores: any, sData: any, vData: any, eData: any, retryCount = 0) => {
+    setSyncStatus('syncing');
+    setSyncProgress(10);
+    
+    try {
+      // Simulate progress
+      const interval = setInterval(() => {
+        setSyncProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      await syncReport({
+        user_id: user?.id || '',
+        score: score,
+        risk_level: score, // Store as 0-100
+        report_details: {
+          scaleRaw: sData?.score,
+          normalizedScores,
+          scaleData: sData,
+          voiceData: vData,
+          expressionData: eData,
+          generatedAt: new Date().toISOString()
+        },
+        weights
+      });
+
+      clearInterval(interval);
+      setSyncProgress(100);
+      setSyncStatus('success');
+      toast.success('报告已同步至云端');
+      
+      // Refresh history
+      fetchHistory();
+    } catch (error) {
+      if (retryCount < 3) {
+        toast.warning(`同步失败，正在尝试第 ${retryCount + 1} 次重试...`);
+        setTimeout(() => {
+          handleSync(score, level, normalizedScores, sData, vData, eData, retryCount + 1);
+        }, 1000);
+      } else {
+        setSyncStatus('error');
+        toast.error('同步失败，请重试');
+      }
+    }
+  };
+
+  const fetchHistory = async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const history = await getAssessments(user.id, 50); // Get recent 50
+      setHistoryList(history.filter(h => h.assessment_type === 'fusion_report' || h.report?.weights));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDownload = async (format: 'png' | 'pdf') => {
+    if (!reportRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(reportRef.current, { scale: 2 });
+      
+      if (format === 'png') {
+        const link = document.createElement('a');
+        link.download = `FusionReport-${new Date().toISOString()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } else {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`FusionReport-${new Date().toISOString()}.pdf`);
+      }
+      toast.success('下载成功');
+    } catch (e) {
+      toast.error('下载失败');
+    }
+  };
+
+  // UI Helpers
+  const getRiskColor = (level: string) => {
+    switch (level) {
+      case 'low': return 'bg-emerald-500 shadow-emerald-500/20';
+      case 'medium': return 'bg-amber-500 shadow-amber-500/20';
+      case 'high': return 'bg-orange-500 shadow-orange-500/20';
+      case 'extreme': return 'bg-rose-600 shadow-rose-600/20';
+      default: return 'bg-slate-500';
+    }
+  };
+
+  const getRiskText = (level: string) => {
+    switch (level) {
+      case 'low': return '低风险';
+      case 'medium': return '中风险';
+      case 'high': return '高风险';
+      case 'extreme': return '极高风险';
+      default: return '未知';
+    }
+  };
+
+  const getRiskBadgeColor = (level: string) => {
+     switch (level) {
+      case 'low': return 'bg-[#10B981]';
+      case 'medium': return 'bg-[#F59E0B]';
+      case 'high': return 'bg-[#F97316]';
+      case 'extreme': return 'bg-[#EF4444]';
+      default: return 'bg-slate-500';
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 pb-24 px-4">
-      <div className="max-w-md mx-auto space-y-8">
-        {/* 顶部汇总卡片 */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden"
-        >
-          {/* 背景装饰 */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-          
-          <div className="flex justify-between items-start mb-6">
-            <div className="space-y-1">
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white">融合评估报告</h2>
-              <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                <Calendar className="w-3 h-3" />
-                2026-02-01 14:32
-              </div>
-            </div>
-            <Badge className={`${
-              riskLevel === 'high' ? 'bg-rose-500 shadow-rose-500/20' : 
-              riskLevel === 'medium' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-emerald-500 shadow-emerald-500/20'
-            } text-white px-4 py-1.5 rounded-full text-xs font-black shadow-lg`}>
-              {riskLevel === 'high' ? '高风险' : riskLevel === 'medium' ? '中风险' : '低风险'}
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-8">
-            <div className="relative w-28 h-28">
-              <svg className="w-full h-full -rotate-90">
-                <circle cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-100 dark:text-slate-800" />
-                <motion.circle 
-                  cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" 
-                  strokeDasharray={301.59}
-                  initial={{ strokeDashoffset: 301.59 }}
-                  animate={{ strokeDashoffset: 301.59 - (301.59 * fusionScore) / 100 }}
-                  className="text-primary"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-slate-800 dark:text-white">{fusionScore}</span>
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Score</span>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-4">
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-slate-400">AI 综合诊断</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  多模态融合分析显示，您的情绪指标在三个维度上均表现出一定的相关性，建议优先关注睡眠调节。
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 flex gap-2">
-            <Button className="flex-1 rounded-2xl h-12 font-bold shadow-lg shadow-primary/20">
-              <Download className="w-4 h-4 mr-2" /> 导出完整 PDF
-            </Button>
-            <Button variant="outline" size="icon" className="w-12 h-12 rounded-2xl border-slate-100 dark:border-slate-800">
-              <Share2 className="w-5 h-5" />
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* 子报告折叠面板 */}
-        <div className="space-y-3">
-          {sections.map((section, idx) => (
-            <Card 
-              key={section.id} 
-              className="rounded-3xl border-none shadow-sm overflow-hidden bg-white dark:bg-slate-900"
-            >
-              <button 
-                onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-                className="w-full p-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950 flex items-center justify-center ${section.color}`}>
-                    <section.icon className="w-5 h-5" />
-                  </div>
-                  <span className="font-bold text-slate-800 dark:text-slate-100">{section.title}</span>
-                </div>
-                {expandedSection === section.id ? <ChevronUp className="w-5 h-5 text-slate-300" /> : <ChevronDown className="w-5 h-5 text-slate-300" />}
-              </button>
-              <AnimatePresence>
-                {expandedSection === section.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                  >
-                    <div className="px-5 pb-5 pt-2 border-t border-slate-50 dark:border-slate-800">
-                      <p className="text-sm text-slate-500 leading-relaxed">
-                        {section.content}
-                      </p>
-                      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-end">
-                        <Button variant="ghost" size="sm" className="text-primary font-bold">查看详细图表</Button>
-                      </div>
+    <div className="fixed inset-0 z-50 bg-[#F8FAFC] dark:bg-slate-950 overflow-y-auto">
+      {/* Navbar */}
+      <div className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100 -ml-2">
+            <X className="w-6 h-6 text-slate-900 dark:text-white" />
+          </Button>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+            多模态融合<br/>评估报告
+          </h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" onClick={fetchHistory} className="rounded-full border-slate-200 text-slate-700 font-medium px-4 h-9">
+                <Clock className="w-4 h-4 mr-1.5" />
+                历史记录
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-[400px] sm:w-[540px]">
+              <SheetHeader>
+                <SheetTitle className="text-xl font-bold flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  历史评估记录
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <ScrollArea className="h-[calc(100vh-120px)] pr-4">
+                  {loadingHistory ? (
+                     <div className="flex justify-center py-10"><RefreshCw className="animate-spin text-slate-400" /></div>
+                  ) : historyList.length === 0 ? (
+                    <div className="text-center py-10 text-slate-400">暂无历史记录</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {historyList.map((item) => (
+                        <div 
+                          key={item.id}
+                          className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-100 dark:border-slate-700"
+                          onClick={() => {
+                            setSelectedHistoryId(item.id);
+                            toast.info('加载历史报告: ' + item.created_at);
+                          }}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                              {new Date(item.created_at).toLocaleString()}
+                            </span>
+                            <Badge className={`${
+                              (item.score || 0) >= 80 ? 'bg-rose-500' : 'bg-emerald-500'
+                            } text-white border-none`}>
+                              {item.score || 0}分
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
-          ))}
+                  )}
+                </ScrollArea>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          <Button size="sm" onClick={() => handleDownload('pdf')} className="rounded-full bg-[#1E6EFF] hover:bg-blue-700 text-white font-medium px-5 h-9 shadow-lg shadow-blue-500/20">
+            <Download className="w-4 h-4 mr-2" />
+            导出PDF
+          </Button>
         </div>
-
-        {/* 历史记录 */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-black text-lg text-slate-800 dark:text-white flex items-center gap-2">
-              <History className="w-5 h-5 text-primary" /> 历史评估记录
-            </h3>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 shadow-sm"><Search className="w-4 h-4" /></Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 shadow-sm"><Filter className="w-4 h-4" /></Button>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <motion.div 
-                key={i}
-                whileTap={{ scale: 0.98 }}
-                className="bg-white dark:bg-slate-900 p-4 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-slate-50 dark:bg-slate-950 rounded-2xl flex items-center justify-center text-primary font-black">
-                    {75 - i * 10}
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100">综合评估报告</p>
-                    <p className="text-[10px] text-slate-400 font-bold">2026-01-{20-i} 10:15</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="text-[10px] border-slate-100 dark:border-slate-800">中风险</Badge>
-                  <ChevronRight className="w-4 h-4 text-slate-300" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        <Button 
-          onClick={onClose}
-          className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 bg-primary"
-        >
-          返回首页
-        </Button>
       </div>
 
-      {/* 高风险警告提示 */}
-      {riskLevel === 'high' && (
-        <div className="fixed bottom-32 left-4 right-4 bg-rose-500 p-4 rounded-2xl shadow-2xl flex gap-3 animate-bounce">
-          <AlertCircle className="w-6 h-6 text-white shrink-0" />
-          <div className="space-y-1">
-            <p className="text-xs font-bold text-white">高风险警示</p>
-            <p className="text-[10px] text-white/80">系统检测到潜在风险，请注意保持通讯畅通，心理医生可能会主动联系您。</p>
-          </div>
+      <div className="max-w-md mx-auto p-4 space-y-6 pb-20 mt-4">
+        {/* Main Report Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-[32px] p-6 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden" ref={reportRef}>
+           {/* Top Green Bar */}
+           <div className="absolute top-0 left-0 right-0 h-2 bg-[#10B981]" />
+           
+           <div className="flex justify-between items-start mb-8 mt-2">
+             <div className="space-y-2">
+               <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">综合风险评估</h2>
+               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 font-medium">
+                 <div className="flex items-center gap-1">
+                   <Calendar className="w-3.5 h-3.5" />
+                   {new Date().toLocaleDateString()}
+                 </div>
+                 <div className="flex items-center gap-1">
+                   <User className="w-3.5 h-3.5" />
+                   {profile?.full_name || '未命名用户'} (ID: {user?.id?.slice(0, 6)})
+                 </div>
+               </div>
+             </div>
+             <Badge className={`${getRiskBadgeColor(riskLevel)} text-white px-3 py-1.5 rounded-full text-sm font-bold border-none`}>
+                {getRiskText(riskLevel)}
+             </Badge>
+           </div>
+
+           <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-12">
+             {/* Left: Gauge */}
+             <div className="relative w-48 h-48 flex-shrink-0">
+                <svg className="w-full h-full -rotate-90">
+                  {/* Background Circle */}
+                  <circle cx="96" cy="96" r="80" fill="none" stroke="#F1F5F9" strokeWidth="16" />
+                  {/* Progress Circle */}
+                  <circle 
+                    cx="96" cy="96" r="80" fill="none" stroke={riskLevel === 'extreme' ? '#EF4444' : riskLevel === 'high' ? '#F97316' : riskLevel === 'medium' ? '#F59E0B' : '#10B981'} 
+                    strokeWidth="16" 
+                    strokeDasharray={502.65}
+                    strokeDashoffset={502.65 - (502.65 * fusionScore) / 100}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">{fusionScore.toFixed(1)}</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">RISK SCORE</span>
+                </div>
+             </div>
+
+             {/* Right: Metrics */}
+             <div className="flex-1 w-full space-y-3">
+               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3">
+                 <span className="text-sm font-bold text-slate-500">量表 (50%)</span>
+                 <div className="flex items-baseline gap-1">
+                   <span className="text-xl font-black text-slate-900 dark:text-white">{data.scale?.score || 0}</span>
+                   <span className="text-xs text-slate-400 font-bold">/ 27</span>
+                 </div>
+               </div>
+               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3">
+                 <span className="text-sm font-bold text-slate-500">语音 (20%)</span>
+                 <div className="flex items-baseline gap-1">
+                   <span className="text-xl font-black text-slate-900 dark:text-white">{data.voice?.score || 0}</span>
+                   <span className="text-xs text-slate-400 font-bold">/ 100</span>
+                 </div>
+               </div>
+               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3">
+                 <span className="text-sm font-bold text-slate-500">表情 (30%)</span>
+                 <div className="flex items-baseline gap-1">
+                   <span className="text-xl font-black text-slate-900 dark:text-white">{data.expression?.depression_risk_score || 0}</span>
+                   <span className="text-xs text-slate-400 font-bold">/ 100</span>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Sync Status */}
+           <div className="mt-8 flex justify-end">
+             <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-full">
+               <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+               <span className="text-xs font-bold text-slate-500">
+                 {syncStatus === 'syncing' ? '正在同步...' : 
+                  syncStatus === 'success' ? '已同步至 报告中心' : '准备就绪'}
+               </span>
+             </div>
+           </div>
         </div>
-      )}
+
+        {/* Action Buttons */}
+        <div className="space-y-3">
+           <Button variant="outline" className="w-full h-16 rounded-2xl border-2 border-blue-100 bg-blue-50/50 hover:bg-blue-100 hover:border-blue-200 text-slate-800 justify-center gap-2 shadow-sm text-lg font-bold">
+             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+               <FileText className="w-4 h-4" />
+             </div>
+             量表报告
+           </Button>
+           <Button variant="outline" className="w-full h-16 rounded-2xl border-2 border-slate-100 bg-white hover:bg-slate-50 text-slate-800 justify-center gap-2 shadow-sm text-lg font-bold">
+             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+               <Mic className="w-4 h-4" />
+             </div>
+             语音报告
+           </Button>
+           <Button variant="outline" className="w-full h-16 rounded-2xl border-2 border-slate-100 bg-white hover:bg-slate-50 text-slate-800 justify-center gap-2 shadow-sm text-lg font-bold">
+             <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+               <Video className="w-4 h-4" />
+             </div>
+             表情报告
+           </Button>
+        </div>
+        
+      </div>
     </div>
   );
 }

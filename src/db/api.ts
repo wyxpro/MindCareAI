@@ -302,6 +302,73 @@ export const createMeditationSession = async (session: {
   return data;
 };
 
+// ==================== 融合报告相关 ====================
+export const syncReport = async (reportData: {
+  user_id: string;
+  assessment_id?: string;
+  score: number;
+  risk_level: number; // 0-100 mapped to risk level
+  report_details: any;
+  weights: { scale: number; voice: number; expression: number };
+}) => {
+  // 1. 如果有assessment_id，更新assessment
+  let assessmentId = reportData.assessment_id;
+  
+  if (assessmentId) {
+    await updateAssessment(assessmentId, {
+      score: reportData.score,
+      risk_level: reportData.risk_level, // 这里的risk_level如果是0-10，需要转换
+      report: {
+        ...reportData.report_details,
+        weights: reportData.weights,
+        synced_at: new Date().toISOString(),
+      },
+    });
+  } else {
+    // 否则创建新的assessment
+    const newAssessment = await createAssessment({
+      user_id: reportData.user_id,
+      assessment_type: 'fusion_report',
+      score: reportData.score,
+      risk_level: reportData.risk_level,
+      report: {
+        ...reportData.report_details,
+        weights: reportData.weights,
+        synced_at: new Date().toISOString(),
+      },
+    });
+    assessmentId = newAssessment?.id;
+  }
+
+  // 2. 写入报告中心 (这里假设报告中心就是assessments表，或者是另一张表)
+  // 如果有专门的 report_center 表，可以在这里写入。
+  // 目前沿用 assessments 表作为历史记录。
+
+  return assessmentId;
+};
+
+export const getReportHistory = async (userId: string, filters?: any) => {
+  let query = supabase
+    .from('assessments')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (filters) {
+    if (filters.startDate && filters.endDate) {
+      query = query.gte('created_at', filters.startDate).lte('created_at', filters.endDate);
+    }
+    if (filters.riskLevel) {
+      // 假设 risk_level 存的是 0-10 或 0-100
+      // 需要根据具体存储逻辑过滤
+    }
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+};
+
 export const getMeditationSessions = async (userId: string, limit = 50) => {
   const { data, error } = await supabase
     .from('meditation_sessions')

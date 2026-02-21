@@ -106,7 +106,7 @@ export default function EnhancedAssessmentPage() {
                 scaleData={scaleData}
                 voiceData={voiceData}
                 expressionData={expressionData}
-                onClose={() => navigate('/')}
+                onClose={() => navigate('/profile')}
               />
             </motion.div>
           )}
