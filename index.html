@@ -413,13 +413,7 @@
       }
 
       .hero-image-carousel {
-        position: absolute;
-        top: 0;
-        left: 0;
-        transform: translate(calc(-100% - 1ch), calc(-30% - 1ch));
-        width: 150px;
-        height: 150px;
-        z-index: 15;
+        display: none !important;
       }
 
       .hero-carousel-wrapper {
@@ -2479,7 +2473,8 @@
           });
         });
 
-        // 顶部图片轮播功能 - 修复路径问题
+        // 顶部图片轮播功能 - 已禁用
+        const DISABLE_HERO_CAROUSEL = true;
         const heroImageCarousel = document.getElementById('heroImageCarousel');
         const heroImageLoader = document.getElementById('heroImageLoader');
         
@@ -2709,8 +2704,12 @@
           }
         });
         
-        // 启动顶部轮播
-        heroInitCarousel();
+        // 启动顶部轮播（禁用）
+        if (DISABLE_HERO_CAROUSEL) {
+          hideCarousel();
+        } else {
+          heroInitCarousel();
+        }
         
         // 简化的调试信息
         setTimeout(() => {
