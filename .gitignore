@@ -13,7 +13,6 @@ dist-ssr
 output
 *.local
 package-lock.json
-.env
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +27,4 @@ package-lock.json
 .sync
 history/*.json
 .vite_cache
+.env
