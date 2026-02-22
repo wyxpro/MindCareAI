@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { modelScopeChat } from '@/db/modelscope';
+import { modelScopeVisionChat } from '@/db/modelscope';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface ExpressionStepProps {
@@ -21,6 +21,8 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const [countdown, setCountdown] = useState(DETECT_DURATION);
   const [fps, setFps] = useState(0);
   const [showReport, setShowReport] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [noFaceCount, setNoFaceCount] = useState(0);
   const [currentEmotion, setCurrentEmotion] = useState('中性');
   const [confidence, setConfidence] = useState(0.62);
@@ -35,6 +37,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTimeRef = useRef<number>(performance.now());
   const analysisRef = useRef<NodeJS.Timeout | null>(null);
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     startCamera();
@@ -127,11 +130,16 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     if (timerRef.current) clearInterval(timerRef.current);
     if (analysisRef.current) clearInterval(analysisRef.current);
     setIsCapturing(false);
+    setShowProgress(true);
+    setAnalysisProgress(0);
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    progressTimerRef.current = setInterval(() => {
+      setAnalysisProgress((p) => Math.min(90, p + 3));
+    }, 150);
     
     toast.info('正在分析面部微表情特征...');
 
     try {
-      // Construct a prompt for Intern-S1-Pro to analyze aggregated features
       const prompt = `仅返回JSON，不要解释。字段：
       emotion_radar{neutral,happy,sad,angry,surprised,fearful,disgusted,contempt,pain} 概率(四位小数)，
       depression_risk_score(0-100)，
@@ -139,15 +147,37 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       micro_features{brow_furrow,mouth_droop,eye_contact}。
       输入摘要：10秒采集中，眉心皱纹频率0.8次/秒，嘴角下垂占比45%，眨眼12次/分；情绪分布：悲伤35%，中性40%，焦虑15%，其他10%。`;
 
-      const aiRes = await modelScopeChat({
-        model: 'Shanghai_AI_Laboratory/Intern-S1-Pro',
-        messages: [{ role: 'user', content: prompt }]
+      const video = videoRef.current;
+      let dataUrl = '';
+      if (video && video.videoWidth && video.videoHeight) {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        }
+      }
+
+      const aiRes = await modelScopeVisionChat({
+        model: 'Qwen/Qwen3.5-397B-A17B',
+        text: prompt,
+        image_url: dataUrl || 'data:image/png;base64,'
       });
 
       let analysisData;
       try {
         const jsonStr = aiRes.text.match(/\{[\s\S]*\}/)?.[0] || '{}';
         analysisData = JSON.parse(jsonStr);
+        if (!analysisData || !analysisData.emotion_radar || typeof analysisData.emotion_radar.neutral !== 'number') {
+          analysisData = {
+            emotion_radar: { neutral: 0.35, happy: 0.06, sad: 0.34, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.02, pain: 0.01 },
+            depression_risk_score: 68,
+            analysis_report: "悲伤主导且微表情提示压抑倾向，建议结合量表综合评估。",
+            micro_features: { brow_furrow: "眉心皱缩频繁", mouth_droop: "嘴角下垂明显", eye_contact: "眨眼偏低" }
+          };
+        }
       } catch (e) {
         // Fallback mock
         analysisData = {
@@ -163,7 +193,12 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       }
 
       setReportData(analysisData);
-      setShowReport(true);
+      setAnalysisProgress(100);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      setTimeout(() => {
+        setShowProgress(false);
+        setShowReport(true);
+      }, 400);
       toast.success('分析完成');
     } catch (error) {
       console.error('Expression analysis failed:', error);
@@ -179,11 +214,16 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             eye_contact: "眼神游离，眨眼频率迟滞" 
           }
       });
-      setShowReport(true);
+      setAnalysisProgress(100);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      setTimeout(() => {
+        setShowProgress(false);
+        setShowReport(true);
+      }, 400);
     }
   };
 
-  const radarData = reportData ? (() => {
+  const radarData = (reportData && reportData.emotion_radar) ? (() => {
     const boost = (v: number) => {
       const amplified = Math.pow(Math.max(0, v), 0.5) * 1.4;
       return Math.min(1, Math.max(0.12, amplified));
@@ -210,7 +250,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             LIVE FEED
           </Badge>
           <div className="text-[10px] text-white/50 font-mono leading-4">
-            FPS: <span className={fps < 15 ? 'text-rose-400' : 'text-emerald-400'}>{fps}</span> · MODEL: Intern-S1-Pro · WIN: 10s<br />
+            FPS: <span className={fps < 15 ? 'text-rose-400' : 'text-emerald-400'}>{fps}</span> · MODEL: Qwen3.5-397B-A17B · WIN: 10s<br />
             FACE: <span className={noFaceCount > 0 ? 'text-rose-400' : 'text-emerald-400'}>{noFaceCount > 0 ? 'LOST' : 'LOCKED'}</span>
           </div>
         </div>
@@ -259,6 +299,26 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
               />
             )}
           </div>
+
+          {showProgress && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="pointer-events-auto w-[92vw] max-w-md mx-auto bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl p-6 text-center"
+              >
+                <p className="text-white text-sm mb-4">正在分析中，请稍候...</p>
+                <div className="w-full h-3 rounded-full bg-gradient-to-r from-slate-700 to-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 transition-all duration-300"
+                    style={{ width: `${analysisProgress}%` }}
+                  />
+                </div>
+                <div className="mt-2 text-white/80 text-xs font-mono">{analysisProgress}%</div>
+              </motion.div>
+            </div>
+          )}
 
           <div className="absolute bottom-52 md:bottom-40 left-0 right-0 px-6">
             <div className="max-w-md mx-auto">

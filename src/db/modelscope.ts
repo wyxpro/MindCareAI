@@ -61,3 +61,39 @@ export async function modelScopeChat(payload: { model: string; messages: ModelSc
     throw new Error(String(err?.message || err));
   }
 }
+
+export async function modelScopeVisionChat(payload: { model: string; text: string; image_url: string }) {
+  try {
+    const body = {
+      model: payload.model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: payload.text },
+            { type: 'image_url', image_url: { url: payload.image_url } },
+          ],
+        },
+      ],
+      stream: false,
+      temperature: 0,
+      max_tokens: 128,
+    };
+    const res = await ky.post('/innerapi/v1/modelscope/chat/completions', {
+      json: body,
+      timeout: 30000,
+      throwHttpErrors: false,
+    });
+    const ct = res.headers.get('content-type') || '';
+    const isJson = ct.includes('application/json');
+    const data = isJson ? await res.json<any>() : await res.text();
+    if (!res.ok) {
+      const msg = isJson ? (data?.error || data?.message || JSON.stringify(data)) : String(data);
+      throw new Error(`ModelScope error ${res.status}: ${msg}`);
+    }
+    const text = data?.choices?.[0]?.message?.content || '';
+    return { raw: data, text };
+  } catch (err: any) {
+    throw new Error(String(err?.message || err));
+  }
+}

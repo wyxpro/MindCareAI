@@ -45,9 +45,13 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   const [questionBank, setQuestionBank] = useState<string[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const listeningRef = useRef(false);
   const stopRequestedRef = useRef(false);
+  const asrBusyRef = useRef(false);
+  const asrErrorCountRef = useRef(0);
+  const webSpeechRef = useRef<any>(null);
   const prefixRef = useRef('');
   const finalTranscriptRef = useRef('');
 
@@ -62,7 +66,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       try {
         stopRequestedRef.current = true;
         listeningRef.current = false;
-        recognitionRef.current?.stop?.();
+        webSpeechRef.current?.stop?.();
       } catch {}
     };
   }, []);
@@ -72,70 +76,79 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     listeningRef.current = false;
     setListening(false);
     try {
-      recognitionRef.current?.stop?.();
+      mediaRecorderRef.current?.stop();
+      streamRef.current?.getTracks().forEach(t => t.stop());
     } catch {}
   };
 
-  const startVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast.error('当前浏览器不支持语音识别');
-      return;
-    }
-
-    stopRequestedRef.current = false;
-    listeningRef.current = true;
-    setListening(true);
-
-    prefixRef.current = inputText ? `${inputText} ` : '';
-    finalTranscriptRef.current = '';
-
-    const recognition = recognitionRef.current || new SpeechRecognition();
-    recognitionRef.current = recognition;
-
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'zh-CN';
-
-    recognition.onresult = (event: any) => {
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const res = event.results[i];
-        const text = res?.[0]?.transcript || '';
-        if (res.isFinal) finalTranscriptRef.current += text;
-        else interim += text;
-      }
-      setInputText(`${prefixRef.current}${finalTranscriptRef.current}${interim}`.trimStart());
-    };
-
-    recognition.onerror = (e: any) => {
-      stopRequestedRef.current = true;
-      listeningRef.current = false;
-      setListening(false);
-      if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
-        toast.error('麦克风权限被拒绝，请在浏览器设置中允许访问');
-      } else {
-        toast.error('语音识别失败，请重试');
-      }
-    };
-
-    recognition.onend = () => {
-      if (stopRequestedRef.current || !listeningRef.current) {
-        setListening(false);
-        return;
-      }
-      try {
-        recognition.start();
-      } catch {}
-    };
-
+  const startVoiceInput = async () => {
     try {
-      recognition.start();
-    } catch {
-      toast.error('语音识别启动失败');
-      stopVoiceInput();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      streamRef.current = stream;
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      mediaRecorderRef.current = mr;
+
+      stopRequestedRef.current = false;
+      listeningRef.current = true;
+      setListening(true);
+      prefixRef.current = inputText ? `${inputText} ` : '';
+      finalTranscriptRef.current = '';
+
+      mr.ondataavailable = async (e) => {
+        if (!listeningRef.current) return;
+        if (e.data?.size > 0 && !asrBusyRef.current) {
+          asrBusyRef.current = true;
+          try {
+            const { transcribeAudio } = await import('@/db/siliconflow');
+            const { convertWebmToWav } = await import('@/utils/audio');
+            const wavBlob = await convertWebmToWav(e.data);
+            const res = await transcribeAudio(wavBlob, 'TeleAI/TeleSpeechASR');
+            const text = res?.text || '';
+            if (text) setInputText(prev => `${prev}${text}`.trimStart());
+            asrErrorCountRef.current = 0;
+          } catch (err) {
+            asrErrorCountRef.current += 1;
+            if (asrErrorCountRef.current >= 2) {
+              // fallback to Web Speech for immediate UX
+              try { startWebSpeechFallback(); } catch {}
+            }
+          }
+          asrBusyRef.current = false;
+        }
+      };
+
+      mr.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+      };
+
+      mr.start(1000);
+    } catch (e: any) {
+      // fallback if MediaRecorder unavailable
+      try { startWebSpeechFallback(); } catch {}
     }
   };
+
+  function startWebSpeechFallback() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('浏览器不支持实时识别且语音服务不可用');
+      return;
+    }
+    const rec = new SpeechRecognition();
+    webSpeechRef.current = rec;
+    listeningRef.current = true; setListening(true);
+    rec.continuous = true; rec.interimResults = true; rec.lang = 'zh-CN';
+    rec.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i]; const text = res?.[0]?.transcript || '';
+        if (res.isFinal) setInputText(prev => `${prev}${text}`.trimStart()); else interim += text;
+      }
+      if (interim) setInputText(prev => `${prev}${interim}`.trimStart());
+    };
+    rec.onend = () => { if (listeningRef.current) rec.start(); };
+    try { rec.start(); } catch {}
+  }
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -362,8 +375,8 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       </div>
 
       {/* 对话区域 */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="max-w-md mx-auto space-y-6 pb-6">
+      <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
+        <div className="max-w-md mx-auto space-y-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 6rem)' }}>
           <AnimatePresence>
             {messages.map((msg, i) => (
               <motion.div
@@ -395,17 +408,20 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
             )}
           </AnimatePresence>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* 输入区域 */}
-      <div className="absolute bottom-20 left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800">
+      <div
+        className="fixed left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}
+      >
         <div className="max-w-md mx-auto flex gap-2">
           <input
             value={inputText}
             onChange={e => setInputText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
             placeholder="请在此输入您的回答..."
-            readOnly={listening}
+            readOnly={false}
             className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 ring-primary transition-all outline-none"
           />
           <Button

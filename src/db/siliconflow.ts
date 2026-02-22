@@ -5,10 +5,11 @@ export interface SiliconFlowTranscriptionResponse {
   // x-siliconcloud-trace-id header is available in response
 }
 
-export async function transcribeAudio(audioFile: File | Blob): Promise<SiliconFlowTranscriptionResponse> {
+export async function transcribeAudio(audioFile: File | Blob, model: 'TeleAI/TeleSpeechASR' | 'FunAudioLLM/SenseVoiceSmall' = 'TeleAI/TeleSpeechASR'): Promise<SiliconFlowTranscriptionResponse> {
   const formData = new FormData();
-  formData.append('file', audioFile);
-  formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
+  const file = (audioFile instanceof File) ? audioFile : new File([audioFile], 'audio.wav', { type: (audioFile as any)?.type || 'audio/wav' });
+  formData.append('file', file, file.name);
+  formData.append('model', model);
 
   try {
     const resp = await ky.post('/innerapi/v1/siliconflow/audio/transcriptions', {
@@ -17,13 +18,15 @@ export async function transcribeAudio(audioFile: File | Blob): Promise<SiliconFl
       throwHttpErrors: false
     });
 
-    const data = await resp.json<any>();
+    const ct = resp.headers.get('content-type') || '';
+    const data = ct.includes('application/json') ? await resp.json<any>() : await resp.text();
 
     if (!resp.ok) {
-      throw new Error(`SiliconFlow ASR error ${resp.status}: ${JSON.stringify(data)}`);
+      throw new Error(`SiliconFlow ASR error ${resp.status}: ${typeof data === 'string' ? data : JSON.stringify(data)}`);
     }
 
-    return data as SiliconFlowTranscriptionResponse;
+    const text = (data as any)?.text || (typeof data === 'string' ? data : '');
+    return { text } as SiliconFlowTranscriptionResponse;
   } catch (err: any) {
     throw new Error(String(err?.message || err));
   }

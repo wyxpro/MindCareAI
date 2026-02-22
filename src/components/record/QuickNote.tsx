@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/db/supabase';
+import { transcribeAudio } from '@/db/siliconflow';
 import { convertWebmToWav } from '@/utils/audio';
 
 interface QuickNoteProps {
@@ -69,19 +69,25 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+      let asrBusy = false;
+      mediaRecorder.ondataavailable = async (event) => {
+        if (!isRecording) return;
+        if (event.data.size > 0 && !asrBusy) {
+          asrBusy = true;
+          try {
+            const wavBlob = await convertWebmToWav(event.data);
+            const res = await transcribeAudio(wavBlob, 'TeleAI/TeleSpeechASR');
+            if (res?.text) setContent(prev => (prev ? `${prev} ` : '') + res.text.trim());
+          } catch (e) {}
+          asrBusy = false;
         }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1200);
       setIsRecording(true);
       toast.info('开始录音，说话时请靠近麦克风...');
     } catch (error) {
@@ -105,51 +111,7 @@ export default function QuickNote({ onSave, initialContent = '', initialImages =
     }
   };
 
-  // 处理音频
-  const processAudio = async (audioBlob: Blob) => {
-    setIsProcessing(true);
-    try {
-      // 转换为WAV格式
-      const wavBlob = await convertWebmToWav(audioBlob);
-      
-      // 转换为base64
-      const reader = new FileReader();
-      reader.readAsDataURL(wavBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-        
-        // 调用语音识别 - 修正参数格式
-        const { data, error } = await supabase.functions.invoke('speech-recognition', {
-          body: {
-            audioBase64: base64Audio,
-            format: 'wav',
-            rate: 16000,
-          },
-        });
-
-        if (error) {
-          console.error('语音识别失败:', error);
-          toast.error('语音识别失败');
-          return;
-        }
-
-        // 修正返回结果的处理
-        if (data.text && data.text.trim()) {
-          const recognizedText = data.text.trim();
-          setContent(prev => prev ? `${prev}\n${recognizedText}` : recognizedText);
-          toast.success('语音识别成功');
-        } else {
-          toast.error('无法识别语音内容');
-        }
-      };
-    } catch (error) {
-      console.error('处理音频失败:', error);
-      toast.error('处理音频失败');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  // 处理音频（不再需要，改为流式识别）
 
   // 选择图片
   const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
