@@ -11,9 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
-import { createEmotionDiary, getEmotionDiaries, speechRecognition, updateEmotionDiary } from '@/db/api';
+import { createEmotionDiary, getEmotionDiaries, updateEmotionDiary } from '@/db/api';
 import type { EmotionDiary, EmotionLevel } from '@/types';
 import { blobToBase64, convertWebmToWav } from '@/utils/audio';
+import { transcribeAudio } from '@/db/siliconflow';
 
 const EMOTIONS = [
   {
@@ -192,12 +193,63 @@ export default function RecordPageNew() {
 
   const handleStartRecording = async () => {
     try {
-      const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-          toast.error('浏览器语音识别需要在 HTTPS 下使用');
-          // 继续尝试使用麦克风录音 + 服务端识别
-        } else {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      let asrBusy = false;
+      mediaRecorder.ondataavailable = async (event) => {
+        if (!isRecordingRef.current) return;
+        if (event.data?.size > 0 && !asrBusy) {
+          asrBusy = true;
+          try {
+            const wavBlob = await convertWebmToWav(event.data);
+            const res = await transcribeAudio(wavBlob, 'TeleAI/TeleSpeechASR');
+            const text = res?.text?.trim();
+            if (text) setContent(prev => prev + (prev ? '\n' : '') + text);
+          } catch {
+            try {
+              const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              if (SpeechRecognition) {
+                const recog = new SpeechRecognition();
+                recognitionRef.current = recog;
+                recog.lang = 'zh-CN';
+                recog.continuous = true;
+                recog.interimResults = true;
+                speechBaseContentRef.current = content;
+                speechCommittedRef.current = '';
+                recog.onresult = (event: any) => {
+                  let committedAdd = '';
+                  let interim = '';
+                  for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    const t = result?.[0]?.transcript || '';
+                    if (result.isFinal) committedAdd += t; else interim += t;
+                  }
+                  if (committedAdd) speechCommittedRef.current = (speechCommittedRef.current + committedAdd).trim();
+                  const base = speechBaseContentRef.current;
+                  const committed = speechCommittedRef.current;
+                  const combined = `${committed}${interim}`.trim();
+                  const next = base ? [base, combined].filter(Boolean).join('\n') : combined;
+                  setContent(next);
+                };
+                recog.onend = () => { if (isRecordingRef.current) recog.start(); };
+                try { recog.start(); } catch {}
+              }
+            } catch {}
+          }
+          asrBusy = false;
+        }
+      };
+      mediaRecorder.onstop = () => { stream.getTracks().forEach(track => track.stop()); };
+      isRecordingRef.current = true;
+      setIsRecording(true);
+      mediaRecorder.start(800);
+      toast.info('语音识别中...', { duration: 1000 });
+    } catch (error) {
+      try {
+        const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) throw error;
         const recog = new SpeechRecognition();
         recognitionRef.current = recog;
         recog.lang = 'zh-CN';
@@ -210,16 +262,10 @@ export default function RecordPageNew() {
           let interim = '';
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const result = event.results[i];
-            const text = result[0].transcript;
-            if (result.isFinal) {
-              committedAdd += text;
-            } else {
-              interim += text;
-            }
+            const t = result?.[0]?.transcript || '';
+            if (result.isFinal) committedAdd += t; else interim += t;
           }
-          if (committedAdd) {
-            speechCommittedRef.current = (speechCommittedRef.current + committedAdd).trim();
-          }
+          if (committedAdd) speechCommittedRef.current = (speechCommittedRef.current + committedAdd).trim();
           const base = speechBaseContentRef.current;
           const committed = speechCommittedRef.current;
           const combined = `${committed}${interim}`.trim();
@@ -227,30 +273,13 @@ export default function RecordPageNew() {
           setContent(next);
         };
         recog.onend = () => { if (isRecordingRef.current) recog.start(); };
-        recog.onerror = () => {};
-        recog.start();
         isRecordingRef.current = true;
         setIsRecording(true);
-        toast.info('语音识别中...', { duration: 1000 });
-        return;
-        }
+        try { recog.start(); } catch {}
+        toast.info('浏览器语音识别中...', { duration: 1000 });
+      } catch {
+        toast.error('无法访问麦克风', { duration: 1000 });
       }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => { audioChunksRef.current.push(event.data); };
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudioRecording(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-      mediaRecorder.start();
-      setIsRecording(true);
-      toast.info('正在录音...', { duration: 1000 });
-    } catch (error) {
-      toast.error('无法访问麦克风', { duration: 1000 });
     }
   };
 
@@ -268,30 +297,8 @@ export default function RecordPageNew() {
     }
   };
 
-  const processAudioRecording = async (audioBlob: Blob) => {
-    setRecognizing(true);
-    try {
-      const wavBlob = await convertWebmToWav(audioBlob);
-      const base64Audio = await blobToBase64(wavBlob);
-      
-      const response = await speechRecognition(base64Audio, 'wav', 16000, wavBlob.size);
-      
-      if (response?.text) {
-        setContent(prev => prev + (prev ? '\n' : '') + response.text);
-        toast.success('语音识别成功', { duration: 1000 });
-      }
-    } catch (error: any) {
-      const msg = String(error?.message || '');
-      if (/API Key|API密钥|未配置/i.test(msg)) {
-        toast.error('语音识别未配置，请在 Supabase Functions 设置 INTEGRATIONS_API_KEY', { duration: 2000 });
-      } else if (/NotAllowedError|permission/i.test(msg)) {
-        toast.error('麦克风权限被拒绝，请允许浏览器访问麦克风', { duration: 2000 });
-      } else {
-        toast.error('语音识别服务暂不可用', { duration: 1000 });
-      }
-    } finally {
-      setRecognizing(false);
-    }
+  const processAudioRecording = async (_audioBlob: Blob) => {
+    // 已改为流式识别，无需停止后统一识别
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

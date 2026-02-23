@@ -121,7 +121,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
         stream.getTracks().forEach(t => t.stop());
       };
 
-      mr.start(1000);
+      mr.start(800);
     } catch (e: any) {
       // fallback if MediaRecorder unavailable
       try { startWebSpeechFallback(); } catch {}

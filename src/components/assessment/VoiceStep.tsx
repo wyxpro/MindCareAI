@@ -317,38 +317,38 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
 
       {/* 专业级报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[24px] border-none bg-white dark:bg-slate-950 shadow-2xl">
+        <DialogContent className="w-[92vw] max-w-xl p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>语音识别完成报告</DialogTitle>
             <DialogDescription>声学特征分析与情绪模型匹配</DialogDescription>
           </DialogHeader>
-          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-6 text-white flex justify-between items-start">
+          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-4 text-white flex justify-between items-start">
              <div className="flex gap-4 items-center">
-               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                 <Activity className="w-6 h-6" />
+               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                 <Activity className="w-5 h-5" />
                </div>
                <div>
-                 <h2 className="text-xl font-bold">语音识别完成</h2>
-                 <p className="text-white/80 text-xs">声学特征分析与情绪模型匹配</p>
+                 <h2 className="text-lg font-bold">语音识别完成</h2>
+                 <p className="text-white/80 text-[11px]">声学特征分析与情绪模型匹配</p>
                </div>
              </div>
              <DialogClose className="text-white/80 hover:text-white transition-colors">
-               <X className="w-6 h-6" />
+               <X className="w-5 h-5" />
              </DialogClose>
           </div>
 
-          <div className="p-6 space-y-6" id="voice-report-card">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 space-y-5" id="voice-report-card">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {/* 左侧：多维指标卡片组 */}
                <div className="space-y-4">
                  <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm">
                    <BarChart3 className="w-4 h-4 text-[#7A3EF4]" /> 核心声学指标
                  </h3>
-                 <div className="grid grid-cols-2 gap-3">
+                 <div className="grid grid-cols-2 gap-2">
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">语速 (字/分)</p>
                       <div className="flex items-end gap-2 mt-1">
-                        <span className="text-xl font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.speed}</span>
+                        <span className="text-lg font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.speed}</span>
                         <span className="text-[10px] text-slate-400 mb-1">参考: 120-180</span>
                       </div>
                       {reportData?.indicators?.isLowSpeed && <Badge variant="destructive" className="mt-2 text-[10px] h-5">过慢</Badge>}
@@ -356,7 +356,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">语调基频 (Hz)</p>
                       <div className="flex items-end gap-2 mt-1">
-                         <span className="text-xl font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.tone}</span>
+                         <span className="text-lg font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.tone}</span>
                          <span className="text-[10px] text-slate-400 mb-1">参考: 100-250</span>
                       </div>
                        {reportData?.indicators?.isHighPitchDrop && <Badge variant="secondary" className="mt-2 text-[10px] h-5 bg-amber-100 text-amber-700">基频下降</Badge>}
@@ -364,7 +364,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">停顿时长 (秒)</p>
                       <div className="flex items-end gap-2 mt-1">
-                         <span className="text-xl font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.pause}</span>
+                         <span className="text-lg font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.pause}</span>
                          <span className="text-[10px] text-slate-400 mb-1">参考: &lt;1.5s</span>
                       </div>
                        {reportData?.indicators?.isLongPause && <Badge variant="destructive" className="mt-2 text-[10px] h-5">停顿过长</Badge>}
@@ -372,7 +372,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">能量值 (dB)</p>
                       <div className="flex items-end gap-2 mt-1">
-                         <span className="text-xl font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.energy}</span>
+                         <span className="text-lg font-black text-slate-800 dark:text-white">{reportData?.speech_metrics?.energy}</span>
                          <span className="text-[10px] text-slate-400 mb-1">参考: 60-80</span>
                       </div>
                     </div>
@@ -380,12 +380,12 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                </div>
 
                {/* 右侧：雷达图 */}
-               <div className="h-64 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
+               <div className="h-48 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
                  <h3 className="absolute top-3 left-3 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm z-10">
                    <Activity className="w-4 h-4 text-[#7A3EF4]" /> 8维情绪雷达
                  </h3>
                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="55%" outerRadius="70%" data={radarData}>
+                    <RadarChart cx="50%" cy="55%" outerRadius="65%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />

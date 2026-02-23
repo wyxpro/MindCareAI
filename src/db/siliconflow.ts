@@ -28,6 +28,24 @@ export async function transcribeAudio(audioFile: File | Blob, model: 'TeleAI/Tel
     const text = (data as any)?.text || (typeof data === 'string' ? data : '');
     return { text } as SiliconFlowTranscriptionResponse;
   } catch (err: any) {
-    throw new Error(String(err?.message || err));
+    // 本地开发或代理不可用时，回退为直接调用官方接口（需前端可用的 VITE_SILICONFLOW_API_KEY）
+    try {
+      const apiKey = (import.meta as any)?.env?.VITE_SILICONFLOW_API_KEY;
+      if (!apiKey) throw err;
+      const direct = await fetch('https://api.siliconflow.cn/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: formData,
+      });
+      const ct = direct.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await direct.json() : await direct.text();
+      if (!direct.ok) {
+        throw new Error(`SiliconFlow direct error ${direct.status}: ${typeof data === 'string' ? data : JSON.stringify(data)}`);
+      }
+      const text = (data as any)?.text || (typeof data === 'string' ? data : '');
+      return { text } as SiliconFlowTranscriptionResponse;
+    } catch (e) {
+      throw new Error(String((e as any)?.message || err?.message || err));
+    }
   }
 }

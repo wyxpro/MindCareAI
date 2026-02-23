@@ -384,28 +384,28 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
       {/* 专业级报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[24px] border-none bg-white dark:bg-slate-950 shadow-2xl">
+        <DialogContent className="w-[92vw] max-w-xl p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>表情识别完成报告</DialogTitle>
             <DialogDescription>微表情特征与抑郁风险关联分析</DialogDescription>
           </DialogHeader>
-          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-6 text-white flex justify-between items-start">
+          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-4 text-white flex justify-between items-start">
              <div className="flex gap-4 items-center">
-               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                 <ScanFace className="w-6 h-6" />
+               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                 <ScanFace className="w-5 h-5" />
                </div>
                <div>
-                 <h2 className="text-xl font-bold">表情识别完成</h2>
-                 <p className="text-white/80 text-xs">微表情特征与抑郁风险关联分析</p>
+                 <h2 className="text-lg font-bold">表情识别完成</h2>
+                 <p className="text-white/80 text-[11px]">微表情特征与抑郁风险关联分析</p>
                </div>
              </div>
              <DialogClose className="text-white/80 hover:text-white transition-colors">
-               <X className="w-6 h-6" />
+               <X className="w-5 h-5" />
              </DialogClose>
           </div>
 
-          <div className="p-6 space-y-6" id="expression-report-card">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 space-y-5" id="expression-report-card">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {/* 左侧：微表情特征 */}
                <div className="space-y-4">
                  <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm">
@@ -428,12 +428,12 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                </div>
 
                {/* 右侧：9维情绪雷达 */}
-               <div className="h-64 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
+               <div className="h-48 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
                  <h3 className="absolute top-3 left-3 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm z-10">
                    <Activity className="w-4 h-4 text-[#7A3EF4]" /> 9维情绪雷达
                  </h3>
                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="55%" outerRadius="70%" data={radarData}>
+                    <RadarChart cx="50%" cy="55%" outerRadius="65%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />

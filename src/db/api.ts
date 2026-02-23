@@ -121,6 +121,17 @@ export const getAssessments = async (userId: string, limit = 10) => {
   return Array.isArray(data) ? data : [];
 };
 
+export const getAssessmentById = async (id: string) => {
+  const { data, error } = await supabase
+    .from('assessments')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as Assessment | null;
+};
+
 export const createAssessment = async (assessment: Partial<Assessment>) => {
   const { data, error } = await supabase
     .from('assessments')
