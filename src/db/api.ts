@@ -234,9 +234,14 @@ export const getCommunityPosts = async (limit = 20) => {
 };
 
 export const createCommunityPost = async (post: Partial<CommunityPost>) => {
+  // Ensure required anonymous_name is present
+  const payload = {
+    ...post,
+    anonymous_name: post.anonymous_name || post.anonymous_nickname || '匿名用户',
+  };
   const { data, error } = await supabase
     .from('community_posts')
-    .insert(post)
+    .insert(payload)
     .select()
     .maybeSingle();
   

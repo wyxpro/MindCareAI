@@ -87,6 +87,8 @@ export default function HealingPageNew() {
   const loopModeRef = useRef<LoopMode>('all');
   const trackIndexRef = useRef(0);
   const wantPlayRef = useRef(false);
+  const playLockRef = useRef(false);
+  const lastActionAtRef = useRef(0);
 
   useEffect(() => {
     loadData();
@@ -274,8 +276,12 @@ export default function HealingPageNew() {
     setCurrentTime(0);
     const audio = audioRef.current;
     if (audio) {
+      wantPlayRef.current = false;
+      playLockRef.current = true;
       audio.pause();
       audio.currentTime = 0;
+      // 解锁在下一次事件循环，避免立即触发 play 导致 AbortError
+      setTimeout(() => { playLockRef.current = false; }, 50);
     }
   };
 
@@ -286,11 +292,26 @@ export default function HealingPageNew() {
     }
     const audio = audioRef.current;
     if (!audio) return;
+    const now = Date.now();
+    if (playLockRef.current || now - lastActionAtRef.current < 200) {
+      return;
+    }
+    lastActionAtRef.current = now;
     setPlayError(null);
     try {
       if (audio.paused) {
-        await audio.play();
+        wantPlayRef.current = true;
+        try {
+          await audio.play();
+        } catch (err: any) {
+          if (String(err?.name) === 'AbortError') {
+            // 被外部 pause 打断，忽略
+            return;
+          }
+          throw err;
+        }
       } else {
+        wantPlayRef.current = false;
         audio.pause();
       }
     } catch (error) {

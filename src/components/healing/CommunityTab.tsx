@@ -92,12 +92,14 @@ export default function CommunityTab() {
     }
     try {
       const anonymousNickname = `用户${Math.random().toString(36).substring(2, 8)}`;
+      const anonymousName = anonymousNickname || '匿名用户';
       await createCommunityPost({
         user_id: user.id,
         content: newPost,
         title: newPost.slice(0, 50),
         category_id: selectedPostCategory,
         anonymous_nickname: anonymousNickname,
+        anonymous_name: anonymousName,
       });
       setNewPost('');
       setSelectedPostCategory('');
