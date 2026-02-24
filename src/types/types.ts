@@ -14,6 +14,8 @@ export interface Profile {
   gender?: string;
   birth_date?: string;
   bio?: string;
+  background_url?: string;
+  selected_background?: string;
   created_at: string;
   updated_at: string;
 }

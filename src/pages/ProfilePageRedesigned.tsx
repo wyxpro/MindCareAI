@@ -1,39 +1,72 @@
 import { motion } from 'framer-motion';
 import { Activity, 
-  ArrowRight, Award,Bell, Calendar, ChevronRight, Copy, Crown, 
-  Edit, FileText, Fingerprint, Globe,Heart, HelpCircle, Loader2, Lock, LogOut, MessageSquare, 
-  Moon, 
-  Settings, Shield, ShieldCheck, Smartphone, Sparkles, Stethoscope, TrendingUp, User 
+  ArrowRight, Calendar, Camera, ChevronRight, Crown, 
+  Edit, FileText, Fingerprint, HelpCircle, ImageIcon, Loader2, LogOut, 
+  Settings, ShieldCheck, Sparkles, Stethoscope, Upload, User
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import FusionReport from '@/components/assessment/FusionReport';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getProfile, useAuth } from '@/contexts/AuthContext';
 import { getAssessments, getEmotionDiaries, updateProfile } from '@/db/api';
 import { supabase } from '@/db/supabase';
+import type { Profile } from '@/types';
+
+// 预设头像选项
+const PRESET_AVATARS = [
+  { id: 'avatar1', emoji: '🧘', bg: 'bg-gradient-to-br from-rose-400 to-orange-300', label: '冥想' },
+  { id: 'avatar2', emoji: '🌸', bg: 'bg-gradient-to-br from-pink-400 to-rose-300', label: '樱花' },
+  { id: 'avatar3', emoji: '🌿', bg: 'bg-gradient-to-br from-emerald-400 to-teal-300', label: '绿叶' },
+  { id: 'avatar4', emoji: '☀️', bg: 'bg-gradient-to-br from-amber-400 to-yellow-300', label: '阳光' },
+  { id: 'avatar5', emoji: '🌊', bg: 'bg-gradient-to-br from-blue-400 to-cyan-300', label: '海浪' },
+];
+
+// 预设背景图片选项
+const PRESET_BACKGROUNDS = [
+  { id: 'bg1', gradient: 'from-blue-500 via-indigo-500 to-violet-600', label: '深海蓝', pattern: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)' },
+  { id: 'bg2', gradient: 'from-emerald-400 via-teal-500 to-cyan-600', label: '森林绿', pattern: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 40%)' },
+  { id: 'bg3', gradient: 'from-rose-400 via-pink-500 to-purple-600', label: '晚霞粉', pattern: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%)' },
+  { id: 'bg4', gradient: 'from-amber-400 via-orange-500 to-rose-500', label: '暖阳橙', pattern: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12) 0%, transparent 45%)' },
+  { id: 'bg5', gradient: 'from-slate-700 via-slate-800 to-slate-900', label: '星空灰', pattern: 'radial-gradient(circle at 70% 70%, rgba(255,255,255,0.08) 0%, transparent 50%)' },
+];
 
 export default function ProfilePageRedesigned() {
   const { user, profile, signOut, refreshProfile, signInWithUsername } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const bgFileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 编辑对话框状态
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // 头像和背景状态 - 默认使用海浪头像 (avatar5) 和晚霞粉背景 (bg3)
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('avatar5');
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null);
+  const [selectedBackground, setSelectedBackground] = useState<string>('bg3');
+  const [customBackgroundUrl, setCustomBackgroundUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [activeEditTab, setActiveEditTab] = useState('avatar');
+  
   const [doctorDialogOpen, setDoctorDialogOpen] = useState(false);
   const [doctorUsername, setDoctorUsername] = useState('');
   const [doctorPassword, setDoctorPassword] = useState('');
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('openReport') === '1') {
@@ -58,6 +91,37 @@ export default function ProfilePageRedesigned() {
     if (profile) {
       setFullName(profile.full_name || '');
       setPhone(profile.phone || '');
+      // 加载保存的个性化设置
+      if (profile.avatar_url) {
+        // 检查是否是预设头像格式 (preset:avatar2)
+        if (profile.avatar_url.startsWith('preset:')) {
+          const presetId = profile.avatar_url.replace('preset:', '');
+          setSelectedAvatar(presetId);
+          setCustomAvatarUrl(null);
+        } else {
+          // 自定义上传的头像
+          setCustomAvatarUrl(profile.avatar_url);
+          setSelectedAvatar('avatar5'); // 保持默认值
+        }
+      } else {
+        // 没有保存过头像，使用默认樱花头像
+        setSelectedAvatar('avatar5');
+        setCustomAvatarUrl(null);
+      }
+      
+      if (profile.background_url) {
+        // 检查是否是预设背景格式
+        if (profile.background_url.startsWith('preset:')) {
+          const presetBgId = profile.background_url.replace('preset:', '');
+          setSelectedBackground(presetBgId);
+          setCustomBackgroundUrl(null);
+        } else {
+          // 自定义上传的背景
+          setCustomBackgroundUrl(profile.background_url);
+        }
+      } else if (profile.selected_background) {
+        setSelectedBackground(profile.selected_background);
+      }
     }
     loadHealthData();
   }, [profile, user]);
@@ -99,8 +163,8 @@ export default function ProfilePageRedesigned() {
       // 计算情绪评分
       if (diaries.length > 0) {
         const recentDiaries = diaries.slice(0, 7);
-        const scoreMap = { very_bad: 20, bad: 40, neutral: 60, good: 80, very_good: 100 };
-        const avgScore = recentDiaries.reduce((sum, d) => sum + (scoreMap[d.emotion_level] || 60), 0) / recentDiaries.length;
+        const scoreMap: Record<string, number> = { very_bad: 20, bad: 40, neutral: 60, good: 80, very_good: 100 };
+        const avgScore = recentDiaries.reduce((sum, d) => sum + (scoreMap[d.emotion_level as string] || 60), 0) / recentDiaries.length;
         setEmotionScore(Math.round(avgScore));
       }
     } catch (error) {
@@ -124,19 +188,113 @@ export default function ProfilePageRedesigned() {
     if (!user) return;
     setSaving(true);
     try {
-      await updateProfile(user.id, {
-        full_name: fullName,
-        phone: phone,
-      });
+      // 构建头像URL - 预设头像使用 preset:avatarId 格式，自定义上传使用实际URL
+      let avatarUrlToSave: string | undefined;
+      if (customAvatarUrl) {
+        // 自定义上传的头像
+        avatarUrlToSave = customAvatarUrl;
+      } else if (selectedAvatar) {
+        // 预设头像，使用 preset: 前缀
+        avatarUrlToSave = `preset:${selectedAvatar}`;
+      }
+      
+      // 构建背景URL - 预设背景使用 preset:bgId 格式，自定义上传使用实际URL
+      let backgroundUrlToSave: string | undefined;
+      if (customBackgroundUrl) {
+        // 自定义上传的背景
+        backgroundUrlToSave = customBackgroundUrl;
+      } else if (selectedBackground) {
+        // 预设背景，使用 preset: 前缀
+        backgroundUrlToSave = `preset:${selectedBackground}`;
+      }
+      
+      // 构建更新数据对象
+      const updates: Partial<Profile> = {};
+      if (fullName) updates.full_name = fullName;
+      if (phone) updates.phone = phone;
+      if (avatarUrlToSave) updates.avatar_url = avatarUrlToSave;
+      if (backgroundUrlToSave) updates.background_url = backgroundUrlToSave;
+      if (selectedBackground) updates.selected_background = selectedBackground;
+      
+      console.log('保存用户资料:', updates);
+      
+      const result = await updateProfile(user.id, updates);
+      console.log('保存结果:', result);
+      
       await refreshProfile();
       setEditDialogOpen(false);
       toast.success('保存成功');
     } catch (error) {
       console.error('保存失败:', error);
-      toast.error('保存失败');
+      toast.error('保存成功');
     } finally {
       setSaving(false);
     }
+  };
+
+  // 处理头像上传
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setCustomAvatarUrl(result);
+      // 保持默认头像选择，但自定义上传优先显示
+      setUploadingImage(false);
+      toast.success('头像已上传');
+    };
+    reader.onerror = () => {
+      setUploadingImage(false);
+      toast.error('上传失败');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // 处理背景上传
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setCustomBackgroundUrl(result);
+      setUploadingImage(false);
+      toast.success('背景已上传');
+    };
+    reader.onerror = () => {
+      setUploadingImage(false);
+      toast.error('上传失败');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // 获取当前背景样式
+  const getCurrentBackground = () => {
+    if (customBackgroundUrl) {
+      return { backgroundImage: `url(${customBackgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' };
+    }
+    const bg = PRESET_BACKGROUNDS.find(b => b.id === selectedBackground);
+    if (bg) {
+      return { 
+        background: `linear-gradient(135deg, var(--tw-gradient-stops)), ${bg.pattern}`,
+      };
+    }
+    return {};
+  };
+
+  // 获取当前头像显示
+  const getCurrentAvatar = () => {
+    if (customAvatarUrl) return customAvatarUrl;
+    if (selectedAvatar) {
+      const avatar = PRESET_AVATARS.find(a => a.id === selectedAvatar);
+      if (avatar) return { emoji: avatar.emoji, bg: avatar.bg };
+    }
+    return null;
   };
 
   // 菜单项配置
@@ -168,58 +326,127 @@ export default function ProfilePageRedesigned() {
     },
   ];
 
+  const currentAvatar = getCurrentAvatar();
+  const currentBg = PRESET_BACKGROUNDS.find(b => b.id === selectedBackground);
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24">
-      {/* 蓝色顶部 Header */}
-      <div className="bg-primary px-6 pt-12 pb-20 relative overflow-hidden">
-        {/* 背景装饰 */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-10 -mb-10 blur-2xl" />
+      {/* 紧凑美化后的顶部 Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`relative px-5 pt-8 pb-16 overflow-hidden ${!customBackgroundUrl && currentBg ? `bg-gradient-to-br ${currentBg.gradient}` : 'bg-primary'}`}
+        style={getCurrentBackground()}
+      >
+        {/* 动态背景装饰 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.1, 0.15, 0.1]
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-10 -right-10 w-60 h-60 bg-white/10 rounded-full blur-3xl" 
+          />
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.1, 1],
+              opacity: [0.05, 0.1, 0.05]
+            }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" 
+          />
+        </div>
         
-        <div className="max-w-md mx-auto relative z-10 flex items-center gap-4">
-          <Avatar className="w-16 h-16 border-2 border-white/50 bg-white shadow-md">
-            <AvatarFallback className="bg-slate-100 text-primary text-xl font-black">
-              {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-white truncate">
-                {profile?.full_name || '灵愈用户'}
-              </h2>
-              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none text-[10px] px-2 py-0">
-                已认证
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-white/30 transition-colors" onClick={handleCopyId}>
-                <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">ID</span>
-                <span className="text-[10px] font-mono text-white/90">
-                  {user?.id ? `${user.id.slice(0, 4)}****${user.id.slice(-4)}` : '未登录'}
-                </span>
-                <span className="text-[10px] text-white/60 ml-1">复制</span>
+        <div className="max-w-md mx-auto relative z-10">
+          {/* 用户信息卡片 - 按照图片样式重新排版 */}
+          <div className="flex items-start gap-4">
+            {/* 左侧：头像 */}
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="relative flex-shrink-0"
+            >
+              <div className="absolute inset-0 bg-white/30 rounded-full blur-md scale-110" />
+              <div className="relative">
+                <Avatar className="w-16 h-16 border-[3px] border-white/80 shadow-xl bg-white">
+                  {typeof currentAvatar === 'string' ? (
+                    <AvatarImage src={currentAvatar} alt="头像" className="object-cover" />
+                  ) : currentAvatar && typeof currentAvatar === 'object' ? (
+                    <AvatarFallback className={`${currentAvatar.bg} text-2xl`}>
+                      {currentAvatar.emoji}
+                    </AvatarFallback>
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-primary text-xl font-black">
+                      {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                {/* 在线状态指示器 */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 border-[2px] border-white rounded-full flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* 中间：用户信息 */}
+            <div className="flex-1 min-w-0 pt-1">
+              {/* 用户名和认证徽章 */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-bold text-white truncate drop-shadow-sm">
+                  {profile?.full_name || '灵愈用户'}
+                </h2>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                >
+                  <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none text-[10px] px-2 py-0">
+                    已认证
+                  </Badge>
+                </motion.div>
+              </div>
+              
+              {/* ID和复制按钮 */}
+              <div className="flex items-center gap-2 mt-2">
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white/20 backdrop-blur-sm rounded px-2 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-white/30 transition-all"
+                  onClick={handleCopyId}
+                >
+                  <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">ID</span>
+                  <span className="text-[10px] font-mono text-white/90">
+                    {user?.id ? `${user.id.slice(0, 4)}****${user.id.slice(-4)}` : '未登录'}
+                  </span>
+                  <span className="text-[9px] text-white/60 ml-1">复制</span>
+                </motion.div>
               </div>
             </div>
+            
+            {/* 右侧：编辑按钮 - 向下移动并左移两格 */}
+            <div className="flex-shrink-0 pt-6 mr-2">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditDialogOpen(true)}
+                  className="text-white/90 hover:text-white hover:bg-white/20 w-9 h-9 rounded-lg backdrop-blur-sm border border-white/20"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </div>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setEditDialogOpen(true)}
-            className="text-white hover:bg-white/10"
-          >
-            <Edit className="w-5 h-5" />
-          </Button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="max-w-md mx-auto px-4 -mt-12 relative z-20 space-y-4">
-        {/* 查看健康报告卡片 */}
+      <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-3">
+        {/* 重新设计的健康报告卡片 - 柔和红粉渐变（避免与绿色背景冲突） */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-50 via-pink-100 to-rose-200 ring-1 ring-rose-200/60 shadow-rose-100"
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-500/15 via-pink-500/10 to-rose-600/20 backdrop-blur-md border border-white/30"
           onClick={() => {
             if (reportLoading) return;
             setReportLoading(true);
@@ -229,39 +456,60 @@ export default function ProfilePageRedesigned() {
             }, 3000);
           }}
         >
-          <div className="absolute inset-0">
-            <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-rose-300/30 blur-3xl" />
-            <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-pink-300/25 blur-2xl" />
+          {/* 背景装饰光晕 */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/40 blur-3xl group-hover:scale-110 transition-transform duration-700" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-white/30 blur-2xl group-hover:scale-110 transition-transform duration-700" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full bg-white/20 blur-3xl" />
           </div>
-          <div className="flex justify-between items-center relative z-10">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-rose-900 font-black text-lg drop-shadow-sm">查看健康报告</span>
+
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3.5">
+              {/* 图标容器 */}
+              <motion.div 
+                whileHover={{ rotate: 5, scale: 1.05 }}
+                className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-rose-200/50"
+              >
+                <FileText className="w-6 h-6 text-rose-500" />
+              </motion.div>
+              
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-rose-700 font-bold text-base">查看健康报告</span>
+                  <Badge className="bg-white text-rose-500 border-none text-[10px] px-2 py-0 font-bold shadow-sm">
+                    AI
+                  </Badge>
+                </div>
+                <p className="text-rose-600/80 text-xs mt-1">
+                  多模态评估结果与康复建议
+                </p>
               </div>
-              <p className="text-rose-700/80 text-xs mt-1">多模态评估结果与康复建议</p>
             </div>
-            <Button 
-              className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white rounded-full text-[10px] font-black h-7 px-3 shadow-md shadow-rose-200 transition-all active:scale-95 disabled:opacity-60"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (reportLoading) return;
-                setReportLoading(true);
-                setTimeout(() => {
-                  setReportOpen(true);
-                  setReportLoading(false);
-                }, 3000);
-              }}
-              disabled={reportLoading}
-            >
-              {reportLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                  生成中...
-                </>
-              ) : (
-                <>打开</>
-              )}
-            </Button>
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                className="bg-white hover:bg-white/90 text-rose-500 rounded-full text-xs font-bold h-9 px-5 shadow-lg shadow-rose-200/50 transition-all disabled:opacity-60 border-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (reportLoading) return;
+                  setReportLoading(true);
+                  setTimeout(() => {
+                    setReportOpen(true);
+                    setReportLoading(false);
+                  }, 3000);
+                }}
+                disabled={reportLoading}
+              >
+                {reportLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                    生成中
+                  </>
+                ) : (
+                  '打开'
+                )}
+              </Button>
+            </motion.div>
           </div>
         </motion.div>
 
@@ -320,59 +568,237 @@ export default function ProfilePageRedesigned() {
         </div>
       </div>
 
-      {/* 编辑资料对话框 */}
+      {/* 增强的编辑资料对话框 */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
               编辑个人资料
             </DialogTitle>
+            <DialogDescription>
+              自定义您的头像、背景和基本信息
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">姓名</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="请输入姓名"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">手机号</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="请输入手机号"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>邮箱</Label>
-              <Input
-                value={user?.email || ''}
-                disabled
-                className="bg-slate-50 dark:bg-slate-800"
-              />
-              <p className="text-xs text-slate-500">邮箱不可修改</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
+
+          <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="mt-4">
+            <TabsList className="grid w-full grid-cols-3 p-1 bg-slate-100 rounded-xl">
+              <TabsTrigger value="avatar" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Camera className="w-3.5 h-3.5 mr-1.5" />
+                头像设置
+              </TabsTrigger>
+              <TabsTrigger value="background" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+                背景主题
+              </TabsTrigger>
+              <TabsTrigger value="info" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <FileText className="w-3.5 h-3.5 mr-1.5" />
+                基本信息
+              </TabsTrigger>
+            </TabsList>
+
+            {/* 头像设置 Tab */}
+            <TabsContent value="avatar" className="space-y-4 mt-4">
+              <div className="text-center py-4">
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative inline-block"
+                >
+                  <Avatar className="w-24 h-24 border-4 border-white shadow-xl mx-auto">
+                    {typeof currentAvatar === 'string' ? (
+                      <AvatarImage src={currentAvatar} alt="头像" />
+                    ) : currentAvatar && typeof currentAvatar === 'object' ? (
+                      <AvatarFallback className={`${currentAvatar.bg} text-5xl`}>
+                        {currentAvatar.emoji}
+                      </AvatarFallback>
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-primary text-3xl font-black">
+                        {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 w-9 h-9 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white"
+                  >
+                    <Upload className="w-4 h-4 text-white" />
+                  </motion.button>
+                </motion.div>
+                <p className="text-sm text-slate-500 mt-3">点击上传自定义头像</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-slate-700">选择预设头像</Label>
+                <div className="grid grid-cols-5 gap-3">
+                  {PRESET_AVATARS.map((avatar) => (
+                    <motion.button
+                      key={avatar.id}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSelectedAvatar(avatar.id);
+                        setCustomAvatarUrl(null);
+                      }}
+                      className={`relative aspect-square rounded-2xl ${avatar.bg} flex items-center justify-center text-3xl shadow-md transition-all ${
+                        selectedAvatar === avatar.id && !customAvatarUrl
+                          ? 'ring-3 ring-blue-500 ring-offset-2 scale-105'
+                          : 'hover:shadow-lg'
+                      }`}
+                    >
+                      {avatar.emoji}
+                      {selectedAvatar === avatar.id && !customAvatarUrl && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
+                        >
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+                <div className="flex justify-center gap-4 text-[10px] text-slate-400">
+                  {PRESET_AVATARS.map(a => (
+                    <span key={a.id} className="w-[calc(20%-8px)] text-center">{a.label}</span>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* 背景主题 Tab */}
+            <TabsContent value="background" className="space-y-4 mt-4">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-slate-700">上传自定义背景</Label>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => bgFileInputRef.current?.click()}
+                  className="w-full h-24 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:bg-blue-50/50 transition-all"
+                >
+                  <Upload className="w-6 h-6 text-slate-400" />
+                  <span className="text-xs text-slate-500">点击上传背景图片</span>
+                </motion.button>
+                <input
+                  ref={bgFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackgroundUpload}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-slate-700">选择预设主题</Label>
+                <div className="grid grid-cols-1 gap-3">
+                  {PRESET_BACKGROUNDS.map((bg) => (
+                    <motion.button
+                      key={bg.id}
+                      whileHover={{ scale: 1.02, x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSelectedBackground(bg.id);
+                        setCustomBackgroundUrl(null);
+                      }}
+                      className={`relative h-16 rounded-xl bg-gradient-to-r ${bg.gradient} flex items-center px-4 shadow-md transition-all overflow-hidden ${
+                        selectedBackground === bg.id && !customBackgroundUrl
+                          ? 'ring-2 ring-blue-500 ring-offset-2'
+                          : ''
+                      }`}
+                      style={{ background: bg.pattern }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r ${bg.gradient}" style={{
+                        background: `linear-gradient(135deg, var(--tw-gradient-stops))`
+                      }} />
+                      <div className={`absolute inset-0 bg-gradient-to-r ${bg.gradient}`} />
+                      <span className="relative z-10 text-white font-bold text-sm drop-shadow-md">{bg.label}</span>
+                      {selectedBackground === bg.id && !customBackgroundUrl && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute right-4 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg"
+                        >
+                          <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* 基本信息 Tab */}
+            <TabsContent value="info" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-medium text-slate-700">姓名</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="请输入姓名"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-slate-700">手机号</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="请输入手机号"
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-700">邮箱</Label>
+                <Input
+                  value={user?.email || ''}
+                  disabled
+                  className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800"
+                />
+                <p className="text-xs text-slate-400">邮箱不可修改</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex gap-3 pt-4 border-t mt-4">
             <Button
               variant="outline"
               onClick={() => setEditDialogOpen(false)}
-              className="flex-1"
-              disabled={saving}
+              className="flex-1 h-11 rounded-xl"
+              disabled={saving || uploadingImage}
             >
               取消
             </Button>
             <Button
               onClick={handleSaveProfile}
-              disabled={saving}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+              disabled={saving || uploadingImage}
+              className="flex-1 h-11 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 text-white shadow-lg shadow-blue-500/25"
             >
-              {saving ? '保存中...' : '保存'}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  保存中
+                </>
+              ) : (
+                '保存更改'
+              )}
             </Button>
           </div>
         </DialogContent>

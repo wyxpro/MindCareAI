@@ -470,7 +470,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                  }}
                  className="bg-[#7A3EF4] hover:bg-[#6B2ED8] text-white rounded-xl px-6 h-10 shadow-lg shadow-indigo-500/20 font-bold text-sm"
                >
-                 下一步：表情识别 <ChevronRight className="w-4 h-4 ml-1" />
+                 表情识别 <ChevronRight className="w-4 h-4 ml-1" />
                </Button>
             </div>
           </div>
