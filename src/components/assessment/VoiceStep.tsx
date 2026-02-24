@@ -102,10 +102,28 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
     const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteFrequencyData(dataArray);
     
-    // 取前40个频率的平均值作为波形高度
-    const newWave = Array.from(dataArray.slice(0, 40)).map(v => Math.max(5, v / 4));
-    setWaveform(newWave);
+    // 使用全部频率数据，确保左右都有波动
+    const totalBars = 50;
+    const newWave = [];
     
+    for (let i = 0; i < totalBars; i++) {
+      // 从频率数据的不同位置采样，确保覆盖全频段
+      const dataIndex = Math.floor((i / totalBars) * dataArray.length);
+      const value = dataArray[dataIndex] || 0;
+      
+      // 增强灵敏度：放大变化幅度
+      const baseHeight = (value / 255) * 85;
+      const amplified = Math.max(10, baseHeight + 10);
+      
+      // 添加时间偏移的随机波动，使波形更自然
+      const timeVariation = Math.sin(Date.now() / 100 + i * 0.3) * 8;
+      const randomVariation = (Math.random() - 0.5) * 15;
+      
+      const finalHeight = Math.max(8, Math.min(95, amplified + timeVariation + randomVariation));
+      newWave.push(finalHeight);
+    }
+    
+    setWaveform(newWave);
     animationFrameRef.current = requestAnimationFrame(updateWaveform);
   };
 
@@ -249,29 +267,72 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       {/* 状态面板 */}
       <Card className="rounded-[32px] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
         <CardContent className="p-8 space-y-8">
-          {/* 实时波形 */}
-          <div className="h-24 flex items-center justify-center gap-1">
+          {/* 实时波形 - 优化视觉效果 */}
+          <div className="h-28 flex items-center justify-center gap-[2px] px-4">
             {waveform.map((h, i) => (
               <motion.div
                 key={i}
-                animate={{ height: isRecording ? h : 5 }}
-                className="w-1 bg-primary/40 rounded-full"
+                animate={{ 
+                  height: isRecording ? h : 5,
+                  opacity: isRecording ? 0.8 + (h / 100) * 0.2 : 0.3
+                }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 20,
+                  delay: i * 0.005
+                }}
+                className="w-[3px] rounded-full"
+                style={{
+                  background: isRecording 
+                    ? `linear-gradient(to top, #7A3EF4, ${h > 50 ? '#EC4899' : '#9F7AEA'})`
+                    : '#E2E8F0'
+                }}
               />
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duration</span>
-              <p className="text-xl font-black text-slate-800 dark:text-white">{duration}s / {MAX_DURATION}s</p>
+          {/* 录音状态指示器 - 替换 PAUSE TIME */}
+          <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-950 rounded-full">
+              <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-rose-500 animate-pulse' : 'bg-slate-300'}`} />
+              <span className="text-xs font-medium text-slate-600">
+                {isRecording ? '正在录音' : isAnalyzing ? '分析中...' : '准备就绪'}
+              </span>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pause Time</span>
-              <p className={`text-xl font-black ${pauseTime > 6 ? 'text-rose-500' : 'text-emerald-500'}`}>{pauseTime}s / 6s</p>
+            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-950 rounded-full">
+              <span className="text-xs text-slate-400">时长</span>
+              <span className="text-sm font-bold text-slate-700">{duration}s</span>
+              <span className="text-xs text-slate-400">/ {MAX_DURATION}s</span>
             </div>
           </div>
 
-          <Progress value={(duration / MAX_DURATION) * 100} className="h-2 rounded-full" />
+          {/* 录音进度条 */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>录音进度</span>
+              <span>{Math.round((duration / MAX_DURATION) * 100)}%</span>
+            </div>
+            <Progress value={(duration / MAX_DURATION) * 100} className="h-2 rounded-full" />
+          </div>
+
+          {/* 分析进度条 - 分析时显示 */}
+          {isAnalyzing && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>分析进度</span>
+                <span className="animate-pulse">处理中...</span>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-[#7A3EF4] to-[#EC4899]"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 3, ease: 'easeInOut' }}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
             <Button
@@ -379,30 +440,50 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                  </div>
                </div>
 
-               {/* 右侧：雷达图 */}
-               <div className="h-48 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
+               {/* 右侧：雷达图 - 放大动画效果 */}
+               <div className="h-56 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
                  <h3 className="absolute top-3 left-3 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm z-10">
                    <Activity className="w-4 h-4 text-[#7A3EF4]" /> 8维情绪雷达
                  </h3>
                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="55%" outerRadius="65%" data={radarData}>
+                    <RadarChart cx="50%" cy="55%" outerRadius="75%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />
                       <Radar
                         name="情绪概率"
                         dataKey="A"
                         stroke="#7A3EF4"
-                        fill="#7A3EF4"
-                        fillOpacity={0.4}
+                        strokeWidth={3}
+                        fill="url(#radarGradient)"
+                        fillOpacity={0.5}
                       />
+                      <defs>
+                        <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#7A3EF4" stopOpacity={0.6}/>
+                          <stop offset="100%" stopColor="#EC4899" stopOpacity={0.3}/>
+                        </linearGradient>
+                      </defs>
                       <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                         itemStyle={{ color: '#7A3EF4', fontWeight: 'bold' }}
-                        formatter={(value: number) => value.toFixed(4)}
+                        formatter={(value: number) => `${(value * 100).toFixed(1)}%`}
                       />
                     </RadarChart>
                  </ResponsiveContainer>
+                 {/* 动态脉冲效果 */}
+                 <motion.div
+                   className="absolute inset-0 rounded-2xl border-2 border-[#7A3EF4]/30"
+                   animate={{ 
+                     scale: [1, 1.02, 1],
+                     opacity: [0.5, 0.8, 0.5]
+                   }}
+                   transition={{ 
+                     duration: 2,
+                     repeat: Infinity,
+                     ease: "easeInOut"
+                   }}
+                 />
                </div>
             </div>
 

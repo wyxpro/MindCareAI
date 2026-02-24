@@ -320,30 +320,63 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             </div>
           )}
 
+          {/* 微表情信号指示器 */}
           <div className="absolute bottom-52 md:bottom-40 left-0 right-0 px-6">
             <div className="max-w-md mx-auto">
-              <div className="bg-slate-950/55 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between">
-                <div className="space-y-1">
+              <div className="bg-slate-950/55 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-primary/20 text-primary border-primary/30">EMO</Badge>
-                    <span className="text-white font-black">{currentEmotion}</span>
-                    <span className="text-white/40 text-xs font-mono">{Math.round(confidence * 100)}%</span>
+                    <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px]">MICRO</Badge>
+                    <span className="text-white/60 text-xs">微表情信号</span>
                   </div>
-                  <div className="text-[10px] text-white/40 font-mono">
-                    Brow: {(microSignals.brow * 100).toFixed(0)} · Mouth: {(microSignals.mouthDown * 100).toFixed(0)} · Blink: {(microSignals.blink * 100).toFixed(0)}
+                  <div className="text-[9px] text-white/40 font-mono">
+                    {isCapturing ? 'ANALYZING' : 'READY'}
                   </div>
                 </div>
-                <div className="w-20">
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${Math.round(confidence * 100)}%` }} />
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-white/50">眉心</span>
+                      <span className="text-white/70">{(microSignals.brow * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-amber-400 rounded-full"
+                        animate={{ width: `${microSignals.brow * 100}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-1 text-[9px] text-white/40 font-mono text-right">
-                    {isCapturing ? 'ANALYZING' : 'READY'}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-white/50">嘴角</span>
+                      <span className="text-white/70">{(microSignals.mouthDown * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-rose-400 rounded-full"
+                        animate={{ width: `${microSignals.mouthDown * 100}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-white/50">眨眼</span>
+                      <span className="text-white/70">{(microSignals.blink * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-cyan-400 rounded-full"
+                        animate={{ width: `${microSignals.blink * 100}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
               {noFaceCount > 0 && (
-                <div className="mt-2 text-[10px] text-rose-200/80 font-bold">
+                <div className="mt-2 text-[10px] text-rose-200/80 font-bold text-center">
                   未检测到人脸，请将面部对准取景框
                 </div>
               )}
@@ -513,7 +546,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                  }}
                  className="bg-[#7A3EF4] hover:bg-[#6B2ED8] text-white rounded-xl px-6 h-10 shadow-lg shadow-indigo-500/20 font-bold text-sm"
                >
-                 生成融合报告 <ChevronRight className="w-4 h-4 ml-1" />
+                 综合报告 <ChevronRight className="w-4 h-4 ml-1" />
                </Button>
             </div>
           </div>

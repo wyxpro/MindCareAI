@@ -935,7 +935,7 @@ export default function FusionReport({
             <X className="w-6 h-6 text-slate-900 dark:text-white" />
           </Button>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
-            多模态融合<br/>评估报告
+            多模态报告
           </h1>
         </div>
         <div className="flex items-center gap-3">
