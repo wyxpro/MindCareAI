@@ -1,15 +1,18 @@
 import { Bell, 
   Bookmark, Clock, Heart, Moon, 
-  Music, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX
+  Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Trash2, Volume2, VolumeX
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import CommunityTab from '@/components/healing/CommunityTab';
+import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
+import DiaryTab from '@/components/healing/DiaryTab';
 import KnowledgeTab from '@/components/healing/KnowledgeTab';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
@@ -17,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   createMeditationSession,
+  deleteHealingContent,
   getHealingContents, 
   getMeditationStats,
   toggleFavorite,
@@ -64,6 +68,7 @@ const meditationTracks = rawMusicFiles
 
 export default function HealingPageNew() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('meditation');
   const [activeCategory, setActiveCategory] = useState('all');
   const [healingContent, setHealingContent] = useState<HealingContent[]>([]);
@@ -82,6 +87,10 @@ export default function HealingPageNew() {
   const [moodDialogOpen, setMoodDialogOpen] = useState(false);
   const [moodAfter, setMoodAfter] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedDetailContent, setSelectedDetailContent] = useState<HealingContent | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] = useState<HealingContent | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const loopModeRef = useRef<LoopMode>('all');
@@ -409,6 +418,20 @@ export default function HealingPageNew() {
     }
   };
 
+  const handleDeleteContent = async () => {
+    if (!contentToDelete) return;
+    try {
+      await deleteHealingContent(contentToDelete.id);
+      setHealingContent(prev => prev.filter(c => c.id !== contentToDelete.id));
+      toast.success('删除成功');
+      setDeleteDialogOpen(false);
+      setContentToDelete(null);
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast.error('删除失败');
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -420,36 +443,50 @@ export default function HealingPageNew() {
       <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
        
 
-        {/* Tab切换 */}
-        <div className="flex gap-3 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        {/* 导航系统 - 冥想、树洞、日记、知识 */}
+        <div className="grid grid-cols-4 gap-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <Button
             onClick={() => setActiveTab('meditation')}
-            className={`flex-1 rounded-full py-6 text-base font-medium transition-smooth ${
+            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
               activeTab === 'meditation'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow hover:opacity-90'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            } active:scale-95`}
           >
+            <Music className="w-4 h-4 mr-1.5" />
             冥想
           </Button>
           <Button
             onClick={() => setActiveTab('community')}
-            className={`flex-1 rounded-full py-6 text-base font-medium transition-smooth ${
+            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
               activeTab === 'community'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow hover:opacity-90'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/20'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            } active:scale-95`}
           >
+            <Heart className="w-4 h-4 mr-1.5" />
             树洞
           </Button>
           <Button
-            onClick={() => setActiveTab('knowledge')}
-            className={`flex-1 rounded-full py-6 text-base font-medium transition-smooth ${
-              activeTab === 'knowledge'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow hover:opacity-90'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+            onClick={() => setActiveTab('diary')}
+            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
+              activeTab === 'diary'
+                ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/20'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            } active:scale-95`}
           >
+            <PenLine className="w-4 h-4 mr-1.5" />
+            日记
+          </Button>
+          <Button
+            onClick={() => setActiveTab('knowledge')}
+            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
+              activeTab === 'knowledge'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            } active:scale-95`}
+          >
+            <Bookmark className="w-4 h-4 mr-1.5" />
             知识
           </Button>
         </div>
@@ -592,7 +629,10 @@ export default function HealingPageNew() {
                   return (
                     <Card
                       key={content.id}
-                      onClick={() => handlePlayContent(content)}
+                      onClick={() => {
+                        setSelectedDetailContent(content);
+                        setDetailDialogOpen(true);
+                      }}
                       className={`cursor-pointer transition-smooth hover:shadow-lg ${
                         isActive
                           ? 'border-2 border-indigo-500 shadow-glow bg-indigo-50/50 dark:bg-indigo-500/10'
@@ -601,7 +641,13 @@ export default function HealingPageNew() {
                     >
                       <CardContent className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePlayContent(content);
+                            }}
+                            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform`}
+                          >
                             <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
                           </div>
                           
@@ -628,6 +674,18 @@ export default function HealingPageNew() {
                           >
                             <Bookmark className={`w-5 h-5 ${favorites.has(content.id) ? 'fill-current text-amber-500' : 'text-muted-foreground'}`} />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setContentToDelete(content);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="hover:bg-muted text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -640,6 +698,9 @@ export default function HealingPageNew() {
 
         {/* 树洞Tab内容 */}
         {activeTab === 'community' && <CommunityTab />}
+
+        {/* 日记Tab内容 */}
+        {activeTab === 'diary' && <DiaryTab />}
 
         {/* 知识Tab内容 */}
         {activeTab === 'knowledge' && <KnowledgeTab />}
@@ -681,6 +742,49 @@ export default function HealingPageNew() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* 删除确认对话框 */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="w-[90vw] max-w-md rounded-[20px] border-none bg-background shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Trash2 className="w-5 h-5 text-destructive" />
+                确认删除
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                你确定要删除「{contentToDelete?.title}」吗？此操作不可恢复。
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteDialogOpen(false);
+                  setContentToDelete(null);
+                }}
+                className="flex-1 rounded-xl border-border hover:bg-muted transition-all"
+              >
+                取消
+              </Button>
+              <Button
+                onClick={handleDeleteContent}
+                className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-white shadow-lg shadow-destructive/20 transition-all"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                删除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* 冥想内容详情弹窗 */}
+        <ContentDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          content={selectedDetailContent}
+          type="healing"
+          onUpdate={loadData}
+        />
       </div>
     </div>
   );

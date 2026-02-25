@@ -1,28 +1,30 @@
 import { Award, Bookmark, 
-  BookOpen, Clock, Eye, FileText, Headphones, Play, Search, Sparkles, ThumbsUp, 
+  BookOpen, Clock, Eye, FileText, Headphones, Play, Search, Sparkles, ThumbsUp, Trash2,
   TrendingUp, Video, Zap
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
+  deleteHealingContent,
   getHealingContents, 
   getUserFavorites,
   incrementLikeCount,
-  incrementViewCount,
   toggleFavorite, 
 } from '@/db/api';
 import type { HealingContent } from '@/types';
 
 const CONTENT_TYPES = [
-  { id: 'all', label: '全部', icon: BookOpen, gradient: 'from-indigo-500 to-purple-500' },
-  { id: 'article', label: '文章', icon: FileText, gradient: 'from-blue-500 to-cyan-500' },
-  { id: 'video', label: '视频', icon: Video, gradient: 'from-pink-500 to-rose-500' },
-  { id: 'audio', label: '音频', icon: Headphones, gradient: 'from-green-500 to-emerald-500' },
+  { id: 'all', label: '全部', icon: BookOpen, gradient: 'from-violet-500 to-fuchsia-500' },
+  { id: 'article', label: '文章', icon: FileText, gradient: 'from-sky-500 to-cyan-500' },
+  { id: 'video', label: '视频', icon: Video, gradient: 'from-rose-500 to-pink-500' },
+  { id: 'audio', label: '音频', icon: Headphones, gradient: 'from-emerald-500 to-teal-500' },
 ];
 
 const TYPE_ICONS: Record<string, any> = {
@@ -32,9 +34,9 @@ const TYPE_ICONS: Record<string, any> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  article: 'from-blue-500 to-cyan-500',
-  video: 'from-pink-500 to-rose-500',
-  audio: 'from-green-500 to-emerald-500',
+  article: 'from-sky-500 to-cyan-500',
+  video: 'from-rose-500 to-pink-500',
+  audio: 'from-emerald-500 to-teal-500',
 };
 
 export default function KnowledgeTab() {
@@ -46,6 +48,10 @@ export default function KnowledgeTab() {
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'all' | 'trending' | 'latest'>('all');
+  const [selectedContent, setSelectedContent] = useState<HealingContent | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] = useState<HealingContent | null>(null);
 
   useEffect(() => {
     loadData();
@@ -126,22 +132,44 @@ export default function KnowledgeTab() {
   };
 
   const handleContentClick = async (content: HealingContent) => {
-    try {
-      await incrementViewCount(content.id);
-      // 这里可以打开内容详情页
-      toast.success('正在加载内容...');
-    } catch (error) {
-      console.error('打开内容失败:', error);
-    }
+    setSelectedContent(content);
+    setDetailDialogOpen(true);
   };
 
   const handleLike = async (contentId: string) => {
+    if (!user) {
+      toast.error('请先登录');
+      return;
+    }
     try {
       await incrementLikeCount(contentId);
-      await loadData();
+      // 更新本地状态
+      setContents(prevContents => 
+        prevContents.map(content => 
+          content.id === contentId 
+            ? { ...content, like_count: (content.like_count || 0) + 1 }
+            : content
+        )
+      );
       toast.success('点赞成功');
     } catch (error) {
       console.error('点赞失败:', error);
+      toast.error('操作失败');
+    }
+  };
+
+  const handleDeleteContent = async () => {
+    if (!contentToDelete) return;
+    try {
+      await deleteHealingContent(contentToDelete.id);
+      setContents(prev => prev.filter(c => c.id !== contentToDelete.id));
+      setFilteredContents(prev => prev.filter(c => c.id !== contentToDelete.id));
+      toast.success('删除成功');
+      setDeleteDialogOpen(false);
+      setContentToDelete(null);
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast.error('删除失败');
     }
   };
 
@@ -164,7 +192,7 @@ export default function KnowledgeTab() {
     <div className="space-y-6">
       {/* 搜索和筛选区域 */}
       <Card className="glass border-0 shadow-xl overflow-hidden animate-fade-in-up">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-green-500/15" />
         <CardContent className="relative p-6 space-y-4">
           {/* 搜索框 */}
           <div className="relative">
@@ -190,7 +218,7 @@ export default function KnowledgeTab() {
                   className={`rounded-full px-6 py-6 text-base font-medium transition-all duration-300 ${
                     isSelected
                       ? `bg-gradient-to-r ${type.gradient} text-white shadow-glow scale-105`
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:scale-105'
+                      : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 hover:scale-105 ring-1 ring-border backdrop-blur'
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-2" />
@@ -208,8 +236,8 @@ export default function KnowledgeTab() {
           onClick={() => setActiveTab('all')}
           className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
             activeTab === 'all'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-glow'
+              : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 ring-1 ring-border backdrop-blur'
           }`}
         >
           <Sparkles className="w-5 h-5 mr-2" />
@@ -220,7 +248,7 @@ export default function KnowledgeTab() {
           className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
             activeTab === 'trending'
               ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 ring-1 ring-border backdrop-blur'
           }`}
         >
           <TrendingUp className="w-5 h-5 mr-2" />
@@ -231,7 +259,7 @@ export default function KnowledgeTab() {
           className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
             activeTab === 'latest'
               ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 ring-1 ring-border backdrop-blur'
           }`}
         >
           <Clock className="w-5 h-5 mr-2" />
@@ -364,7 +392,7 @@ export default function KnowledgeTab() {
                           className="text-muted-foreground hover:text-pink-500 transition-all duration-300 hover:scale-110 group/like"
                         >
                           <ThumbsUp className="w-4 h-4 mr-2 group-hover/like:fill-current" />
-                          点赞
+                          <span className="font-medium">{content.like_count || 0}</span>
                         </Button>
                         
                         <Button
@@ -374,6 +402,20 @@ export default function KnowledgeTab() {
                         >
                           <Play className="w-4 h-4 mr-2 group-hover/play:fill-current" />
                           {content.content_type === 'article' ? '阅读' : content.content_type === 'video' ? '观看' : '收听'}
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setContentToDelete(content);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-muted-foreground hover:text-destructive transition-all duration-300 hover:scale-110 ml-auto"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          删除
                         </Button>
                       </div>
                     </div>
@@ -396,6 +438,49 @@ export default function KnowledgeTab() {
           <p className="text-xs">已加载 {filteredContents.length} 条内容</p>
         </div>
       )}
+
+      {/* 详情弹窗 */}
+      <ContentDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        content={selectedContent}
+        type="knowledge"
+        onUpdate={loadData}
+      />
+
+      {/* 删除确认对话框 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="w-[90vw] max-w-md rounded-[20px] border-none bg-background shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              确认删除
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              你确定要删除「{contentToDelete?.title}」吗？此操作不可恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setContentToDelete(null);
+              }}
+              className="flex-1 rounded-xl border-border hover:bg-muted transition-all"
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleDeleteContent}
+              className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-white shadow-lg shadow-destructive/20 transition-all"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

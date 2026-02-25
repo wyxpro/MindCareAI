@@ -177,6 +177,37 @@
 @layer utilities {
   /* ========== 科技医疗动画效果 ========== */
   
+  /* 自定义滚动条样式 */
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(196 181 253);
+    border-radius: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(167 139 250);
+  }
+  
+  .scrollbar-thumb-violet-300::-webkit-scrollbar-thumb {
+    background: rgb(196 181 253);
+  }
+  
+  .scrollbar-thumb-violet-400::-webkit-scrollbar-thumb {
+    background: rgb(167 139 250);
+  }
+  
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
   /* 渐变文字效果 */
   .gradient-text {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--info)));
@@ -433,6 +464,15 @@
   }
   .rotate-y-180 {
     transform: rotateY(180deg);
+  }
+
+  /* 隐藏滚动条 */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

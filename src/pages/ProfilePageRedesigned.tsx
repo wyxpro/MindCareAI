@@ -441,12 +441,12 @@ export default function ProfilePageRedesigned() {
       </motion.div>
 
       <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-3">
-        {/* 重新设计的健康报告卡片 - 柔和红粉渐变（避免与绿色背景冲突） */}
+        {/* 重新设计的健康报告卡片 - 玻璃透明效果 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-gradient-to-br from-rose-500/15 via-pink-500/10 to-rose-600/20 backdrop-blur-md border border-white/30"
+          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/50 dark:border-slate-700/50"
           onClick={() => {
             if (reportLoading) return;
             setReportLoading(true);
@@ -457,10 +457,9 @@ export default function ProfilePageRedesigned() {
           }}
         >
           {/* 背景装饰光晕 */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/40 blur-3xl group-hover:scale-110 transition-transform duration-700" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-white/30 blur-2xl group-hover:scale-110 transition-transform duration-700" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-indigo-400/20 to-purple-400/20 blur-3xl group-hover:scale-110 transition-transform duration-700" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-gradient-to-br from-teal-400/20 to-emerald-400/20 blur-2xl group-hover:scale-110 transition-transform duration-700" />
           </div>
 
           <div className="flex items-center justify-between relative z-10">
@@ -468,19 +467,19 @@ export default function ProfilePageRedesigned() {
               {/* 图标容器 */}
               <motion.div 
                 whileHover={{ rotate: 5, scale: 1.05 }}
-                className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-rose-200/50"
+                className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/30"
               >
-                <FileText className="w-6 h-6 text-rose-500" />
+                <FileText className="w-6 h-6 text-white" />
               </motion.div>
               
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-rose-700 font-bold text-base">查看健康报告</span>
-                  <Badge className="bg-white text-rose-500 border-none text-[10px] px-2 py-0 font-bold shadow-sm">
+                  <span className="text-slate-800 dark:text-slate-100 font-bold text-base">查看健康报告</span>
+                  <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-none text-[10px] px-2 py-0 font-bold shadow-sm">
                     AI
                   </Badge>
                 </div>
-                <p className="text-rose-600/80 text-xs mt-1">
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
                   多模态评估结果与康复建议
                 </p>
               </div>
@@ -488,7 +487,7 @@ export default function ProfilePageRedesigned() {
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button 
-                className="bg-white hover:bg-white/90 text-rose-500 rounded-full text-xs font-bold h-9 px-5 shadow-lg shadow-rose-200/50 transition-all disabled:opacity-60 border-0"
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-full text-xs font-bold h-9 px-5 shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-60 border-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (reportLoading) return;

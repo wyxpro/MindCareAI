@@ -271,6 +271,35 @@ export const createCommunityComment = async (comment: Partial<CommunityComment>)
   return data as CommunityComment;
 };
 
+export const deleteCommunityPost = async (postId: string, userId: string) => {
+  // 先检查是否是该用户的帖子
+  const { data: post } = await supabase
+    .from('community_posts')
+    .select('user_id')
+    .eq('id', postId)
+    .maybeSingle();
+  
+  if (!post || post.user_id !== userId) {
+    throw new Error('无权删除此帖子');
+  }
+  
+  const { error } = await supabase
+    .from('community_posts')
+    .delete()
+    .eq('id', postId);
+  
+  if (error) throw error;
+};
+
+export const deleteHealingContent = async (contentId: string) => {
+  const { error } = await supabase
+    .from('healing_contents')
+    .delete()
+    .eq('id', contentId);
+  
+  if (error) throw error;
+};
+
 export const togglePostLike = async (postId: string, userId: string) => {
   // 检查是否已点赞
   const { data: existing } = await supabase

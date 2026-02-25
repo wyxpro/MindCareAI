@@ -1,4 +1,4 @@
-import { Activity, BookOpen, Heart, Home, User } from 'lucide-react';
+import { Activity, Heart, Home, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +10,6 @@ const navItems = [
   { path: '/', label: '首页', icon: Home },
   { path: '/assessment', label: 'AI评估', icon: Activity },
   { path: '/healing', label: '疗愈', icon: Heart },
-  { path: '/record', label: '记录', icon: BookOpen },
   { path: '/profile', label: '我的', icon: User },
 ];
 

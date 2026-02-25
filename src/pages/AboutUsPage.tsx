@@ -1,8 +1,13 @@
 import { motion } from 'framer-motion';
 import { Brain, 
-  ChevronLeft, ExternalLink,Github, Globe, Heart, Mail, MessageSquare, Shield, Sparkles, 
+  ChevronLeft, Heart, Mail, MessageSquare, Shield, Sparkles, 
   Users, 
-  Zap 
+  Zap,
+  Award,
+  Clock,
+  Target,
+  TrendingUp,
+  Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -12,124 +17,230 @@ import { Card, CardContent } from '@/components/ui/card';
 export default function AboutUsPage() {
   const navigate = useNavigate();
 
+  const features = [
+    {
+      icon: Sparkles,
+      title: '多模态AI识别',
+      desc: '融合语音、文本、表情多维度数据',
+      color: 'from-indigo-500 to-purple-500',
+      bg: 'bg-indigo-50 dark:bg-indigo-950/30'
+    },
+    {
+      icon: Users,
+      title: '专家医生复核',
+      desc: '专业医生团队二次审核',
+      color: 'from-rose-500 to-pink-500',
+      bg: 'bg-rose-50 dark:bg-rose-950/30'
+    },
+    {
+      icon: Heart,
+      title: '个性化疗愈',
+      desc: '定制专属康复计划和建议',
+      color: 'from-teal-500 to-emerald-500',
+      bg: 'bg-teal-50 dark:bg-teal-950/30'
+    },
+    {
+      icon: Shield,
+      title: '医学级隐私',
+      desc: '端到端加密，保障数据安全',
+      color: 'from-amber-500 to-orange-500',
+      bg: 'bg-amber-50 dark:bg-amber-950/30'
+    }
+  ];
+
+  const achievements = [
+    { icon: Users, label: '服务用户', value: '50k+' },
+    { icon: Award, label: '识别精度', value: '98%' },
+    { icon: Clock, label: '全天候响应', value: '24/7' },
+    { icon: TrendingUp, label: '满意度', value: '96%' }
+  ];
+
+  const highlights = [
+    '三甲医院医生团队支持',
+    '符合HIPAA医疗数据隐私标准',
+    '通过国家医疗器械二类认证',
+    '已在全球多国上线服务'
+  ];
+
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 pb-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pb-20">
       {/* Header */}
-      <div className="px-4 py-4 sticky top-0 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full">
+      <div className="px-4 py-4 sticky top-0 z-30 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
           <ChevronLeft className="w-6 h-6" />
         </Button>
-        <h1 className="text-lg font-bold">关于我们</h1>
+        <h1 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">关于我们</h1>
       </div>
 
-      <div className="max-w-md mx-auto px-6 pt-0 space-y-12">
-        {/* Hero */}
-        <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-primary to-indigo-600 text-white">
-          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="px-6 py-10 text-center space-y-4 relative z-10">
+      <div className="max-w-md mx-auto px-6 pt-6 space-y-10">
+        {/* Hero Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl"
+        >
+          {/* 背景装饰 */}
+          <div className="absolute inset-0 overflow-hidden">
             <motion.div 
-              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, 90, 0]
+              }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-white/20 blur-3xl"
+            />
+            <motion.div 
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                rotate: [0, -90, 0]
+              }}
+              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-white/20 blur-3xl"
+            />
+          </div>
+
+          <div className="text-center space-y-5 relative z-10">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-20 h-20 rounded-[28px] mx-auto bg-white/15 backdrop-blur flex items-center justify-center"
+              transition={{ delay: 0.2 }}
+              className="w-20 h-20 rounded-[24px] mx-auto bg-white/20 backdrop-blur-lg border border-white/30 flex items-center justify-center shadow-xl"
             >
-              <Brain className="w-10 h-10 text-white" />
+              <Brain className="w-11 h-11 text-white" />
             </motion.div>
-            <h2 className="text-2xl font-black tracking-tight">灵愈AI</h2>
-            <p className="text-white/80 text-xs font-medium uppercase tracking-[0.25em]">灵愈AI · 数字化心理医疗</p>
-            <p className="text-sm text-white/90 leading-relaxed max-w-[300px] mx-auto">
+            
+            <div>
+              <h2 className="text-3xl font-black text-white tracking-tight mb-2">灵愈AI</h2>
+              <p className="text-white/90 text-xs font-semibold uppercase tracking-[0.2em]">数字化心理健康服务</p>
+            </div>
+
+            <p className="text-sm text-white/95 leading-relaxed max-w-[280px] mx-auto">
               用多模态AI与人文关怀，打造专业、私密、温暖的心理健康服务。
             </p>
-            <div className="flex justify-center gap-2 pt-2">
-              <Badge className="bg-white/20 border-white/30 text-white">隐私加密</Badge>
-              <Badge className="bg-white/20 border-white/30 text-white">医学规范</Badge>
-              <Badge className="bg-white/20 border-white/30 text-white">全天候响应</Badge>
+
+            <div className="flex flex-wrap justify-center gap-2 pt-2">
+              <Badge className="bg-white/25 hover:bg-white/30 border-white/40 text-white backdrop-blur-sm">隐私加密</Badge>
+              <Badge className="bg-white/25 hover:bg-white/30 border-white/40 text-white backdrop-blur-sm">医学规范</Badge>
+              <Badge className="bg-white/25 hover:bg-white/30 border-white/40 text-white backdrop-blur-sm">全天候响应</Badge>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Vision Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="border-0 bg-slate-50 dark:bg-slate-900 rounded-3xl">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center">
-                <Shield className="w-5 h-5 text-indigo-600" />
-              </div>
-              <h3 className="text-sm font-bold">隐私至上</h3>
-              <p className="text-[10px] text-slate-400 leading-normal">端到端加密，严格守护您的每一份心声。</p>
-            </CardContent>
-          </Card>
+        {/* 核心功能 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">我们做什么</h3>
+          </div>
           
-          <Card className="border-0 bg-slate-50 dark:bg-slate-900 rounded-3xl">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center">
-                <Heart className="w-5 h-5 text-rose-600" />
-              </div>
-              <h3 className="text-sm font-bold">温暖陪伴</h3>
-              <p className="text-[10px] text-slate-400 leading-normal">24/7 在线回应，陪你走出情绪低谷。</p>
+          <div className="grid grid-cols-2 gap-3">
+            {features.map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * i }}
+              >
+                <Card className={`border-0 rounded-2xl ${feature.bg} hover:shadow-lg transition-all group cursor-pointer`}>
+                  <CardContent className="p-5 space-y-3">
+                    <div className={`w-11 h-11 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                      <feature.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{feature.title}</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* 成就数据 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-purple-600" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">我们的成就</h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {achievements.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 * i }}
+              >
+                <Card className="border-0 bg-white dark:bg-slate-900 rounded-2xl shadow-md hover:shadow-xl transition-all">
+                  <CardContent className="p-5 text-center space-y-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-950/50 dark:to-purple-950/50 rounded-xl flex items-center justify-center mx-auto">
+                      <item.icon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{item.value}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1 uppercase tracking-wide">{item.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* 专业认证 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Award className="w-5 h-5 text-rose-600" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">专业认证</h3>
+          </div>
+
+          <Card className="border-0 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20 rounded-2xl shadow-md">
+            <CardContent className="p-5 space-y-2.5">
+              {highlights.map((text, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * i }}
+                  className="flex items-center gap-3"
+                >
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">{text}</p>
+                </motion.div>
+              ))}
             </CardContent>
           </Card>
         </div>
 
-        {/* 我们做什么 */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <Zap className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-bold">我们做什么</h3>
-          </div>
-          <Card className="border-0 rounded-3xl bg-white dark:bg-slate-900">
-            <CardContent className="p-6 space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                通过语音、文本、微表情等多模态数据，构建科学的心理评估与个性化干预方案。
-              </p>
-              <div className="grid grid-cols-2 gap-3 text-[10px] text-slate-500">
-                <div className="flex items-center gap-2"><Sparkles className="w-3 h-3 text-primary" /> 多模态识别</div>
-                <div className="flex items-center gap-2"><Users className="w-3 h-3 text-primary" /> 专家复核</div>
-                <div className="flex items-center gap-2"><Heart className="w-3 h-3 text-primary" /> 个性化疗愈</div>
-                <div className="flex items-center gap-2"><Shield className="w-3 h-3 text-primary" /> 医学级隐私</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stats */}
-        <div className="flex justify-between items-center py-6 border-y border-slate-100 dark:border-slate-800">
-          <div className="text-center space-y-1">
-            <p className="text-xl font-black text-primary">50k+</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">服务用户</p>
-          </div>
-          <div className="text-center space-y-1">
-            <p className="text-xl font-black text-primary">98%</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">识别精度</p>
-          </div>
-          <div className="text-center space-y-1">
-            <p className="text-xl font-black text-primary">24/7</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">全天候响应</p>
-          </div>
-        </div>
-
-        {/* Team / Social */}
+        {/* 联系方式 */}
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest text-center">联系我们</h3>
-          <div className="flex justify-center gap-6">
-            <button className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-              <Globe className="w-5 h-5" />
-            </button>
-            <button className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-              <Mail className="w-5 h-5" />
-            </button>
-            <button className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-              <MessageSquare className="w-5 h-5" />
-            </button>
+          <div className="flex justify-center gap-4">
+            {[
+              { icon: Mail, color: 'from-blue-500 to-cyan-500' },
+              { icon: MessageSquare, color: 'from-green-500 to-emerald-500' },
+            ].map((item, i) => (
+              <motion.button
+                key={i}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg hover:shadow-xl transition-all`}
+              >
+                <item.icon className="w-6 h-6 text-white" />
+              </motion.button>
+            ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center pt-8">
-          <p className="text-[10px] text-slate-300 dark:text-slate-700 font-bold uppercase tracking-widest">
+        <div className="text-center pt-6 pb-2">
+          <p className="text-[11px] text-slate-400 dark:text-slate-600 font-semibold uppercase tracking-widest">
             Made with ❤️ for Mental Health
           </p>
-          <p className="text-[9px] text-slate-200 dark:text-slate-800 mt-2">
+          <p className="text-[10px] text-slate-300 dark:text-slate-700 mt-2 font-medium">
             灵愈AI v1.0.0
           </p>
         </div>

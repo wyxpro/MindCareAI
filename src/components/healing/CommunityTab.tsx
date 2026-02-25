@@ -1,17 +1,20 @@
 import { Clock, Eye, 
   Heart, HelpCircle, 
-  MessageCircle, Send, Share2, Smile, Sparkles, Star, ThumbsUp, TrendingUp, TrendingUpIcon 
+  MessageCircle, Send, Share2, Smile, Sparkles, Star, ThumbsUp, Trash2, TrendingUp
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   createCommunityPost, 
+  deleteCommunityPost,
   getCommunityPosts, 
   getCommunityPostsByCategory,
   getPostCategories,
@@ -29,11 +32,11 @@ const CATEGORY_ICONS: Record<string, any> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  pink: 'from-pink-500 to-rose-500',
+  pink: 'from-fuchsia-500 to-rose-500',
   green: 'from-emerald-500 to-teal-500',
-  blue: 'from-blue-500 to-cyan-500',
+  blue: 'from-sky-500 to-cyan-500',
   yellow: 'from-amber-500 to-orange-500',
-  purple: 'from-purple-500 to-fuchsia-500',
+  purple: 'from-violet-500 to-fuchsia-500',
 };
 
 const AVATAR_GRADIENTS = [
@@ -55,6 +58,35 @@ export default function CommunityTab() {
   const [selectedPostCategory, setSelectedPostCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'recovery'>('all');
+  const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<CommunityPost | null>(null);
+
+  const handleDeletePost = async () => {
+    if (!user || !postToDelete) return;
+    try {
+      await deleteCommunityPost(postToDelete.id, user.id);
+      setPosts(prev => prev.filter(p => p.id !== postToDelete.id));
+      setRecoveryStories(prev => prev.filter(p => p.id !== postToDelete.id));
+      toast.success('删除成功');
+      setDeleteDialogOpen(false);
+      setPostToDelete(null);
+    } catch (error) {
+      console.error('删除失败:', error);
+      toast.error('删除失败，可能无权删除此帖子');
+    }
+  };
+
+  const handleShare = (post: CommunityPost, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/healing/community/${post.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('链接已复制到剪贴板');
+    }).catch(() => {
+      toast.error('复制失败');
+    });
+  };
 
   useEffect(() => {
     loadData();
@@ -117,10 +149,26 @@ export default function CommunityTab() {
       return;
     }
     try {
-      await togglePostLike(postId, user.id);
-      await loadData();
+      const liked = await togglePostLike(postId, user.id);
+      // 更新本地状态
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === postId 
+            ? { ...post, like_count: (post.like_count || 0) + (liked ? 1 : -1) }
+            : post
+        )
+      );
+      setRecoveryStories(prevStories => 
+        prevStories.map(post => 
+          post.id === postId 
+            ? { ...post, like_count: (post.like_count || 0) + (liked ? 1 : -1) }
+            : post
+        )
+      );
+      toast.success(liked ? '点赞成功' : '已取消点赞');
     } catch (error) {
       console.error('点赞失败:', error);
+      toast.error('操作失败');
     }
   };
 
@@ -157,7 +205,7 @@ export default function CommunityTab() {
     <div className="space-y-6">
       {/* 发布卡片 */}
       <Card className="glass border-0 shadow-xl overflow-hidden animate-fade-in-up">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-sky-500/10" />
         <CardContent className="relative p-6 space-y-4">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-glow">
@@ -185,7 +233,7 @@ export default function CommunityTab() {
                     className={`rounded-full px-4 py-2 transition-all duration-300 ${
                       isSelected
                         ? `bg-gradient-to-r ${gradient} text-white shadow-glow scale-105`
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:scale-105'
+                        : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 hover:scale-105 ring-1 ring-border backdrop-blur'
                     }`}
                   >
                     <Icon className="w-4 h-4 mr-2" />
@@ -215,7 +263,7 @@ export default function CommunityTab() {
           <Button
             onClick={handleCreatePost}
             disabled={!newPost.trim() || !selectedPostCategory}
-            className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:opacity-90 text-white shadow-glow transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:opacity-90 text-white shadow-glow transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4 mr-2" />
             匿名发布
@@ -229,8 +277,8 @@ export default function CommunityTab() {
           onClick={() => setActiveTab('all')}
           className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
             activeTab === 'all'
-              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-glow'
+              : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 ring-1 ring-border backdrop-blur'
           }`}
         >
           <MessageCircle className="w-5 h-5 mr-2" />
@@ -241,7 +289,7 @@ export default function CommunityTab() {
           className={`flex-1 rounded-full py-6 text-base font-medium transition-all duration-300 ${
             activeTab === 'recovery'
               ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-glow'
-              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 ring-1 ring-border backdrop-blur'
           }`}
         >
           <Star className="w-5 h-5 mr-2" />
@@ -257,7 +305,7 @@ export default function CommunityTab() {
             variant={!selectedCategory ? 'default' : 'outline'}
             className={`whitespace-nowrap rounded-full transition-all duration-300 ${
               !selectedCategory
-                ? 'bg-gradient-to-r from-primary to-info text-white shadow-glow'
+                ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-glow'
                 : 'hover:scale-105'
             }`}
           >
@@ -315,7 +363,11 @@ export default function CommunityTab() {
             return (
               <Card
                 key={post.id}
-                className={`glass shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] animate-fade-in-up ${
+                onClick={() => {
+                  setSelectedPost(post);
+                  setDetailDialogOpen(true);
+                }}
+                className={`glass shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] animate-fade-in-up cursor-pointer ${
                   isRecoveryStory
                     ? 'border-2 border-amber-500/50 bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-yellow-50/50 dark:from-amber-500/10 dark:via-orange-500/5 dark:to-yellow-500/10'
                     : 'border-border'
@@ -380,7 +432,10 @@ export default function CommunityTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleLike(post.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLike(post.id);
+                      }}
                       className="text-muted-foreground hover:text-pink-500 transition-all duration-300 hover:scale-110 group"
                     >
                       <ThumbsUp className="w-4 h-4 mr-2 group-hover:fill-current" />
@@ -390,6 +445,11 @@ export default function CommunityTab() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPost(post);
+                        setDetailDialogOpen(true);
+                      }}
                       className="text-muted-foreground hover:text-blue-500 transition-all duration-300 hover:scale-110 group"
                     >
                       <MessageCircle className="w-4 h-4 mr-2 group-hover:fill-current" />
@@ -399,11 +459,29 @@ export default function CommunityTab() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-muted-foreground hover:text-green-500 transition-all duration-300 hover:scale-110 group ml-auto"
+                      onClick={(e) => handleShare(post, e)}
+                      className="text-muted-foreground hover:text-green-500 transition-all duration-300 hover:scale-110 group"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       分享
                     </Button>
+
+                    {/* 只有帖子作者才能删除 */}
+                    {user && post.user_id === user.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPostToDelete(post);
+                          setDeleteDialogOpen(true);
+                        }}
+                        className="text-muted-foreground hover:text-destructive transition-all duration-300 hover:scale-110 group"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        删除
+                      </Button>
+                    )}
                   </div>
 
                   {/* 康复故事特殊标记 */}
@@ -433,6 +511,49 @@ export default function CommunityTab() {
           <p className="text-xs">已加载 {displayPosts.length} 条动态</p>
         </div>
       )}
+
+      {/* 详情弹窗 */}
+      <ContentDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        content={selectedPost}
+        type="community"
+        onUpdate={loadData}
+      />
+
+      {/* 删除确认对话框 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="w-[90vw] max-w-md rounded-[20px] border-none bg-background shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              确认删除
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              你确定要删除这条动态吗？此操作不可恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setPostToDelete(null);
+              }}
+              className="flex-1 rounded-xl border-border hover:bg-muted transition-all"
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleDeletePost}
+              className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-white shadow-lg shadow-destructive/20 transition-all"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
