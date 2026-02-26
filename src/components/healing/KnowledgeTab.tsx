@@ -1,5 +1,5 @@
 import { Award, Bookmark, 
-  BookOpen, Clock, Eye, FileText, Headphones, Play, Search, Sparkles, ThumbsUp, Trash2,
+  BookOpen, Clock, Eye, FileText, Headphones, Play, Search, Sparkles, ThumbsUp,
   TrendingUp, Video, Zap
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  deleteHealingContent,
   getHealingContents, 
   getUserFavorites,
   incrementLikeCount,
@@ -50,8 +49,6 @@ export default function KnowledgeTab() {
   const [activeTab, setActiveTab] = useState<'all' | 'trending' | 'latest'>('all');
   const [selectedContent, setSelectedContent] = useState<HealingContent | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [contentToDelete, setContentToDelete] = useState<HealingContent | null>(null);
 
   useEffect(() => {
     loadData();
@@ -155,21 +152,6 @@ export default function KnowledgeTab() {
     } catch (error) {
       console.error('点赞失败:', error);
       toast.error('操作失败');
-    }
-  };
-
-  const handleDeleteContent = async () => {
-    if (!contentToDelete) return;
-    try {
-      await deleteHealingContent(contentToDelete.id);
-      setContents(prev => prev.filter(c => c.id !== contentToDelete.id));
-      setFilteredContents(prev => prev.filter(c => c.id !== contentToDelete.id));
-      toast.success('删除成功');
-      setDeleteDialogOpen(false);
-      setContentToDelete(null);
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast.error('删除失败');
     }
   };
 
@@ -404,19 +386,7 @@ export default function KnowledgeTab() {
                           {content.content_type === 'article' ? '阅读' : content.content_type === 'video' ? '观看' : '收听'}
                         </Button>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setContentToDelete(content);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-muted-foreground hover:text-destructive transition-all duration-300 hover:scale-110 ml-auto"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          删除
-                        </Button>
+
                       </div>
                     </div>
                   </div>
@@ -448,39 +418,7 @@ export default function KnowledgeTab() {
         onUpdate={loadData}
       />
 
-      {/* 删除确认对话框 */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="w-[90vw] max-w-md rounded-[20px] border-none bg-background shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-destructive" />
-              确认删除
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              你确定要删除「{contentToDelete?.title}」吗？此操作不可恢复。
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setContentToDelete(null);
-              }}
-              className="flex-1 rounded-xl border-border hover:bg-muted transition-all"
-            >
-              取消
-            </Button>
-            <Button
-              onClick={handleDeleteContent}
-              className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-white shadow-lg shadow-destructive/20 transition-all"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }

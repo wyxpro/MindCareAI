@@ -460,22 +460,53 @@ export default function ProfilePageRedesigned() {
             <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-gradient-to-br from-teal-400/20 to-emerald-400/20 blur-2xl group-hover:scale-110 transition-transform duration-700" />
           </div>
 
+          {/* 加载进度条 */}
+          {reportLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-x-0 bottom-0 h-1 bg-slate-200/50"
+            >
+              <motion.div 
+                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 3, ease: 'easeInOut' }}
+              />
+            </motion.div>
+          )}
+
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3.5">
               {/* 图标容器 */}
               <motion.div 
                 whileHover={{ rotate: 5, scale: 1.05 }}
-                className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/30"
+                className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
+                  reportLoading 
+                    ? 'bg-gradient-to-br from-indigo-400 to-purple-500' 
+                    : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                }`}
               >
-                <FileText className="w-6 h-6 text-white" />
+                {reportLoading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  >
+                    <Loader2 className="w-6 h-6 text-white" />
+                  </motion.div>
+                ) : (
+                  <FileText className="w-6 h-6 text-white" />
+                )}
               </motion.div>
               
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-800 dark:text-slate-100 font-bold text-base">查看健康报告</span>
+                  <span className="text-slate-800 dark:text-slate-100 font-bold text-base">
+                    {reportLoading ? '生成报告中...' : '查看健康报告'}
+                  </span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-                  多模态评估结果与康复建议
+                  {reportLoading ? 'AI正在分析您的健康数据' : '多模态评估结果与康复建议'}
                 </p>
               </div>
             </div>

@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { 
   createCommunityPost, 
   deleteCommunityPost,
+  getCommunityPostCommentCount,
   getCommunityPosts, 
   getCommunityPostsByCategory,
   getPostCategories,
@@ -102,9 +103,25 @@ export default function CommunityTab() {
         getPostCategories(),
         getRecoveryStories(5),
       ]);
-      setPosts(postsData);
+      
+      // 获取每个帖子的实际评论数量
+      const postsWithCommentCount = await Promise.all(
+        postsData.map(async (post) => {
+          const commentCount = await getCommunityPostCommentCount(post.id);
+          return { ...post, comment_count: commentCount };
+        })
+      );
+      
+      const storiesWithCommentCount = await Promise.all(
+        storiesData.map(async (post) => {
+          const commentCount = await getCommunityPostCommentCount(post.id);
+          return { ...post, comment_count: commentCount };
+        })
+      );
+      
+      setPosts(postsWithCommentCount);
       setCategories(categoriesData);
-      setRecoveryStories(storiesData);
+      setRecoveryStories(storiesWithCommentCount);
     } catch (error) {
       console.error('加载数据失败:', error);
       toast.error('加载失败');

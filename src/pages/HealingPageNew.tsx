@@ -156,10 +156,7 @@ export default function HealingPageNew() {
 
   useEffect(() => {
     if (activeTab !== 'meditation') return;
-    if (meditationTracks.length === 0) {
-      setPlayError('未找到冥想音乐文件');
-      return;
-    }
+    // 不显示错误提示
     setPlayError(null);
   }, [activeTab]);
 
@@ -168,30 +165,33 @@ export default function HealingPageNew() {
     if (!audio) return;
     if (meditationTracks.length === 0) return;
     const current = meditationTracks[trackIndex];
-    const tryLoad = async () => {
-      try {
-        const res = await fetch(current.url, { method: 'HEAD' });
-        if (!res.ok) throw new Error('head_failed');
-        audio.preload = 'auto';
-        audio.src = current.url;
-        audio.volume = muted ? 0 : volume;
-        audio.load();
+    
+    // 直接加载音频，不预先检查文件是否存在
+    const loadAudio = () => {
+      audio.preload = 'auto';
+      audio.src = current.url;
+      audio.volume = muted ? 0 : volume;
+      audio.load();
+      
+      // 音频可以播放时自动播放
+      const handleCanPlay = () => {
         if (wantPlayRef.current) {
           audio.play().catch(() => {});
         }
-        const nextIndex = (trackIndex + 1) % meditationTracks.length;
-        const preloader = new Audio();
-        preloader.preload = 'auto';
-        preloader.src = meditationTracks[nextIndex].url;
-        preloader.load();
-        preloadRef.current = preloader;
-        setPlayError(null);
-      } catch {
-        setPlayError(`音乐文件不可用：${current.fileName}`);
-        toast.error('音乐文件未找到或不可访问');
-      }
+        audio.removeEventListener('canplay', handleCanPlay);
+      };
+      audio.addEventListener('canplay', handleCanPlay);
+      
+      // 预加载下一首
+      const nextIndex = (trackIndex + 1) % meditationTracks.length;
+      const preloader = new Audio();
+      preloader.preload = 'auto';
+      preloader.src = meditationTracks[nextIndex].url;
+      preloader.load();
+      preloadRef.current = preloader;
     };
-    tryLoad();
+    
+    loadAudio();
 
     return () => {
       preloadRef.current = null;

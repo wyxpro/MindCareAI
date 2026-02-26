@@ -260,6 +260,16 @@ export const getCommunityComments = async (postId: string) => {
   return Array.isArray(data) ? data : [];
 };
 
+export const getCommunityPostCommentCount = async (postId: string) => {
+  const { count, error } = await supabase
+    .from('community_comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', postId);
+  
+  if (error) throw error;
+  return count || 0;
+};
+
 export const createCommunityComment = async (comment: Partial<CommunityComment>) => {
   const { data, error } = await supabase
     .from('community_comments')
