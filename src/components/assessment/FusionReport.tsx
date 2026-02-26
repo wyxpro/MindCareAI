@@ -60,7 +60,7 @@ export default function FusionReport({
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   
   // New States
-  const [activeReport, setActiveReport] = useState<'scale' | 'voice' | 'comprehensive' | null>(null);
+  const [activeReport, setActiveReport] = useState<'scale' | 'voice' | 'expression' | null>(null);
   const [advice, setAdvice] = useState<string>('');
   const [generatingAdvice, setGeneratingAdvice] = useState(false);
 
@@ -170,6 +170,29 @@ export default function FusionReport({
     ];
   }, [data.voice]);
 
+  // 表情识别9维度雷达图数据 - 放大差异使雷达图更清晰
+  const expressionRadarData = useMemo(() => {
+    const facialExpressions = data.expression?.facial_expressions || mockExpressionData.facial_expressions;
+    // 9维情绪：中性、高兴、悲伤、愤怒、惊讶、恐惧、厌恶、轻蔑、痛苦
+    // 使用放大函数使差异更明显
+    const amplify = (v: number) => {
+      // 将0-1的值映射到20-100范围，使雷达图变化更明显
+      const base = v || 0.1;
+      return Math.min(100, Math.max(20, Math.round(base * 120)));
+    };
+    return [
+      { subject: '中性', A: amplify(facialExpressions.neutral || 0.40), fullMark: 100 },
+      { subject: '高兴', A: amplify(facialExpressions.happy || 0.15), fullMark: 100 },
+      { subject: '悲伤', A: amplify(facialExpressions.sad || 0.25), fullMark: 100 },
+      { subject: '愤怒', A: amplify(facialExpressions.angry || 0.05), fullMark: 100 },
+      { subject: '惊讶', A: amplify(facialExpressions.surprised || 0.05), fullMark: 100 },
+      { subject: '恐惧', A: amplify(facialExpressions.fearful || 0.05), fullMark: 100 },
+      { subject: '厌恶', A: amplify(facialExpressions.disgusted || 0.02), fullMark: 100 },
+      { subject: '轻蔑', A: amplify(facialExpressions.contempt || 0.02), fullMark: 100 },
+      { subject: '痛苦', A: amplify(facialExpressions.pain || 0.01), fullMark: 100 },
+    ];
+  }, [data.expression]);
+
   // UI Helpers
   const getRiskColor = (level: string) => {
     switch (level) {
@@ -216,7 +239,16 @@ export default function FusionReport({
         expression: hasValidExpressionData(expressionData) ? expressionData : mockExpressionData 
       };
       setData(newData);
-      calculateFusion(newData.scale, newData.voice, newData.expression);
+      // 使用最新的 weights 计算
+      const score = calculateFusionScore(newData.scale, newData.voice, newData.expression, weights);
+      setFusionScore(score);
+      // Determine Risk Level
+      let level: 'low' | 'medium' | 'high' | 'extreme' = 'low';
+      if (score >= 80) level = 'extreme';
+      else if (score >= 60) level = 'high';
+      else if (score >= 40) level = 'medium';
+      else level = 'low';
+      setRiskLevel(level);
     }
   }, [scaleData, voiceData, expressionData, weights, assessmentId]);
 
@@ -332,9 +364,29 @@ export default function FusionReport({
 
        // Recalculate to update UI state
        calculateFusion(newData.scale, newData.voice, newData.expression);
-       // Open comprehensive detail dialog for the selected history item
-       setActiveReport('comprehensive');
     }
+  };
+
+  // 计算融合分数的纯函数版本
+  const calculateFusionScore = (sData: any, vData: any, eData: any, w: any) => {
+    const scaleRaw = getScaleScore(sData);
+    let scaleNormalized = 0;
+    if (scaleRaw <= 4) scaleNormalized = scaleRaw * 5;
+    else if (scaleRaw <= 9) scaleNormalized = 20 + (scaleRaw - 5) * 4;
+    else if (scaleRaw <= 14) scaleNormalized = 40 + (scaleRaw - 10) * 4;
+    else if (scaleRaw <= 19) scaleNormalized = 60 + (scaleRaw - 15) * 4;
+    else scaleNormalized = 80 + (scaleRaw - 20) * 2.5; // Cap at 100
+
+    const voiceNormalized = getVoiceScore(vData); // 0-100
+    const expressionNormalized = getExpressionScore(eData); // 0-100
+
+    const score = Math.round(
+      scaleNormalized * w.scale + 
+      voiceNormalized * w.voice + 
+      expressionNormalized * w.expression
+    );
+
+    return score;
   };
 
   const calculateFusion = (sData: any, vData: any, eData: any) => {
@@ -607,7 +659,7 @@ export default function FusionReport({
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <Mic className="w-5 h-5" />
                 </div>
-                语音情绪识别报告
+                语音情绪报告
               </DialogTitle>
               <DialogDescription className="text-white/80 mt-2">
                 基于声学特征的情绪状态分析
@@ -664,7 +716,7 @@ export default function FusionReport({
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
               <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-violet-500" />
-                情绪分布详情
+                语音情绪分布详情
               </h4>
               <div className="space-y-3">
                 {[
@@ -694,7 +746,7 @@ export default function FusionReport({
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
               <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-violet-500" />
-                多维情绪雷达图
+                6维语音情绪雷达图
               </h4>
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
@@ -723,194 +775,126 @@ export default function FusionReport({
         </DialogContent>
       </Dialog>
 
-      {/* 综合诊断报告弹窗 - 全新设计 */}
-      <Dialog open={activeReport === 'comprehensive'} onOpenChange={() => setActiveReport(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 border-0 bg-white rounded-2xl mx-auto w-[calc(100%-3rem)]">
-          {/* 头部 - 医疗专业风格 */}
-          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white relative overflow-hidden">
-            {/* 背景装饰 */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mt-20 blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full -ml-16 -mb-16 blur-2xl" />
-            </div>
-            <DialogHeader className="relative z-10">
+      {/* 表情识别报告弹窗 */}
+      <Dialog open={activeReport === 'expression'} onOpenChange={() => setActiveReport(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 border-0 bg-white rounded-2xl mx-auto w-[calc(100%-3rem)]">
+          {/* 头部 */}
+          <div className="bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 p-6 text-white">
+            <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                  <Stethoscope className="w-5 h-5" />
+                  <Video className="w-5 h-5" />
                 </div>
-                综合诊断报告
+                表情识别报告
               </DialogTitle>
               <DialogDescription className="text-white/80 mt-2">
-                多模态数据融合深度分析结果
+                基于面部微表情的情绪状态分析
               </DialogDescription>
             </DialogHeader>
           </div>
           
           <div className="p-6 space-y-6">
-            {/* 核心指标卡片组 */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-4 border border-slate-100 text-center shadow-sm">
-                <div className="text-xs text-slate-500 mb-2 font-medium">综合风险分</div>
-                <div className={`text-3xl font-black ${riskLevel === 'high' || riskLevel === 'extreme' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                  {fusionScore}
-                </div>
-                <div className="text-[10px] text-slate-400 mt-1">满分 100</div>
-              </div>
-              <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-4 border border-slate-100 text-center shadow-sm">
-                <div className="text-xs text-slate-500 mb-2 font-medium">风险等级</div>
-                <Badge className={`${getRiskBadgeColor(riskLevel)} text-white px-4 py-1.5 text-sm font-bold mt-1`}>
-                  {getRiskText(riskLevel)}
+            {/* 得分卡片 */}
+            <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-5 border border-slate-100 shadow-sm">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-slate-600 font-medium">抑郁风险分值</span>
+                <Badge className={`${getExpressionScore(data.expression) > 60 ? 'bg-rose-500' : 'bg-emerald-500'} text-white px-3 py-1`}>
+                  {getExpressionScore(data.expression) > 60 ? '风险较高' : '风险较低'}
                 </Badge>
               </div>
-              <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-4 border border-slate-100 text-center shadow-sm">
-                <div className="text-xs text-slate-500 mb-2 font-medium">主要影响因子</div>
-                <div className="text-lg font-bold text-slate-800 mt-1">量表</div>
-                <div className="text-[10px] text-slate-400">权重 50%</div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-black text-slate-900">{getExpressionScore(data.expression)}</span>
+                <span className="text-slate-400 text-lg">/ 100</span>
               </div>
-            </div>
-
-            {/* 详细得分 breakdown */}
-            <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-              <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
-                多维度得分详情
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="text-slate-700 font-medium">量表评估 (50%)</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-slate-900">{getScaleScore(data.scale)}</span>
-                    <span className="text-xs text-slate-400">/ 27</span>
-                  </div>
-                </div>
-                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(getScaleScore(data.scale) / 27) * 100}%` }} />
-                </div>
-                
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                      <Mic className="w-4 h-4 text-violet-600" />
-                    </div>
-                    <span className="text-slate-700 font-medium">语音情绪 (20%)</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-slate-900">{getVoiceScore(data.voice)}</span>
-                    <span className="text-xs text-slate-400">/ 100</span>
-                  </div>
-                </div>
-                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-violet-500 rounded-full" style={{ width: `${getVoiceScore(data.voice)}%` }} />
-                </div>
-                
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center">
-                      <Video className="w-4 h-4 text-cyan-600" />
-                    </div>
-                    <span className="text-slate-700 font-medium">表情识别 (30%)</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-bold text-slate-900">{getExpressionScore(data.expression)}</span>
-                    <span className="text-xs text-slate-400">/ 100</span>
-                  </div>
-                </div>
-                <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${getExpressionScore(data.expression)}%` }} />
-                </div>
-              </div>
+              <p className="text-slate-500 text-sm mt-3 leading-relaxed">
+                表情分析显示您的抑郁风险<span className="font-semibold text-slate-700">{getExpressionScore(data.expression) > 60 ? '较高' : '较低'}</span>。
+              </p>
             </div>
              
-            {/* 趋势分析 */}
+            {/* 微表情特征 */}
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
               <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
-                情绪趋势分析
+                <Activity className="w-4 h-4 text-cyan-500" />
+                微表情特征分析
               </h4>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="space-y-3">
                 {[
-                  { day: '周一', score: 68, trend: 'up' },
-                  { day: '周二', score: 72, trend: 'up' },
-                  { day: '周三', score: 65, trend: 'down' },
-                  { day: '周四', score: 70, trend: 'up' },
+                  { label: '眉心皱纹', value: data.expression?.micro_features?.brow_furrow || '眉心舒展自然，无明显紧张迹象', icon: '👁️' },
+                  { label: '嘴角形态', value: data.expression?.micro_features?.mouth_droop || '嘴角自然上扬，呈现积极状态', icon: '👄' },
+                  { label: '眼神接触', value: data.expression?.micro_features?.eye_contact || '眼神专注，眨眼频率正常', icon: '👀' },
                 ].map((item, idx) => (
-                  <div key={idx} className="bg-white rounded-lg p-3 border border-slate-100 text-center">
-                    <div className="text-xs text-slate-500 mb-1">{item.day}</div>
-                    <div className="text-lg font-bold text-slate-800">{item.score}</div>
-                    <div className={`text-xs mt-1 ${item.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                      {item.trend === 'up' ? '↑ 改善' : '↓ 波动'}
+                  <div key={idx} className="bg-white rounded-lg p-4 border border-slate-100">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">{item.icon}</span>
+                      <div className="flex-1">
+                        <div className="text-xs text-slate-500 mb-1">{item.label}</div>
+                        <div className="text-sm font-medium text-slate-700">{item.value}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* 个性化建议卡片 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-                <h4 className="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
-                  <Heart className="w-4 h-4" />
-                  心理调节建议
-                </h4>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-0.5">•</span>
-                    <span>每天进行10分钟正念冥想练习</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-0.5">•</span>
-                    <span>保持规律作息，确保7-8小时睡眠</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-500 mt-0.5">•</span>
-                    <span>适度运动，每周3次有氧运动</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
-                <h4 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
-                  <Stethoscope className="w-4 h-4" />
-                  专业干预建议
-                </h4>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">•</span>
-                    <span>建议预约心理咨询师进行深度评估</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">•</span>
-                    <span>考虑认知行为疗法（CBT）干预</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">•</span>
-                    <span>定期复查，建议2周后重新评估</span>
-                  </li>
-                </ul>
+            {/* 面部表情分布 - 9维情绪 */}
+            <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+              <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-cyan-500" />
+                面部表情分布
+              </h4>
+              <div className="space-y-3">
+                {[
+                  { label: '中性', value: Math.round((data.expression?.facial_expressions?.neutral || 0.40) * 100), color: 'bg-slate-400', icon: '😐' },
+                  { label: '高兴', value: Math.round((data.expression?.facial_expressions?.happy || 0.15) * 100), color: 'bg-amber-400', icon: '😊' },
+                  { label: '悲伤', value: Math.round((data.expression?.facial_expressions?.sad || 0.25) * 100), color: 'bg-blue-500', icon: '😢' },
+                  { label: '愤怒', value: Math.round((data.expression?.facial_expressions?.angry || 0.05) * 100), color: 'bg-rose-500', icon: '😠' },
+                  { label: '惊讶', value: Math.round((data.expression?.facial_expressions?.surprised || 0.05) * 100), color: 'bg-cyan-400', icon: '😲' },
+                  { label: '恐惧', value: Math.round((data.expression?.facial_expressions?.fearful || 0.05) * 100), color: 'bg-purple-500', icon: '😰' },
+                  { label: '厌恶', value: Math.round((data.expression?.facial_expressions?.disgusted || 0.02) * 100), color: 'bg-green-500', icon: '🤢' },
+                  { label: '轻蔑', value: Math.round((data.expression?.facial_expressions?.contempt || 0.02) * 100), color: 'bg-orange-400', icon: '😏' },
+                  { label: '痛苦', value: Math.round((data.expression?.facial_expressions?.pain || 0.01) * 100), color: 'bg-red-600', icon: '😣' },
+                ].map((emotion) => (
+                  <div key={emotion.label} className="flex items-center gap-3">
+                    <span className="text-lg">{emotion.icon}</span>
+                    <span className="text-sm text-slate-600 w-12">{emotion.label}</span>
+                    <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${emotion.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${emotion.value}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-bold text-slate-700 w-10 text-right">{emotion.value}%</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* 智能诊断结论 */}
-            <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-xl p-5 border border-emerald-100">
-              <h4 className="font-bold flex items-center gap-2 mb-3 text-emerald-800">
-                <Lightbulb className="w-5 h-5" />
-                智能诊断结论
+            {/* 9维度情绪雷达图 */}
+            <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+              <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-cyan-500" />
+                9维表情雷达图
               </h4>
-              <div className="bg-white/70 rounded-lg p-4">
-                <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
-                  {advice || `根据多模态数据分析，您当前的心理状态处于${getRiskText(riskLevel)}水平。
-
-主要表现：
-1. 量表评估显示存在轻度抑郁倾向，主要表现为兴趣减退和情绪低落
-2. 语音分析检测到轻微的焦虑特征，语速偏慢
-3. 表情识别显示疲劳度较高，建议注意休息
-
-整体评估：您的状况需要关注，建议采取积极的心理调节措施，必要时寻求专业帮助。`}
-                </p>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={expressionRadarData}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name="情绪概率"
+                      dataKey="A"
+                      stroke="#06b6d4"
+                      fill="#06b6d4"
+                      fillOpacity={0.4}
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      itemStyle={{ color: '#06b6d4', fontWeight: 'bold' }}
+                      formatter={(value: number) => `${value}%`}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
@@ -918,7 +902,7 @@ export default function FusionReport({
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => handleDownload('pdf')} className="rounded-xl h-11 px-6">
                 <Download className="w-4 h-4 mr-2" />
-                导出完整报告
+                导出报告
               </Button>
               <Button onClick={() => setActiveReport(null)} className="rounded-xl h-11 px-6 bg-slate-900 hover:bg-slate-800">
                 关闭
@@ -1018,120 +1002,163 @@ export default function FusionReport({
                 className="text-xs font-bold h-9 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all whitespace-normal leading-tight px-1"
                 onClick={() => setActiveReport('voice')}
               >
-                语音情绪识别报告
+                语音情绪报告
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs font-bold h-9 border-slate-200 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all whitespace-normal leading-tight px-1"
-                onClick={() => setActiveReport('comprehensive')}
+                className="text-xs font-bold h-9 border-slate-200 hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-200 transition-all whitespace-normal leading-tight px-1"
+                onClick={() => setActiveReport('expression')}
               >
-                综合诊断报告
+                表情识别报告
               </Button>
            </div>
-           
-           <div className="flex justify-between items-start mb-8 mt-2">
-             <div className="space-y-2">
-               <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">综合风险评估</h2>
-               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 font-medium">
-                 <div className="flex items-center gap-1">
-                   <Calendar className="w-3.5 h-3.5" />
-                   {new Date().toLocaleDateString()}
-                 </div>
-                 <div className="flex items-center gap-1">
-                   <User className="w-3.5 h-3.5" />
-                   {profile?.full_name || '未命名用户'} (ID: {user?.id?.slice(0, 6)})
-                 </div>
-               </div>
-             </div>
-             <Badge className={`${getRiskBadgeColor(riskLevel)} text-white px-3 py-1.5 rounded-full text-sm font-bold border-none`}>
-                {getRiskText(riskLevel)}
-             </Badge>
-           </div>
 
-           <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-12">
-             {/* Left: Gauge */}
-             <div className="relative w-48 h-48 flex-shrink-0">
-                <svg className="w-full h-full -rotate-90">
-                  {/* Background Circle */}
-                  <circle cx="96" cy="96" r="80" fill="none" stroke="#F1F5F9" strokeWidth="16" />
-                  {/* Progress Circle */}
-                  <circle 
-                    cx="96" cy="96" r="80" fill="none" stroke={riskLevel === 'extreme' ? '#EF4444' : riskLevel === 'high' ? '#F97316' : riskLevel === 'medium' ? '#8B5CF6' : '#10B981'} 
-                    strokeWidth="16" 
-                    strokeDasharray={502.65}
-                    strokeDashoffset={502.65 - (502.65 * fusionScore) / 100}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">{fusionScore.toFixed(1)}</span>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">RISK SCORE</span>
-                </div>
+           {/* 综合报告内容区域 */}
+           <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+             {/* 核心指标卡片组 */}
+             <div className="grid grid-cols-3 gap-3 mb-6">
+               <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-3 border border-slate-100 text-center shadow-sm">
+                 <div className="text-xs text-slate-500 mb-1 font-medium">综合风险分</div>
+                 <div className={`text-2xl font-black ${riskLevel === 'high' || riskLevel === 'extreme' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                   {fusionScore}
+                 </div>
+                 <div className="text-[10px] text-slate-400 mt-1">满分 100</div>
+               </div>
+               <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-3 border border-slate-100 text-center shadow-sm">
+                 <div className="text-xs text-slate-500 mb-1 font-medium">风险等级</div>
+                 <Badge className={`${getRiskBadgeColor(riskLevel)} text-white px-3 py-1 text-xs font-bold mt-1`}>
+                   {getRiskText(riskLevel)}
+                 </Badge>
+               </div>
+               <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-3 border border-slate-100 text-center shadow-sm">
+                 <div className="text-xs text-slate-500 mb-1 font-medium">主要影响因子</div>
+                 <div className="text-base font-bold text-slate-800 mt-1">量表</div>
+                 <div className="text-[10px] text-slate-400">权重 50%</div>
+               </div>
              </div>
 
-             {/* Right: Metrics */}
-             <div className="flex-1 w-full space-y-3">
-               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3">
-                 <span className="text-sm font-bold text-slate-500">量表 (50%)</span>
-                 <div className="flex items-baseline gap-1">
-                   <span className="text-xl font-black text-slate-900 dark:text-white">{getScaleScore(data.scale)}</span>
-                   <span className="text-xs text-slate-400 font-bold">/ 27</span>
-                 </div>
-               </div>
-               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3">
-                 <span className="text-sm font-bold text-slate-500">语音 (20%)</span>
-                 <div className="flex items-baseline gap-1">
-                   <span className="text-xl font-black text-slate-900 dark:text-white">{getVoiceScore(data.voice)}</span>
-                   <span className="text-xs text-slate-400 font-bold">/ 100</span>
-                 </div>
-               </div>
-               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3">
-                 <span className="text-sm font-bold text-slate-500">表情 (30%)</span>
-                 <div className="flex items-baseline gap-1">
-                   <span className="text-xl font-black text-slate-900 dark:text-white">{getExpressionScore(data.expression)}</span>
-                   <span className="text-xs text-slate-400 font-bold">/ 100</span>
-                 </div>
-               </div>
-             </div>
-           </div>
-
-           {/* Sync Status removed by request */}
-           {/* Professional Advice Section */}
-           <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
-             <div className="flex items-center gap-2 mb-4">
-               <Lightbulb className="w-5 h-5 text-amber-500" />
-               <h3 className="text-lg font-bold text-slate-900 dark:text-white">专业诊断建议</h3>
-             </div>
-             
-             {generatingAdvice ? (
-               <div className="flex items-center gap-2 text-slate-500 text-sm">
-                 <RefreshCw className="w-4 h-4 animate-spin" />
-                 正在生成个性化建议...
-               </div>
-             ) : (
-               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
-                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                   <div className="whitespace-pre-line text-slate-600 dark:text-slate-300 leading-relaxed">
-                     {advice}
+             {/* 详细得分 breakdown */}
+             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6">
+               <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                 <Activity className="w-4 h-4 text-emerald-500" />
+                 多维度得分详情
+               </h4>
+               <div className="space-y-3">
+                 <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                     <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                       <FileText className="w-3.5 h-3.5 text-blue-600" />
+                     </div>
+                     <span className="text-slate-700 font-medium text-sm">量表评估 (50%)</span>
+                   </div>
+                   <div className="flex items-baseline gap-1">
+                     <span className="text-lg font-bold text-slate-900">{getScaleScore(data.scale)}</span>
+                     <span className="text-xs text-slate-400">/ 27</span>
                    </div>
                  </div>
+                 <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                   <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(getScaleScore(data.scale) / 27) * 100}%` }} />
+                 </div>
                  
-                 <div className="mt-4 flex flex-wrap gap-2">
-                   <Button size="sm" variant="outline" className="bg-white rounded-full text-xs h-8">
-                     <Heart className="w-3.5 h-3.5 mr-1.5 text-rose-500" />
-                     情绪日记
-                   </Button>
-                   <Button size="sm" variant="outline" className="bg-white rounded-full text-xs h-8">
-                     <User className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
-                     咨询医生
-                   </Button>
+                 <div className="flex items-center justify-between pt-2">
+                   <div className="flex items-center gap-2">
+                     <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                       <Mic className="w-3.5 h-3.5 text-violet-600" />
+                     </div>
+                     <span className="text-slate-700 font-medium text-sm">语音情绪 (20%)</span>
+                   </div>
+                   <div className="flex items-baseline gap-1">
+                     <span className="text-lg font-bold text-slate-900">{getVoiceScore(data.voice)}</span>
+                     <span className="text-xs text-slate-400">/ 100</span>
+                   </div>
+                 </div>
+                 <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                   <div className="h-full bg-violet-500 rounded-full" style={{ width: `${getVoiceScore(data.voice)}%` }} />
+                 </div>
+                 
+                 <div className="flex items-center justify-between pt-2">
+                   <div className="flex items-center gap-2">
+                     <div className="w-7 h-7 rounded-lg bg-cyan-100 flex items-center justify-center">
+                       <Video className="w-3.5 h-3.5 text-cyan-600" />
+                     </div>
+                     <span className="text-slate-700 font-medium text-sm">表情识别 (30%)</span>
+                   </div>
+                   <div className="flex items-baseline gap-1">
+                     <span className="text-lg font-bold text-slate-900">{getExpressionScore(data.expression)}</span>
+                     <span className="text-xs text-slate-400">/ 100</span>
+                   </div>
+                 </div>
+                 <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                   <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${getExpressionScore(data.expression)}%` }} />
                  </div>
                </div>
-             )}
-           </div>
+             </div>
 
+             {/* 个性化建议卡片 */}
+             <div className="grid grid-cols-2 gap-3 mb-6">
+               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
+                 <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
+                   <Heart className="w-4 h-4" />
+                   心理调节建议
+                 </h4>
+                 <ul className="space-y-1.5 text-xs text-slate-700">
+                   <li className="flex items-start gap-1.5">
+                     <span className="text-blue-500 mt-0.5">•</span>
+                     <span>每天进行10分钟正念冥想练习</span>
+                   </li>
+                   <li className="flex items-start gap-1.5">
+                     <span className="text-blue-500 mt-0.5">•</span>
+                     <span>保持规律作息，确保7-8小时睡眠</span>
+                   </li>
+                   <li className="flex items-start gap-1.5">
+                     <span className="text-blue-500 mt-0.5">•</span>
+                     <span>适度运动，每周3次有氧运动</span>
+                   </li>
+                 </ul>
+               </div>
+               <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 border border-amber-100">
+                 <h4 className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-2">
+                   <Stethoscope className="w-4 h-4" />
+                   专业干预建议
+                 </h4>
+                 <ul className="space-y-1.5 text-xs text-slate-700">
+                   <li className="flex items-start gap-1.5">
+                     <span className="text-amber-500 mt-0.5">•</span>
+                     <span>建议预约心理咨询师进行深度评估</span>
+                   </li>
+                   <li className="flex items-start gap-1.5">
+                     <span className="text-amber-500 mt-0.5">•</span>
+                     <span>考虑认知行为疗法（CBT）干预</span>
+                   </li>
+                   <li className="flex items-start gap-1.5">
+                     <span className="text-amber-500 mt-0.5">•</span>
+                     <span>定期复查，建议2周后重新评估</span>
+                   </li>
+                 </ul>
+               </div>
+             </div>
+
+             {/* 智能诊断结论 */}
+             <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 rounded-xl p-4 border border-emerald-100">
+               <h4 className="font-bold flex items-center gap-2 mb-3 text-emerald-800">
+                 <Lightbulb className="w-5 h-5" />
+                 智能诊断结论
+               </h4>
+               <div className="bg-white/70 rounded-lg p-3">
+                 <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
+                   {advice || `根据多模态数据分析，您当前的心理状态处于${getRiskText(riskLevel)}水平。
+
+主要表现：
+1. 量表评估显示存在轻度抑郁倾向，主要表现为兴趣减退和情绪低落
+2. 语音分析检测到轻微的焦虑特征，语速偏慢
+3. 表情识别显示疲劳度较高，建议注意休息
+
+整体评估：您的状况需要关注，建议采取积极的心理调节措施，必要时寻求专业帮助。`}
+                 </p>
+               </div>
+             </div>
+           </div>
         </div>
         
       </div>

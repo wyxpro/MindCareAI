@@ -22,6 +22,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [waveform, setWaveform] = useState<number[]>(Array(40).fill(5));
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   
@@ -115,11 +116,15 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       const baseHeight = (value / 255) * 85;
       const amplified = Math.max(10, baseHeight + 10);
       
-      // 添加时间偏移的随机波动，使波形更自然
-      const timeVariation = Math.sin(Date.now() / 100 + i * 0.3) * 8;
-      const randomVariation = (Math.random() - 0.5) * 15;
+      // 添加时间偏移的随机波动，使波形更自然 - 增加右侧波动
+      const timeVariation = Math.sin(Date.now() / 80 + i * 0.5) * 12;
+      const randomVariation = (Math.random() - 0.5) * 20;
       
-      const finalHeight = Math.max(8, Math.min(95, amplified + timeVariation + randomVariation));
+      // 为右侧增加额外的波动效果
+      const positionFactor = i / totalBars;
+      const rightBoost = positionFactor > 0.5 ? (positionFactor - 0.5) * 15 : 0;
+      
+      const finalHeight = Math.max(8, Math.min(95, amplified + timeVariation + randomVariation + rightBoost));
       newWave.push(finalHeight);
     }
     
@@ -142,7 +147,19 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
 
   const analyzeAudio = async (blob: Blob) => {
     setIsAnalyzing(true);
+    setAnalysisProgress(0);
     toast.info('正在分析语音情绪特征...');
+    
+    // 模拟分析进度更新
+    const progressInterval = setInterval(() => {
+      setAnalysisProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 95;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
     
     try {
       // 1. ASR Transcription
@@ -233,11 +250,15 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       };
 
       setReportData({ text, ...analysisData });
-      setShowReport(true);
+      setAnalysisProgress(100);
+      setTimeout(() => {
+        setShowReport(true);
+      }, 300);
       toast.success('分析完成');
     } catch (error) {
       console.error('Analysis failed:', error);
       toast.error('分析失败，请重试');
+      setAnalysisProgress(0);
     } finally {
       setIsAnalyzing(false);
     }
@@ -267,20 +288,20 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       {/* 状态面板 */}
       <Card className="rounded-[32px] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
         <CardContent className="p-8 space-y-8">
-          {/* 实时波形 - 优化视觉效果 */}
+          {/* 实时波形 - 优化视觉效果，增强整体波动 */}
           <div className="h-28 flex items-center justify-center gap-[2px] px-4">
             {waveform.map((h, i) => (
               <motion.div
                 key={i}
                 animate={{ 
                   height: isRecording ? h : 5,
-                  opacity: isRecording ? 0.8 + (h / 100) * 0.2 : 0.3
+                  opacity: isRecording ? 0.7 + (h / 100) * 0.3 : 0.3
                 }}
                 transition={{ 
                   type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                  delay: i * 0.005
+                  stiffness: 400,
+                  damping: 15,
+                  mass: 0.5
                 }}
                 className="w-[3px] rounded-full"
                 style={{
@@ -316,19 +337,18 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
             <Progress value={(duration / MAX_DURATION) * 100} className="h-2 rounded-full" />
           </div>
 
-          {/* 分析进度条 - 分析时显示 */}
+          {/* 分析进度条 - 分析时显示，带百分比 */}
           {isAnalyzing && (
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-slate-500">
                 <span>分析进度</span>
-                <span className="animate-pulse">处理中...</span>
+                <span className="font-bold text-[#7A3EF4]">{Math.round(analysisProgress)}%</span>
               </div>
               <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-[#7A3EF4] to-[#EC4899]"
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 3, ease: 'easeInOut' }}
+                  animate={{ width: `${analysisProgress}%` }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
                 />
               </div>
             </div>
