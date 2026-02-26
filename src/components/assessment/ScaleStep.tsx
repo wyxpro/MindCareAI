@@ -65,8 +65,8 @@ const EMOJI_LIST = [
   '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄'
 ];
 
-// 医生默认头像
-const DOCTOR_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=doctor-ai&backgroundColor=b6e3f4&accessories=sunglasses&clothingGraphic=bear';
+// 医生默认头像 - 使用本地图片
+const DOCTOR_AVATAR = '/srcs/img/doctor.png';
 
 // 模拟历史评估数据 - 包含完整的题目和对话
 const MOCK_HISTORY_ASSESSMENTS: HistoryAssessment[] = [
@@ -868,8 +868,12 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
                         className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         {msg.role === 'assistant' && (
-                          <Avatar className="w-9 h-9 shrink-0 border-2 border-slate-100 dark:border-slate-800">
-                            <AvatarImage src={msg.avatar || DOCTOR_AVATAR} />
+                          <Avatar className="w-9 h-9 shrink-0 border-2 border-slate-100 dark:border-slate-800 overflow-hidden">
+                            <AvatarImage 
+                              src={msg.avatar || DOCTOR_AVATAR} 
+                              className="object-cover w-full h-full"
+                              alt="医生头像"
+                            />
                             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-xs">
                               <Stethoscope className="w-4 h-4" />
                             </AvatarFallback>
@@ -1078,8 +1082,12 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
               >
                 {/* AI消息左侧头像 */}
                 {msg.role === 'assistant' && (
-                  <Avatar className="w-9 h-9 shrink-0 border-2 border-slate-100 dark:border-slate-800">
-                    <AvatarImage src={msg.avatar || DOCTOR_AVATAR} />
+                  <Avatar className="w-9 h-9 shrink-0 border-2 border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <AvatarImage 
+                      src={msg.avatar || DOCTOR_AVATAR} 
+                      className="object-cover w-full h-full"
+                      alt="医生头像"
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-xs">
                       <Stethoscope className="w-4 h-4" />
                     </AvatarFallback>

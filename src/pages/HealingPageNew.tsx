@@ -71,11 +71,21 @@ const rawMusicFiles = [
   '落了白 - 蒋雪儿Snow.J.mp3',
 ] as const;
 
+// 根据环境判断基础URL
+const getBaseUrl = () => {
+  // 如果是本地开发环境
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return '/srcs/music';
+  }
+  // 上线版本使用完整URL
+  return 'https://k.playe.top/srcs/music';
+};
+
 const meditationTracks = rawMusicFiles
   .map((fileName) => {
     const nameWithoutExt = fileName.replace(/\.(mp3|ogg|wav|m4a)$/i, '');
     const [title, artist] = nameWithoutExt.split(' - ');
-    const url = `/srcs/music/${encodeURIComponent(fileName)}`;
+    const url = `${getBaseUrl()}/${encodeURIComponent(fileName)}`;
     return {
       id: fileName,
       url,
@@ -248,8 +258,9 @@ export default function HealingPageNew() {
       const current = meditationTracks[trackIndexRef.current];
       setBuffering(false);
       setIsPlaying(false);
-      setPlayError(`音乐加载失败：${current?.fileName || '未知文件'}`);
-      toast.error('音乐加载失败，请检查文件是否存在');
+      // 静默处理错误，不显示提示
+      console.log(`音乐加载失败：${current?.fileName || '未知文件'}`);
+      // 自动切换到下一首
       if (meditationTracks.length > 1) {
         setTrackIndex((prev) => (prev + 1) % meditationTracks.length);
       }
@@ -721,19 +732,7 @@ export default function HealingPageNew() {
                     </motion.button>
                   </motion.div>
 
-                  {/* 错误提示 */}
-                  <AnimatePresence>
-                    {playError && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="mt-4 text-center text-xs text-rose-200 bg-rose-500/20 backdrop-blur-sm rounded-lg py-2 px-4"
-                      >
-                        {playError}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+
                 </CardContent>
               </Card>
 
