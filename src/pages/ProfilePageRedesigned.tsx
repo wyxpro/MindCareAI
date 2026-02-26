@@ -35,8 +35,6 @@ const PRESET_BACKGROUNDS = [
   { id: 'bg1', gradient: 'from-blue-500 via-indigo-500 to-violet-600', label: '深海蓝', pattern: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)' },
   { id: 'bg2', gradient: 'from-emerald-400 via-teal-500 to-cyan-600', label: '森林绿', pattern: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 40%)' },
   { id: 'bg3', gradient: 'from-rose-400 via-pink-500 to-purple-600', label: '晚霞粉', pattern: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%)' },
-  { id: 'bg4', gradient: 'from-amber-400 via-orange-500 to-rose-500', label: '暖阳橙', pattern: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12) 0%, transparent 45%)' },
-  { id: 'bg5', gradient: 'from-slate-700 via-slate-800 to-slate-900', label: '星空灰', pattern: 'radial-gradient(circle at 70% 70%, rgba(255,255,255,0.08) 0%, transparent 50%)' },
 ];
 
 export default function ProfilePageRedesigned() {
@@ -475,9 +473,6 @@ export default function ProfilePageRedesigned() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-800 dark:text-slate-100 font-bold text-base">查看健康报告</span>
-                  <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-none text-[10px] px-2 py-0 font-bold shadow-sm">
-                    AI
-                  </Badge>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
                   多模态评估结果与康复建议
@@ -485,30 +480,7 @@ export default function ProfilePageRedesigned() {
               </div>
             </div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-full text-xs font-bold h-9 px-5 shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-60 border-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (reportLoading) return;
-                  setReportLoading(true);
-                  setTimeout(() => {
-                    setReportOpen(true);
-                    setReportLoading(false);
-                  }, 3000);
-                }}
-                disabled={reportLoading}
-              >
-                {reportLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                    生成中
-                  </>
-                ) : (
-                  '打开'
-                )}
-              </Button>
-            </motion.div>
+
           </div>
         </motion.div>
 

@@ -1,9 +1,11 @@
-import { Bell, 
-  Bookmark, Clock, Heart, Moon, 
-  Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Trash2, Volume2, VolumeX
+import { 
+  Bookmark, Heart, Moon,
+  Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Trash2, Volume2,
+  Sparkles, Cloud, Zap
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import CommunityTab from '@/components/healing/CommunityTab';
 import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
@@ -14,8 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -30,19 +30,39 @@ import type { HealingContent } from '@/types';
 type LoopMode = 'one' | 'all' | 'shuffle';
 
 const MEDITATION_CATEGORIES = [
-  { id: 'all', label: '全部' },
-  { id: 'relax', label: '放松' },
-  { id: 'sleep', label: '睡眠' },
-  { id: 'focus', label: '专注' },
+  { id: 'all', label: '全部', icon: Sparkles, color: 'from-violet-400 to-purple-500' },
+  { id: 'relax', label: '放松', icon: Cloud, color: 'from-sky-400 to-blue-500' },
+  { id: 'sleep', label: '睡眠', icon: Moon, color: 'from-indigo-400 to-violet-500' },
+  { id: 'focus', label: '专注', icon: Zap, color: 'from-amber-400 to-orange-500' },
 ];
 
 const CONTENT_GRADIENTS = [
-  'from-emerald-500 to-emerald-600',
-  'from-purple-500 to-purple-600',
-  'from-blue-500 to-blue-600',
-  'from-pink-500 to-pink-600',
-  'from-amber-500 to-amber-600',
+  'from-emerald-400 via-teal-400 to-cyan-400',
+  'from-violet-400 via-purple-400 to-pink-400',
+  'from-blue-400 via-indigo-400 to-violet-400',
+  'from-rose-400 via-pink-400 to-fuchsia-400',
+  'from-amber-400 via-orange-400 to-rose-400',
 ];
+
+// 动画配置
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: 'spring' as const, stiffness: 300, damping: 24 }
+  }
+};
+
+// scaleVariants 用于组件动画
 
 const rawMusicFiles = [
   'Lisure .mp3',
@@ -69,6 +89,7 @@ const meditationTracks = rawMusicFiles
 export default function HealingPageNew() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('meditation');
   const [activeCategory, setActiveCategory] = useState('all');
   const [healingContent, setHealingContent] = useState<HealingContent[]>([]);
@@ -102,6 +123,16 @@ export default function HealingPageNew() {
   useEffect(() => {
     loadData();
   }, [activeCategory]);
+
+  // 处理从其他页面传入的 tab 状态
+  useEffect(() => {
+    const state = location.state as { activeTab?: string } | null;
+    if (state?.activeTab) {
+      setActiveTab(state.activeTab);
+      // 清除 state 避免刷新后仍生效
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   useEffect(() => {
     if (healingContent.length > 0 && !selectedContent) {
@@ -439,289 +470,488 @@ export default function HealingPageNew() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
+      <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
        
-
         {/* 导航系统 - 冥想、树洞、日记、知识 */}
-        <div className="grid grid-cols-4 gap-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <Button
-            onClick={() => setActiveTab('meditation')}
-            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
-              activeTab === 'meditation'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-            } active:scale-95`}
-          >
-            <Music className="w-4 h-4 mr-1.5" />
-            冥想
-          </Button>
-          <Button
-            onClick={() => setActiveTab('community')}
-            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
-              activeTab === 'community'
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/20'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-            } active:scale-95`}
-          >
-            <Heart className="w-4 h-4 mr-1.5" />
-            树洞
-          </Button>
-          <Button
-            onClick={() => setActiveTab('diary')}
-            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
-              activeTab === 'diary'
-                ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/20'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-            } active:scale-95`}
-          >
-            <PenLine className="w-4 h-4 mr-1.5" />
-            日记
-          </Button>
-          <Button
-            onClick={() => setActiveTab('knowledge')}
-            className={`rounded-2xl py-5 text-sm font-medium transition-all duration-200 ${
-              activeTab === 'knowledge'
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-            } active:scale-95`}
-          >
-            <Bookmark className="w-4 h-4 mr-1.5" />
-            知识
-          </Button>
-        </div>
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-4 gap-2"
+        >
+          {[
+            { id: 'meditation', label: '冥想', icon: Music, colors: 'from-indigo-500 via-purple-500 to-pink-500' },
+            { id: 'community', label: '树洞', icon: Heart, colors: 'from-blue-500 via-cyan-500 to-teal-500' },
+            { id: 'diary', label: '日记', icon: PenLine, colors: 'from-rose-500 via-pink-500 to-fuchsia-500' },
+            { id: 'knowledge', label: '知识', icon: Bookmark, colors: 'from-emerald-500 via-teal-500 to-cyan-500' },
+          ].map((tab) => (
+            <motion.div key={tab.id} variants={itemVariants}>
+              <Button
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative overflow-hidden rounded-2xl py-5 text-sm font-medium transition-all duration-300 w-full ${
+                  activeTab === tab.id
+                    ? 'text-white shadow-lg'
+                    : 'bg-white/80 dark:bg-slate-800/80 text-muted-foreground hover:text-foreground backdrop-blur-sm'
+                } active:scale-95`}
+                style={{
+                  boxShadow: activeTab === tab.id ? `0 8px 30px -10px rgba(99, 102, 241, 0.5)` : undefined
+                }}
+              >
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="activeTabBg"
+                    className={`absolute inset-0 bg-gradient-to-r ${tab.colors}`}
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center justify-center gap-1.5">
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </span>
+              </Button>
+            </motion.div>
+          ))}
+        </motion.div>
 
         {/* 冥想Tab内容 */}
-        {activeTab === 'meditation' && (
-          <div className="space-y-6">
-            {/* 主播放器 */}
-            <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-0 shadow-2xl overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <CardContent className="p-4 md:p-6">
-                <div className="flex justify-center mb-3">
-                  <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 px-3 py-1 text-xs">
-                    {isPlaying ? '正在播放' : '已暂停'}
-                  </Badge>
+        <AnimatePresence mode="wait">
+          {activeTab === 'meditation' && (
+            <motion.div
+              key="meditation"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {/* 主播放器 - 全新设计 */}
+              <Card className="relative overflow-hidden border-0 shadow-2xl shadow-indigo-900/30">
+                {/* 动态背景渐变 - 深邃星空蓝紫 */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/50 via-transparent to-transparent" />
+                
+                {/* 星星装饰 */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full animate-pulse" />
+                  <div className="absolute top-20 right-20 w-0.5 h-0.5 bg-white/80 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+                  <div className="absolute top-32 left-1/4 w-1 h-1 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+                  <div className="absolute bottom-20 right-10 w-0.5 h-0.5 bg-white/70 rounded-full animate-pulse" style={{ animationDelay: '1.5s' }} />
+                  <div className="absolute bottom-32 left-20 w-1 h-1 bg-white/50 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+                  <div className="absolute top-1/2 right-1/3 w-0.5 h-0.5 bg-white/90 rounded-full animate-pulse" style={{ animationDelay: '0.8s' }} />
                 </div>
+                
+                {/* 装饰光晕 - 星云效果 */}
+                <div className="absolute -top-20 -right-20 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
+                <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
+                
+                <CardContent className="relative p-6 md:p-8">
+                  {/* 状态标签 */}
+                  <motion.div 
+                    className="flex justify-center mb-4"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <Badge className={`px-4 py-1.5 text-xs font-medium border-0 ${
+                      isPlaying 
+                        ? 'bg-indigo-500/30 text-indigo-100 backdrop-blur-md shadow-lg shadow-indigo-500/20' 
+                        : 'bg-indigo-500/20 text-indigo-200/80 backdrop-blur-sm'
+                    }`}>
+                      <span className="flex items-center gap-1.5">
+                        {isPlaying && (
+                          <span className="flex gap-0.5">
+                            <span className="w-1 h-3 bg-indigo-300 rounded-full animate-[bounce_1s_infinite]" />
+                            <span className="w-1 h-3 bg-purple-300 rounded-full animate-[bounce_1s_infinite_0.1s]" />
+                            <span className="w-1 h-3 bg-pink-300 rounded-full animate-[bounce_1s_infinite_0.2s]" />
+                          </span>
+                        )}
+                        {isPlaying ? '正在播放' : '已暂停'}
+                      </span>
+                    </Badge>
+                  </motion.div>
 
-                <div className="text-center mb-4">
-                  <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
-                    {selectedContent?.title || '5分钟呼吸导引'}
-                  </h2>
-                  <p className="text-indigo-300 text-xs">
-                    {selectedContent?.description || '跟随圆圈来缓呼吸'}
-                  </p>
-                  {currentTrackLabel && (
-                    <p className="text-white/70 text-[11px] mt-2">
-                      当前音乐：{currentTrackLabel}
+                  {/* 标题区域 */}
+                  <motion.div 
+                    className="text-center mb-6"
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                      {selectedContent?.title || '5分钟呼吸导引'}
+                    </h2>
+                    <p className="text-indigo-200/80 text-sm">
+                      {selectedContent?.description || '跟随圆圈来缓呼吸'}
                     </p>
-                  )}
-                </div>
-
-                {/* 呼吸动画圆形 */}
-                <div className="flex justify-center mb-4">
-                  <div className="relative w-24 h-24">
-                    <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20 animate-breathe" />
-                    <div className="absolute inset-2 rounded-full border-2 border-indigo-500/30 animate-breathe" style={{ animationDelay: '0.5s' }} />
-                    <div className="absolute inset-4 rounded-full border-2 border-indigo-500/40 animate-breathe" style={{ animationDelay: '1s' }} />
-                    <div className="absolute inset-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-glow flex items-center justify-center animate-pulse-glow">
-                      <Music className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 进度条 */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-xs text-indigo-300 mb-2">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(totalTime || 0)}</span>
-                  </div>
-                  <Slider
-                    value={[progressValue]}
-                    max={100}
-                    step={0.1}
-                    onValueChange={(v) => {
-                      const audio = audioRef.current;
-                      if (!audio || !totalTime) return;
-                      const nextTime = (v[0] / 100) * totalTime;
-                      audio.currentTime = Math.max(0, Math.min(totalTime, nextTime));
-                      setCurrentTime(Math.floor(audio.currentTime));
-                    }}
-                    className="w-full [&_[data-slot=slider-track]]:bg-white/10 [&_[data-slot=slider-range]]:bg-gradient-to-r [&_[data-slot=slider-range]]:from-indigo-500 [&_[data-slot=slider-range]]:to-purple-600 [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:border-white"
-                  />
-                </div>
-
-                {/* 播放控制 */}
-                <div className="flex items-center justify-center gap-3">
-                  <audio ref={(el) => { audioRef.current = el; }} preload="auto" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={playPrev}
-                    disabled={meditationTracks.length === 0}
-                    className="w-9 h-9 text-indigo-300 hover:text-white hover:bg-slate-700/50 transition-smooth"
-                  >
-                    <SkipBack className="w-4 h-4" />
-                  </Button>
-                  
-                  <Button
-                    onClick={togglePlay}
-                    disabled={meditationTracks.length === 0}
-                    className="w-12 h-12 rounded-full bg-white hover:bg-gray-100 shadow-2xl transition-smooth"
-                  >
-                    {buffering ? (
-                      <span className="w-6 h-6 rounded-full border-2 border-slate-900/25 border-t-slate-900 animate-spin" />
-                    ) : isPlaying ? (
-                      <Pause className="w-6 h-6 text-slate-900" fill="currentColor" />
-                    ) : (
-                      <Play className="w-6 h-6 text-slate-900 ml-0.5" fill="currentColor" />
+                    {currentTrackLabel && (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-purple-300/70 text-xs mt-2 font-medium"
+                      >
+                        ♪ {currentTrackLabel}
+                      </motion.p>
                     )}
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={playNext}
-                    disabled={meditationTracks.length === 0}
-                    className="w-9 h-9 text-indigo-300 hover:text-white hover:bg-slate-700/50 transition-smooth"
-                  >
-                    <SkipForward className="w-4 h-4" />
-                  </Button>
-                </div>
+                  </motion.div>
 
-                {playError && (
-                  <div className="mt-3 text-center text-[10px] text-rose-200/90">
-                    {playError}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {/* 呼吸动画圆形 - 星空版 */}
+                  <motion.div 
+                    className="flex justify-center mb-8"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4, type: 'spring' }}
+                  >
+                    <div className="relative w-32 h-32">
+                      {/* 外层波纹 - 星空紫 */}
+                      <motion.div 
+                        className="absolute inset-0 rounded-full border-2 border-indigo-400/30"
+                        animate={isPlaying ? {
+                          scale: [1, 1.2, 1],
+                          opacity: [0.5, 0.2, 0.5],
+                        } : {}}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                      />
+                      <motion.div 
+                        className="absolute inset-2 rounded-full border-2 border-purple-400/40"
+                        animate={isPlaying ? {
+                          scale: [1, 1.15, 1],
+                          opacity: [0.6, 0.3, 0.6],
+                        } : {}}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                      />
+                      <motion.div 
+                        className="absolute inset-4 rounded-full border-2 border-pink-400/30"
+                        animate={isPlaying ? {
+                          scale: [1, 1.1, 1],
+                          opacity: [0.7, 0.4, 0.7],
+                        } : {}}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                      />
+                      {/* 中心圆 - 深空效果 */}
+                      <motion.div 
+                        className="absolute inset-6 rounded-full bg-gradient-to-br from-indigo-500/80 to-purple-600/80 backdrop-blur-md shadow-2xl flex items-center justify-center border border-indigo-400/50"
+                        animate={isPlaying ? {
+                          boxShadow: [
+                            '0 0 30px rgba(99, 102, 241, 0.5)',
+                            '0 0 60px rgba(99, 102, 241, 0.7)',
+                            '0 0 30px rgba(99, 102, 241, 0.5)',
+                          ]
+                        } : {}}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <Music className="w-8 h-8 text-white" />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+
+                  {/* 进度条 - 星空版 */}
+                  <motion.div 
+                    className="mb-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <div className="flex items-center justify-between text-xs text-indigo-200/60 mb-2 font-medium">
+                      <span>{formatTime(currentTime)}</span>
+                      <span>{formatTime(totalTime || 0)}</span>
+                    </div>
+                    <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full"
+                        style={{ width: `${progressValue}%` }}
+                        layoutId="progress"
+                      />
+                      {/* 进度条星光效果 */}
+                      <div 
+                        className="absolute inset-y-0 w-4 bg-indigo-400/60 blur-sm rounded-full"
+                        style={{ left: `calc(${progressValue}% - 8px)` }}
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* 播放控制 - 星空版 */}
+                  <motion.div 
+                    className="flex items-center justify-center gap-4"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <audio ref={(el) => { audioRef.current = el; }} preload="auto" />
+                    
+                    {/* 上一首 */}
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={playPrev}
+                      disabled={meditationTracks.length === 0}
+                      className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all disabled:opacity-30 border border-white/20"
+                    >
+                      <SkipBack className="w-5 h-5" />
+                    </motion.button>
+                    
+                    {/* 播放/暂停 - 主按钮 */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={togglePlay}
+                      disabled={meditationTracks.length === 0}
+                      className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all disabled:opacity-50 border border-indigo-400/50"
+                    >
+                      {buffering ? (
+                        <span className="w-6 h-6 rounded-full border-3 border-indigo-300 border-t-white animate-spin" />
+                      ) : isPlaying ? (
+                        <Pause className="w-7 h-7 text-white" fill="currentColor" />
+                      ) : (
+                        <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
+                      )}
+                    </motion.button>
+                    
+                    {/* 下一首 */}
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={playNext}
+                      disabled={meditationTracks.length === 0}
+                      className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all disabled:opacity-30 border border-white/20"
+                    >
+                      <SkipForward className="w-5 h-5" />
+                    </motion.button>
+                  </motion.div>
+
+                  {/* 错误提示 */}
+                  <AnimatePresence>
+                    {playError && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-4 text-center text-xs text-rose-200 bg-rose-500/20 backdrop-blur-sm rounded-lg py-2 px-4"
+                      >
+                        {playError}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
 
             
 
-            {/* 冥想库 */}
-            <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <div className="flex items-center gap-2 mb-4">
-                <Music className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-xl font-bold text-foreground">冥想库</h3>
+            {/* 冥想库 - 重新设计 */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="space-y-4"
+            >
+              {/* 标题区域 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                    <Music className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">冥想库</h3>
+                    <p className="text-xs text-muted-foreground">探索内心的宁静</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                {MEDITATION_CATEGORIES.map(cat => (
-                  <Button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`rounded-full px-6 py-2 text-sm font-medium whitespace-nowrap transition-smooth ${
-                      activeCategory === cat.id
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    {cat.label}
-                  </Button>
-                ))}
+              {/* 分类标签 - 新设计 */}
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {MEDITATION_CATEGORIES.map((cat) => {
+                  const CatIcon = cat.icon;
+                  return (
+                    <motion.button
+                      key={cat.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                        activeCategory === cat.id
+                          ? `bg-gradient-to-r ${cat.color} text-white shadow-lg`
+                          : 'bg-white dark:bg-slate-800 text-muted-foreground hover:text-foreground shadow-sm border border-border/50'
+                      }`}
+                    >
+                      <CatIcon className="w-4 h-4" />
+                      {cat.label}
+                    </motion.button>
+                  );
+                })}
               </div>
 
+              {/* 内容列表 - 新设计 */}
               <div className="space-y-3">
                 {healingContent.slice(0, 4).map((content, index) => {
                   const gradient = CONTENT_GRADIENTS[index % CONTENT_GRADIENTS.length];
                   const isActive = selectedContent?.id === content.id;
                   
                   return (
-                    <Card
+                    <motion.div
                       key={content.id}
-                      onClick={() => {
-                        setSelectedDetailContent(content);
-                        setDetailDialogOpen(true);
-                      }}
-                      className={`cursor-pointer transition-smooth hover:shadow-lg ${
-                        isActive
-                          ? 'border-2 border-indigo-500 shadow-glow bg-indigo-50/50 dark:bg-indigo-500/10'
-                          : 'border border-border hover:border-indigo-300'
-                      }`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      whileHover={{ x: 4 }}
                     >
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePlayContent(content);
-                            }}
-                            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform`}
-                          >
-                            <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                      <Card
+                        onClick={() => {
+                          setSelectedDetailContent(content);
+                          setDetailDialogOpen(true);
+                        }}
+                        className={`cursor-pointer transition-all duration-300 overflow-hidden ${
+                          isActive
+                            ? 'ring-2 ring-indigo-500 shadow-lg shadow-indigo-500/20'
+                            : 'hover:shadow-md border-border/50'
+                        }`}
+                      >
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            {/* 播放按钮 */}
+                            <motion.div 
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePlayContent(content);
+                              }}
+                              className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg cursor-pointer relative overflow-hidden`}
+                            >
+                              <div className="absolute inset-0 bg-white/20 opacity-0 hover:opacity-100 transition-opacity" />
+                              <Play className="w-6 h-6 text-white ml-0.5 relative z-10" fill="white" />
+                            </motion.div>
+                            
+                            {/* 内容信息 */}
+                            <div>
+                              <h4 className="font-semibold text-foreground mb-0.5">{content.title}</h4>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="px-2 py-0.5 rounded-full bg-muted">{content.category}</span>
+                                <span>•</span>
+                                <span>{content.duration ? `${Math.floor(content.duration / 60)}:00` : '5:00'}</span>
+                              </div>
+                            </div>
                           </div>
-                          
-                          <div>
-                            <h4 className="font-semibold text-foreground mb-1">{content.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {content.category} • {content.duration ? `${Math.floor(content.duration / 60)}:00` : '5:00'}
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="flex items-center gap-2">
-                          {isActive && (
-                            <Volume2 className="w-5 h-5 text-indigo-600 animate-pulse" />
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleFavorite(content.id);
-                            }}
-                            className="hover:bg-muted"
-                          >
-                            <Bookmark className={`w-5 h-5 ${favorites.has(content.id) ? 'fill-current text-amber-500' : 'text-muted-foreground'}`} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setContentToDelete(content);
-                              setDeleteDialogOpen(true);
-                            }}
-                            className="hover:bg-muted text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+                          {/* 操作按钮 */}
+                          <div className="flex items-center gap-1">
+                            {isActive && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mr-1"
+                              >
+                                <Volume2 className="w-4 h-4 text-indigo-600 animate-pulse" />
+                              </motion.div>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleFavorite(content.id);
+                              }}
+                              className="w-9 h-9 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                            >
+                              <Bookmark className={`w-4 h-4 ${favorites.has(content.id) ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground'}`} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setContentToDelete(content);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="w-9 h-9 rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-rose-500" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   );
                 })}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* 树洞Tab内容 */}
-        {activeTab === 'community' && <CommunityTab />}
+        <AnimatePresence mode="wait">
+          {activeTab === 'community' && (
+            <motion.div
+              key="community"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CommunityTab />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 日记Tab内容 */}
-        {activeTab === 'diary' && <DiaryTab />}
+        <AnimatePresence mode="wait">
+          {activeTab === 'diary' && (
+            <motion.div
+              key="diary"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DiaryTab />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 知识Tab内容 */}
-        {activeTab === 'knowledge' && <KnowledgeTab />}
+        <AnimatePresence mode="wait">
+          {activeTab === 'knowledge' && (
+            <motion.div
+              key="knowledge"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <KnowledgeTab />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 冥想完成对话框 */}
         <Dialog open={moodDialogOpen} onOpenChange={setMoodDialogOpen}>
-          <DialogContent className="glass border-primary/20 shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold gradient-text">冥想完成</DialogTitle>
+          <DialogContent className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-0 shadow-2xl rounded-3xl">
+            <DialogHeader className="text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
+                className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg"
+              >
+                <Sparkles className="w-8 h-8 text-white" />
+              </motion.div>
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                冥想完成
+              </DialogTitle>
+              <p className="text-muted-foreground mt-2">恭喜你完成了 {Math.floor(currentTime / 60)} 分钟的冥想练习</p>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <p className="text-foreground">恭喜你完成了{Math.floor(currentTime / 60)}分钟的冥想练习!</p>
               <div className="space-y-2">
-                <Label htmlFor="moodAfter" className="text-foreground">现在的感受如何?</Label>
+                <Label htmlFor="moodAfter" className="text-foreground font-medium">现在的感受如何？</Label>
                 <Textarea
                   id="moodAfter"
                   value={moodAfter}
                   onChange={(e) => setMoodAfter(e.target.value)}
-                  placeholder="记录你的感受..."
+                  placeholder="记录下此刻的心情..."
                   rows={3}
-                  className="bg-background border-border focus:border-primary/50 transition-smooth"
+                  className="bg-slate-50 dark:bg-slate-800 border-0 rounded-xl focus:ring-2 focus:ring-indigo-500/20 resize-none"
                 />
               </div>
             </div>
@@ -729,15 +959,15 @@ export default function HealingPageNew() {
               <Button
                 variant="outline"
                 onClick={() => setMoodDialogOpen(false)}
-                className="flex-1 border-border hover:bg-muted transition-smooth"
+                className="flex-1 rounded-xl border-slate-200 hover:bg-slate-100 transition-all"
               >
                 跳过
               </Button>
               <Button
                 onClick={handleSaveMood}
-                className="flex-1 bg-gradient-to-r from-primary to-info hover:opacity-90 text-white shadow-glow transition-smooth"
+                className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 text-white shadow-lg shadow-indigo-500/25 transition-all"
               >
-                保存
+                保存记录
               </Button>
             </div>
           </DialogContent>
@@ -745,33 +975,40 @@ export default function HealingPageNew() {
 
         {/* 删除确认对话框 */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent className="w-[90vw] max-w-md rounded-[20px] border-none bg-background shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Trash2 className="w-5 h-5 text-destructive" />
+          <DialogContent className="w-[90vw] max-w-md rounded-3xl border-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl">
+            <DialogHeader className="text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="w-14 h-14 mx-auto mb-3 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center"
+              >
+                <Trash2 className="w-7 h-7 text-rose-500" />
+              </motion.div>
+              <DialogTitle className="text-xl font-bold text-foreground">
                 确认删除
               </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                你确定要删除「{contentToDelete?.title}」吗？此操作不可恢复。
+              <DialogDescription className="text-muted-foreground mt-2">
+                你确定要删除「{contentToDelete?.title}」吗？<br />此操作不可恢复。
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="gap-3 mt-4">
+            <DialogFooter className="gap-3 mt-6">
               <Button
                 variant="outline"
                 onClick={() => {
                   setDeleteDialogOpen(false);
                   setContentToDelete(null);
                 }}
-                className="flex-1 rounded-xl border-border hover:bg-muted transition-all"
+                className="flex-1 rounded-xl border-slate-200 hover:bg-slate-100 transition-all"
               >
                 取消
               </Button>
               <Button
                 onClick={handleDeleteContent}
-                className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-white shadow-lg shadow-destructive/20 transition-all"
+                className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:opacity-90 text-white shadow-lg shadow-rose-500/25 transition-all"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                删除
+                确认删除
               </Button>
             </DialogFooter>
           </DialogContent>

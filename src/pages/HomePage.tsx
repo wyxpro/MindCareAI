@@ -267,7 +267,44 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-       
+        {/* 树洞社区卡片 - 放在精选内容标题下方 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="mb-4"
+        >
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => navigate('/healing', { state: { activeTab: 'community' } })}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 p-5 shadow-xl shadow-blue-200 cursor-pointer"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000" />
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="w-5 h-5 text-white" />
+                  <span className="text-white font-bold">树洞社区</span>
+                </div>
+                <p className="text-white/80 text-sm">
+                  与 2,000+ 伙伴分享心情
+                </p>
+              </div>
+              <div className="flex -space-x-2">
+                {['🧘', '🌸', '🌿'].map((emoji, i) => (
+                  <div key={i} className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-lg border-2 border-white/50">
+                    {emoji}
+                  </div>
+                ))}
+                <div className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border-2 border-white/50">
+                  +99
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
 
         {/* 精选内容卡片 */}
         <motion.div
@@ -333,62 +370,23 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        {/* 社区卡片 - 底部 */}
+        {/* 友好提示语 */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="pb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="text-center pb-6"
         >
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => navigate('/healing')}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-400 via-pink-400 to-violet-400 p-5 shadow-xl shadow-rose-200 cursor-pointer"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000" />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-5 h-5 text-white" />
-                  <span className="text-white font-bold">温暖社区</span>
-                </div>
-                <p className="text-white/80 text-sm">
-                  与 2,000+ 伙伴分享心情
-                </p>
-              </div>
-              <div className="flex -space-x-2">
-                {['🧘', '🌸', '🌿'].map((emoji, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-lg border-2 border-white/50">
-                    {emoji}
-                  </div>
-                ))}
-                <div className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border-2 border-white/50">
-                  +99
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* 友好提示语 */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center mt-4"
-          >
-            <p className="text-sm text-slate-400 dark:text-slate-500">
-              {[
-                '🌿 今天也要好好爱自己哦',
-                '🌟 每一天都是崭新的开始',
-                '💖 你值得拥有美好的一切',
-                '🌈 生活充满希望，一起加油',
-                '✨ 每个早晨都是新的奇迹',
-                '🌸 微笑面对生活，温暖常在',
-              ][Math.floor(Math.random() * 6)]}
-            </p>
-          </motion.div>
+          <p className="text-sm text-slate-400 dark:text-slate-500">
+            {[
+              '🌿 今天也要好好爱自己哦',
+              '🌟 每一天都是崭新的开始',
+              '💖 你值得拥有美好的一切',
+              '🌈 生活充满希望，一起加油',
+              '✨ 每个早晨都是新的奇迹',
+              '🌸 微笑面对生活，温暖常在',
+            ][Math.floor(Math.random() * 6)]}
+          </p>
         </motion.div>
       </div>
     </div>

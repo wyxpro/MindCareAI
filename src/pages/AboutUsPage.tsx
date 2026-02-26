@@ -157,37 +157,6 @@ export default function AboutUsPage() {
           </div>
         </div>
 
-        {/* 成就数据 */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-purple-600" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">我们的成就</h3>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {achievements.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 * i }}
-              >
-                <Card className="border-0 bg-white dark:bg-slate-900 rounded-2xl shadow-md hover:shadow-xl transition-all">
-                  <CardContent className="p-5 text-center space-y-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-950/50 dark:to-purple-950/50 rounded-xl flex items-center justify-center mx-auto">
-                      <item.icon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{item.value}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1 uppercase tracking-wide">{item.label}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
         {/* 专业认证 */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
