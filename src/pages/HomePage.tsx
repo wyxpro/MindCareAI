@@ -19,7 +19,6 @@ export default function HomePage() {
   const [moodStatus, setMoodStatus] = useState('心情很棒');
   const [greeting, setGreeting] = useState('');
   const [currentQuote, setCurrentQuote] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   // 轮播图片数量
   const carouselImages = 3;
@@ -45,14 +44,8 @@ export default function HomePage() {
       setCurrentQuote((prev) => (prev + 1) % carouselImages);
     }, 5000);
 
-    // 实时更新时间
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
     return () => {
       clearInterval(interval);
-      clearInterval(timeInterval);
     };
   }, []);
 
@@ -82,16 +75,6 @@ export default function HomePage() {
   };
 
 
-
-  // 格式化日期时间
-  const formatDateTime = (date: Date) => {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${month}月${day}日 ${hours}:${minutes}:${seconds}`;
-  };
 
   // 主要功能 - 大卡片设计
   const mainFeatures = [
@@ -196,23 +179,11 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-3"
             >
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-0.5">{greeting}</p>
-                  <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                    {profile?.full_name || '朋友'} ✨
-                  </h1>
-                </div>
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-md border border-white/20 dark:border-slate-700/50 rounded-2xl px-3 py-1.5 shadow-sm self-center"
-                >
-                  <p className="text-xs font-mono font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {formatDateTime(currentTime)}
-                  </p>
-                </motion.div>
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-0.5">{greeting}</p>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                  {profile?.full_name || '朋友'} ✨
+                </h1>
               </div>
             </motion.div>
 

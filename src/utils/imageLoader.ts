@@ -6,32 +6,16 @@ export interface CarouselImage {
 }
 
 /**
- * 动态加载 srcs/img 目录下的所有图片
- * 支持 png, jpg, jpeg, webp 格式
+ * 获取轮播图片列表
+ * 直接使用静态路径，避免 Vite import.meta.glob 的 MIME 类型问题
  */
 export const loadCarouselImages = (): CarouselImage[] => {
-  try {
-    // 使用 Vite 的 import.meta.glob 动态导入图片
-    const imageModules = import.meta.glob('/srcs/img/*.{png,jpg,jpeg,webp}', { 
-      eager: true,
-      query: '?url',
-      import: 'default'
-    });
-    
-    return Object.entries(imageModules).map(([path, url]) => {
-      const fileName = path.split('/').pop() || '';
-      const name = fileName.split('.')[0];
-      
-      return {
-        src: url as string,
-        alt: `轮播图片 ${name}`,
-        name
-      };
-    }).sort((a, b) => a.name.localeCompare(b.name)); // 按文件名排序
-  } catch (error) {
-    console.warn('Failed to load carousel images:', error);
-    return [];
-  }
+  // 直接返回已知的图片路径
+  return [
+    { src: '/srcs/img/1.png', alt: '轮播图片 1', name: '1' },
+    { src: '/srcs/img/2.png', alt: '轮播图片 2', name: '2' },
+    { src: '/srcs/img/3.png', alt: '轮播图片 3', name: '3' },
+  ];
 };
 
 /**

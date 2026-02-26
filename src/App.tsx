@@ -1,4 +1,4 @@
-import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, HashRouter as Router, Routes, useLocation } from 'react-router-dom';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { RouteGuard } from '@/components/common/RouteGuard';
 import DoctorLayout from '@/components/layouts/DoctorLayout';
