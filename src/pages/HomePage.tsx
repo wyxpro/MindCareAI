@@ -194,56 +194,12 @@ export default function HomePage() {
 
       {/* 主要内容区 */}
       <div className="px-5 max-w-md mx-auto space-y-6">
-        {/* 每日心语 - 图片轮播 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="relative overflow-hidden rounded-3xl shadow-xl -mt-4"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuote}
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.7, ease: "easeInOut" }}
-              className="relative w-full h-48 overflow-hidden"
-            >
-              <img
-                src={`/srcs/img/${currentQuote + 1}.png`}
-                alt={`轮播图 ${currentQuote + 1}`}
-                className="w-full h-full object-cover"
-              />
-              {/* 阴影遮罩层，使指示器更清晰 */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-            </motion.div>
-          </AnimatePresence>
-
-          {/* 指示器 */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            {[0, 1, 2].map((i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentQuote(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === currentQuote ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
-                }`}
-              />
-            ))}
-          </div>
-        </motion.div>
-
         {/* 主要功能 - 瀑布流卡片 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.2 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">探索功能</h3>
-            <span className="text-xs text-slate-400"></span>
-          </div>
           
           <div className="grid grid-cols-2 gap-3">
             {/* 大卡片 */}
@@ -293,7 +249,58 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        {/* 快捷功能 - 圆形图标 */}
+        {/* 精选内容标题 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">精选内容</h3>
+            <motion.button 
+              whileHover={{ x: 3 }}
+              onClick={() => navigate('/healing')}
+              className="text-sm text-violet-600 font-medium flex items-center gap-1"
+            >
+              全部 <ChevronRight className="w-4 h-4" />
+            </motion.button>
+          </div>
+        </motion.div>
+
+       
+
+        {/* 精选内容卡片 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+            {featuredContent.map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                whileHover={{ y: -5 }}
+                onClick={() => navigate('/healing')}
+                className="flex-shrink-0 w-40 bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer"
+              >
+                <div className={`h-24 ${item.bgColor} flex items-center justify-center text-4xl relative`}>
+                  {item.image}
+                </div>
+                <div className="p-3">
+                  <p className="text-[10px] text-slate-400 mb-1">{item.type} · {item.duration}</p>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                    {item.title}
+                  </h4>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+        
+ {/* 快捷功能 - 圆形图标 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -322,53 +329,6 @@ export default function HomePage() {
                   {action.title}
                 </span>
               </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* 精选内容 - 横向滚动卡片 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">精选内容</h3>
-            <motion.button 
-              whileHover={{ x: 3 }}
-              onClick={() => navigate('/healing')}
-              className="text-sm text-violet-600 font-medium flex items-center gap-1"
-            >
-              全部 <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
-            {featuredContent.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + index * 0.1 }}
-                whileHover={{ y: -5 }}
-                onClick={() => navigate('/healing')}
-                className="flex-shrink-0 w-40 bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer"
-              >
-                <div className={`h-24 ${item.bgColor} flex items-center justify-center text-4xl relative`}>
-                  {item.tag && (
-                    <Badge className="absolute top-2 left-2 bg-white/80 text-slate-700 border-none text-[9px]">
-                      {item.tag}
-                    </Badge>
-                  )}
-                  {item.image}
-                </div>
-                <div className="p-3">
-                  <p className="text-[10px] text-slate-400 mb-1">{item.type} · {item.duration}</p>
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                    {item.title}
-                  </h4>
-                </div>
-              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -409,6 +369,25 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </motion.div>
+
+          {/* 友好提示语 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center mt-4"
+          >
+            <p className="text-sm text-slate-400 dark:text-slate-500">
+              {[
+                '🌿 今天也要好好爱自己哦',
+                '🌟 每一天都是崭新的开始',
+                '💖 你值得拥有美好的一切',
+                '🌈 生活充满希望，一起加油',
+                '✨ 每个早晨都是新的奇迹',
+                '🌸 微笑面对生活，温暖常在',
+              ][Math.floor(Math.random() * 6)]}
+            </p>
           </motion.div>
         </motion.div>
       </div>

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronRight, ClipboardList, Download, Info, Printer, Send, Smile, Stethoscope, History, FileText, Calendar, AlertCircle } from 'lucide-react';
+import { Check, ChevronRight, ClipboardList, Download, Info, Printer, Send, Smile, Stethoscope, History, FileText, Calendar, AlertCircle, Activity } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -904,45 +904,105 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
           </DialogContent>
         </Dialog>
 
-        {/* 历史评估报告弹窗 - 与量表评估报告样式一致 */}
+        {/* 历史评估报告弹窗 - 与 FusionReport 量表评估报告样式一致 */}
         <Dialog open={showHistoryReport} onOpenChange={setShowHistoryReport}>
-          <DialogContent className="max-w-md p-0 overflow-hidden rounded-[32px] border-none">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 border-0 bg-white rounded-2xl mx-auto w-[calc(100%-3rem)]">
             {selectedHistory && (
               <>
-                <div className="bg-gradient-to-br from-primary to-primary-foreground p-8 text-center text-white space-y-4">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto backdrop-blur-md">
-                    <ClipboardList className="w-10 h-10" />
-                  </div>
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-black">评估完成</h2>
-                    <p className="text-white/70 text-sm">基于您的多轮对话回答生成的报告</p>
-                    <p className="text-white/60 text-xs mt-2">{formatHistoryDate(selectedHistory.date)}</p>
+                {/* 头部 */}
+                <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">量表评估报告</h2>
+                      </div>
+                      <p className="text-white/80 mt-2 text-sm">PHQ-9 抑郁症筛查量表详细得分与分析</p>
+                      <p className="text-white/60 text-xs mt-1">{formatHistoryDate(selectedHistory.date)}</p>
+                    </div>
                   </div>
                 </div>
-
-                <div className="p-8 space-y-8 bg-white dark:bg-slate-950" id={`history-report-card-${selectedHistory.id}`}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl text-center space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score</span>
-                      <p className="text-3xl font-black text-primary">{selectedHistory.reportData.score}</p>
-                    </div>
-                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl text-center space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Risk</span>
-                      <p className={`text-lg font-black ${
-                        selectedHistory.reportData.riskLevel === 'high' ? 'text-rose-500' : 
-                        selectedHistory.reportData.riskLevel === 'medium' ? 'text-amber-500' : 'text-emerald-500'
-                      }`}>
+                
+                <div className="p-6 space-y-6" id={`history-report-card-${selectedHistory.id}`}>
+                  {/* 得分卡片 */}
+                  <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-5 border border-slate-100 shadow-sm">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-slate-600 font-medium">PHQ-9 总分</span>
+                      <Badge className={`${
+                        selectedHistory.reportData.riskLevel === 'high' ? 'bg-[#F97316]' : 
+                        selectedHistory.reportData.riskLevel === 'medium' ? 'bg-[#8B5CF6]' : 'bg-[#10B981]'
+                      } text-white px-3 py-1`}>
                         {selectedHistory.reportData.riskLevel === 'high' ? '高风险' : 
                          selectedHistory.reportData.riskLevel === 'medium' ? '中风险' : '低风险'}
-                      </p>
+                      </Badge>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-slate-900">{selectedHistory.reportData.score}</span>
+                      <span className="text-slate-400 text-lg">/ 27</span>
+                    </div>
+                    <p className="text-slate-500 text-sm mt-3 leading-relaxed">
+                      根据您的量表回答，您的抑郁倾向处于<span className="font-semibold text-slate-700">
+                        {selectedHistory.reportData.riskLevel === 'high' ? '高风险' : 
+                         selectedHistory.reportData.riskLevel === 'medium' ? '中风险' : '低风险'}
+                      </span>水平。
+                    </p>
+                  </div>
+                   
+                  {/* 各维度得分 */}
+                  <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+                    <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-blue-500" />
+                      各维度得分详情
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {selectedHistory.reportData.dimensionScores && selectedHistory.reportData.dimensionScores.length > 0 ? (
+                        selectedHistory.reportData.dimensionScores.map((item: any, idx: number) => (
+                          <div key={idx} className="bg-white rounded-lg p-3 border border-slate-100">
+                            <div className="text-xs text-slate-500 mb-1">{item.label}</div>
+                            <div className="flex items-baseline gap-1">
+                              <span className={`text-lg font-bold ${item.score >= 2 ? 'text-amber-500' : item.score >= 1 ? 'text-blue-500' : 'text-emerald-500'}`}>
+                                {item.score}
+                              </span>
+                              <span className="text-xs text-slate-400">/ {item.max || 3}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        // 默认维度
+                        [
+                          { label: '兴趣丧失', score: 2, max: 3 },
+                          { label: '情绪低落', score: 2, max: 3 },
+                          { label: '睡眠问题', score: 1, max: 3 },
+                          { label: '疲劳感', score: 2, max: 3 },
+                          { label: '食欲变化', score: 1, max: 3 },
+                          { label: '自我评价', score: 1, max: 3 },
+                          { label: '注意力', score: 2, max: 3 },
+                          { label: '动作迟缓', score: 1, max: 3 },
+                          { label: '自杀意念', score: 0, max: 3 },
+                        ].map((item, idx) => (
+                          <div key={idx} className="bg-white rounded-lg p-3 border border-slate-100">
+                            <div className="text-xs text-slate-500 mb-1">{item.label}</div>
+                            <div className="flex items-baseline gap-1">
+                              <span className={`text-lg font-bold ${item.score >= 2 ? 'text-amber-500' : item.score >= 1 ? 'text-blue-500' : 'text-emerald-500'}`}>
+                                {item.score}
+                              </span>
+                              <span className="text-xs text-slate-400">/ {item.max}</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                      <Info className="w-4 h-4 text-primary" /> AI 建议
-                    </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">
+                  {/* AI 建议 */}
+                  <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+                    <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                      <Info className="w-4 h-4 text-blue-500" />
+                      AI 专业建议
+                    </h4>
+                    <p className="text-slate-600 text-sm leading-relaxed">
                       {selectedHistory.reportData.riskLevel === 'high' 
                         ? '您的得分反映出显著的抑郁倾向，建议尽快咨询专业医生进行干预。' 
                         : selectedHistory.reportData.riskLevel === 'medium' 
@@ -951,56 +1011,37 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
                     </p>
                   </div>
 
-                  <div className="pt-4 space-y-3">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="flex-1 rounded-xl h-12 border-slate-100 dark:border-slate-800"
-                        onClick={async () => {
-                          const el = document.getElementById(`history-report-card-${selectedHistory.id}`);
-                          if (!el) return;
-                          const html2canvas = (await import('html2canvas')).default;
-                          const canvas = await html2canvas(el, { backgroundColor: null, scale: 2 });
-                          const imgData = canvas.toDataURL('image/png');
-                          const { jsPDF } = await import('jspdf');
-                          const pdf = new jsPDF('p', 'mm', 'a4');
-                          const pageWidth = pdf.internal.pageSize.getWidth();
-                          const pageHeight = pdf.internal.pageSize.getHeight();
-                          const imgWidth = pageWidth;
-                          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                          const y = Math.max(10, (pageHeight - imgHeight) / 2);
-                          pdf.addImage(imgData, 'PNG', 0, y, imgWidth, imgHeight);
-                          pdf.save(`assessment-report-${selectedHistory.id}.pdf`);
-                        }}
-                      >
-                        <Download className="w-4 h-4 mr-2" /> PDF
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1 rounded-xl h-12 border-slate-100 dark:border-slate-800"
-                        onClick={async () => {
-                          const el = document.getElementById(`history-report-card-${selectedHistory.id}`);
-                          if (!el) return;
-                          const html2canvas = (await import('html2canvas')).default;
-                          const canvas = await html2canvas(el, { backgroundColor: null, scale: 2 });
-                          const a = document.createElement('a');
-                          a.href = canvas.toDataURL('image/png');
-                          a.download = `assessment-report-${selectedHistory.id}.png`;
-                          a.click();
-                        }}
-                      >
-                        <Printer className="w-4 h-4 mr-2" /> PNG
-                      </Button>
-                    </div>
+                  {/* 操作按钮 */}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={async () => {
+                        const el = document.getElementById(`history-report-card-${selectedHistory.id}`);
+                        if (!el) return;
+                        const html2canvas = (await import('html2canvas')).default;
+                        const canvas = await html2canvas(el, { backgroundColor: null, scale: 2 });
+                        const imgData = canvas.toDataURL('image/png');
+                        const { jsPDF } = await import('jspdf');
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const pageWidth = pdf.internal.pageSize.getWidth();
+                        const pageHeight = pdf.internal.pageSize.getHeight();
+                        const imgWidth = pageWidth;
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                        const y = Math.max(10, (pageHeight - imgHeight) / 2);
+                        pdf.addImage(imgData, 'PNG', 0, y, imgWidth, imgHeight);
+                        pdf.save(`assessment-report-${selectedHistory.id}.pdf`);
+                      }}
+                      className="rounded-xl h-11 px-6"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      导出报告
+                    </Button>
                     <Button 
                       onClick={() => setShowHistoryReport(false)}
-                      className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
+                      className="rounded-xl h-11 px-6 bg-slate-900 hover:bg-slate-800"
                     >
                       关闭
                     </Button>
-                    <p className="text-[10px] text-center text-slate-400 leading-relaxed px-4">
-                      免责声明：本评估由 AI 生成，仅供参考。不代表临床诊断。如感不适请及时就医。
-                    </p>
                   </div>
                 </div>
               </>

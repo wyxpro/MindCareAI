@@ -712,36 +712,6 @@ export default function FusionReport({
               </div>
             </div>
 
-            {/* 情绪分析详情 */}
-            <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-              <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-violet-500" />
-                语音情绪分布详情
-              </h4>
-              <div className="space-y-3">
-                {[
-                  { label: '平静', value: 45, color: 'bg-emerald-500', icon: '😌' },
-                  { label: '悲伤', value: 20, color: 'bg-blue-500', icon: '😢' },
-                  { label: '开心', value: 15, color: 'bg-amber-500', icon: '😊' },
-                  { label: '愤怒', value: 8, color: 'bg-rose-500', icon: '😠' },
-                  { label: '恐惧', value: 7, color: 'bg-purple-500', icon: '😰' },
-                  { label: '惊讶', value: 5, color: 'bg-cyan-500', icon: '😲' },
-                ].map((emotion) => (
-                  <div key={emotion.label} className="flex items-center gap-3">
-                    <span className="text-lg">{emotion.icon}</span>
-                    <span className="text-sm text-slate-600 w-12">{emotion.label}</span>
-                    <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${emotion.color} rounded-full transition-all duration-500`}
-                        style={{ width: `${emotion.value}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-bold text-slate-700 w-10 text-right">{emotion.value}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* 雷达图区域 */}
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
               <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
