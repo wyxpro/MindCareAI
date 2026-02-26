@@ -11,7 +11,7 @@ dotenv.config();
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
-  publicDir: 'srcs',
+  publicDir: 'public',
   plugins: [
     react(),
     svgr({

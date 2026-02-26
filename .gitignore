@@ -14,6 +14,9 @@ output
 *.local
 package-lock.json
 
+# Old srcs directory (moved to public/srcs)
+/srcs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
