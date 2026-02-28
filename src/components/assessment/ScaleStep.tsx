@@ -318,6 +318,37 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     }
   };
 
+  // 智能生成最后的保底回复
+  const generateSmartFallback = (userResponse: string, nextQuestion: string): string => {
+    const response = userResponse.toLowerCase();
+    let empathyPrefix = '';
+    
+    // 根据用户回答内容智能匹配共情回应
+    if (response.includes('经常') || response.includes('总是') || response.includes('每天')) {
+      empathyPrefix = '听起来你最近承受着不小的压力，这种持续性的状态确实需要关注。';
+    } else if (response.includes('偶尔') || response.includes('有时') || response.includes('不太')) {
+      empathyPrefix = '看得出来这种情况是间歇性的，你能够觉察到这一点很好。';
+    } else if (response.includes('没有') || response.includes('不会') || response.includes('很少')) {
+      empathyPrefix = '这方面你保持得不错，继续保持这样的状态。';
+    } else if (response.includes('不确定') || response.includes('不知道')) {
+      empathyPrefix = '这个问题可能需要仔细回想，没关系，我们慢慢来。';
+    } else if (response.includes('失眠') || response.includes('睡不着')) {
+      empathyPrefix = '睡眠问题确实会影响日常生活，这需要我们特别关注。';
+    } else if (response.includes('压力') || response.includes('焦虑')) {
+      empathyPrefix = '能够觉察到压力和焦虑是很重要的第一步。';
+    } else if (response.includes('难过') || response.includes('伤心') || response.includes('沮丧')) {
+      empathyPrefix = '你的感受我能理解，允许自己有这样的情绪是正常的。';
+    } else if (response.length > 20) {
+      // 用户回答较长，说明愿意分享
+      empathyPrefix = '感谢你愿意分享这些细节，这对评估很有帮助。';
+    } else {
+      // 其他情况
+      empathyPrefix = '你的回答我记下了，让我们继续了解更多。';
+    }
+    
+    return `${empathyPrefix} 下面我们继续：${nextQuestion}`;
+  };
+
   // 处理表情选择
   const handleEmojiSelect = (emoji: string) => {
     setInputText(prev => prev + emoji);
@@ -351,25 +382,100 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
           .join('\n\n');
       } catch {}
 
-      const systemPrompt = `你是一位专业的心理咨询师，正在进行抑郁量表对话评估。量表：${selectedScales.join(',')}。请以温暖、共情的方式逐步引导，必要时进行澄清与安全提醒。每次回复尽量控制在80字以内。\n\n【知识库参考】\n${kbText || '暂无相关知识库'}`;
+      const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
+      
+      // 构建完整的对话历史上下文（最近3轮）
+      const recentMessages = messages.slice(-6); // 最近3轮对话（用户+AI各3条）
+      const conversationHistory = recentMessages.map(m => ({
+        role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+        content: [{ type: 'input_text' as const, text: m.content }]
+      }));
+
+      const systemPrompt = `你是一位温暖、专业的心理咨询师，正在进行${selectedScales.join('、')}抑郁量表对话评估。
+
+【重要】你必须生成一个完整的回复，包含两个部分：
+
+第一部分 - 共情回应（30-50字）：
+针对用户刚才的回答，生成具体的、个性化的共情反馈。
+- 如果用户提到具体时间/频率（如"一周2-3天"），你需要在回复中提到这个具体信息
+- 如果用户表达负面情绪，你要表达理解和支持
+- 如果用户表达正面状态，你要给予肯定和鼓励
+- 避免使用"好的"、"我理解了"、"我知道了"、"我能感受到"等空泛表达
+- 必须让用户感到你真正在倾听和理解他们的具体情况
+
+第二部分 - 引导下一题：
+用"下面我们继续："或"接下来："自然过渡到下一题："${nextQ}"
+
+【正确示例】
+用户："偶尔会有，一周2-3天吧"
+✓ 正确："一周有2-3天出现这种情况，说明你的状态整体还算稳定，这是个好的信号。下面我们继续：${nextQ}"
+✗ 错误："好的，我理解了。下面我们继续：${nextQ}"
+
+用户："经常失眠，每天都要很久才能睡着"
+✓ 正确："每天都受到睡眠困扰确实很辛苦，长期的失眠会影响白天的状态，我们需要重点关注这一点。下面我们继续：${nextQ}"
+✗ 错误："我能感受到你的状态。下面我们继续：${nextQ}"
+
+【知识库参考】
+${kbText || '暂无相关知识库'}`;
 
       const aiResponse = await volcResponses({
         model: 'doubao-seed-1-8-251228',
         input: [
           { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
+          ...conversationHistory,
           {
-            role: 'user',
+            role: 'user' as const,
             content: [
-              { type: 'input_text', text: response }
+              { type: 'input_text' as const, text: response }
             ]
           }
         ]
       });
 
       let aiContent = aiResponse?.text || '';
-      if (!aiContent) {
-        const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
-        aiContent = `好的，我理解了。下面我们继续：${nextQ}`;
+      
+      // 如果AI回复为空、过短或包含禁用词，重新生成个性化回复
+      const isFallbackNeeded = !aiContent 
+        || aiContent.length < 20 
+        || /好的|我理解了|我知道了|我能感受到/.test(aiContent);
+      
+      if (isFallbackNeeded) {
+        // 使用简化prompt强制AI生成个性化回复
+        const fallbackPrompt = `你是心理咨询师。用户刚回答："${response}"
+
+请用30-50字给出具体的、个性化的共情回应，然后说"下面我们继续："。
+
+要求：
+1. 必须针对用户回答的具体内容进行回应
+2. 禁止使用"好的"、"我理解了"、"我能感受到"等空泛词汇
+3. 如果用户提到具体细节（时间/频率/程度），必须在回复中体现
+4. 体现专业的心理咨询师的共情能力`;
+
+        try {
+          const fallbackResponse = await volcResponses({
+            model: 'doubao-seed-1-8-251228',
+            input: [
+              { 
+                role: 'system', 
+                content: [{ type: 'input_text', text: '你是专业的心理咨询师，擅长共情式沟通。' }] 
+              },
+              {
+                role: 'user' as const,
+                content: [{ type: 'input_text' as const, text: fallbackPrompt }]
+              }
+            ]
+          });
+          
+          if (fallbackResponse?.text && fallbackResponse.text.length >= 20) {
+            aiContent = `${fallbackResponse.text} ${nextQ}`;
+          } else {
+            // 最后的保底：根据回答内容智能匹配
+            aiContent = generateSmartFallback(response, nextQ);
+          }
+        } catch (error) {
+          console.error('Fallback AI generation failed:', error);
+          aiContent = generateSmartFallback(response, nextQ);
+        }
       }
       
       // 模拟问题进度增加
@@ -612,25 +718,100 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
           .join('\n\n');
       } catch {}
 
-      const systemPrompt = `你是一位专业的心理咨询师，正在进行抑郁量表对话评估。量表：${selectedScales.join(',')}。请以温暖、共情的方式逐步引导，必要时进行澄清与安全提醒。每次回复尽量控制在80字以内。\n\n【知识库参考】\n${kbText || '暂无相关知识库'}`;
+      const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
+      
+      // 构建完整的对话历史上下文（最近3轮）
+      const recentMessages = messages.slice(-6); // 最近3轮对话（用户+AI各3条）
+      const conversationHistory = recentMessages.map(m => ({
+        role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+        content: [{ type: 'input_text' as const, text: m.content }]
+      }));
+
+      const systemPrompt = `你是一位温暖、专业的心理咨询师，正在进行${selectedScales.join('、')}抑郁量表对话评估。
+
+【重要】你必须生成一个完整的回复，包含两个部分：
+
+第一部分 - 共情回应（30-50字）：
+针对用户刚才的回答，生成具体的、个性化的共情反馈。
+- 如果用户提到具体时间/频率（如"一周2-3天"），你需要在回复中提到这个具体信息
+- 如果用户表达负面情绪，你要表达理解和支持
+- 如果用户表达正面状态，你要给予肯定和鼓励
+- 避免使用"好的"、"我理解了"、"我知道了"、"我能感受到"等空泛表达
+- 必须让用户感到你真正在倾听和理解他们的具体情况
+
+第二部分 - 引导下一题：
+用"下面我们继续："或"接下来："自然过渡到下一题："${nextQ}"
+
+【正确示例】
+用户："偶尔会有，一周2-3天吧"
+✓ 正确："一周有2-3天出现这种情况，说明你的状态整体还算稳定，这是个好的信号。下面我们继续：${nextQ}"
+✗ 错误："好的，我理解了。下面我们继续：${nextQ}"
+
+用户："经常失眠，每天都要很久才能睡着"
+✓ 正确："每天都受到睡眠困扰确实很辛苦，长期的失眠会影响白天的状态，我们需要重点关注这一点。下面我们继续：${nextQ}"
+✗ 错误："我能感受到你的状态。下面我们继续：${nextQ}"
+
+【知识库参考】
+${kbText || '暂无相关知识库'}`;
 
       const response = await volcResponses({
         model: 'doubao-seed-1-8-251228',
         input: [
           { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
+          ...conversationHistory,
           {
-            role: 'user',
+            role: 'user' as const,
             content: [
-              { type: 'input_text', text: inputText }
+              { type: 'input_text' as const, text: inputText }
             ]
           }
         ]
       });
 
       let aiContent = response?.text || '';
-      if (!aiContent) {
-        const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
-        aiContent = `好的，我理解了。下面我们继续：${nextQ}`;
+      
+      // 如果AI回复为空、过短或包含禁用词，重新生成个性化回复
+      const isFallbackNeeded = !aiContent 
+        || aiContent.length < 20 
+        || /好的|我理解了|我知道了|我能感受到/.test(aiContent);
+      
+      if (isFallbackNeeded) {
+        // 使用简化prompt强制AI生成个性化回复
+        const fallbackPrompt = `你是心理咨询师。用户刚回答："${inputText}"
+
+请用30-50字给出具体的、个性化的共情回应，然后说"下面我们继续："。
+
+要求：
+1. 必须针对用户回答的具体内容进行回应
+2. 禁止使用"好的"、"我理解了"、"我能感受到"等空泛词汇
+3. 如果用户提到具体细节（时间/频率/程度），必须在回复中体现
+4. 体现专业的心理咨询师的共情能力`;
+
+        try {
+          const fallbackResponse = await volcResponses({
+            model: 'doubao-seed-1-8-251228',
+            input: [
+              { 
+                role: 'system', 
+                content: [{ type: 'input_text', text: '你是专业的心理咨询师，擅长共情式沟通。' }] 
+              },
+              {
+                role: 'user' as const,
+                content: [{ type: 'input_text' as const, text: fallbackPrompt }]
+              }
+            ]
+          });
+          
+          if (fallbackResponse?.text && fallbackResponse.text.length >= 20) {
+            aiContent = `${fallbackResponse.text} ${nextQ}`;
+          } else {
+            // 最后的保底：根据回答内容智能匹配
+            aiContent = generateSmartFallback(inputText, nextQ);
+          }
+        } catch (error) {
+          console.error('Fallback AI generation failed:', error);
+          aiContent = generateSmartFallback(inputText, nextQ);
+        }
       }
       
       // 模拟问题进度增加

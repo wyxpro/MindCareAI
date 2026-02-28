@@ -734,3 +734,39 @@ export const multimodalFusion = async (params: {
   if (error) throw error;
   return data;
 };
+
+// ==================== 知识文档管理 ====================
+// 上传知识文档到Storage
+export const uploadKnowledgeDocument = async (file: File, category: string) => {
+  const timestamp = Date.now();
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const filePath = `${category}/${timestamp}_${sanitizedName}`;
+  
+  const { data, error } = await supabase.storage
+    .from('knowledge-documents')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (error) throw error;
+  return { path: data.path, name: file.name, size: file.size, type: file.type };
+};
+
+// 删除知识文档
+export const deleteKnowledgeDocument = async (filePath: string) => {
+  const { error } = await supabase.storage
+    .from('knowledge-documents')
+    .remove([filePath]);
+    
+  if (error) throw error;
+};
+
+// 获取文档公开URL
+export const getKnowledgeDocumentUrl = (filePath: string) => {
+  const { data } = supabase.storage
+    .from('knowledge-documents')
+    .getPublicUrl(filePath);
+    
+  return data.publicUrl;
+};

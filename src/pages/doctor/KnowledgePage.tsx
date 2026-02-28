@@ -1,4 +1,4 @@
-import { BookOpen, Edit, Plus, Search, Trash2, Eye, Copy, ArrowUp, ArrowDown } from 'lucide-react';
+import { BookOpen, Edit, Plus, Search, Trash2, Eye, Copy, ArrowUp, ArrowDown, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
-import { createKnowledge, deleteKnowledge, getKnowledgeBase, updateKnowledge } from '@/db/api';
+import { createKnowledge, deleteKnowledge, getKnowledgeBase, updateKnowledge, uploadKnowledgeDocument, deleteKnowledgeDocument, getKnowledgeDocumentUrl } from '@/db/api';
 import type { KnowledgeBase } from '@/types';
 
 export default function KnowledgePage() {
@@ -31,6 +31,7 @@ export default function KnowledgePage() {
   const [tags, setTags] = useState('');
   const [scaleQuestions, setScaleQuestions] = useState<{ id: string; text: string; order: number }[]>([]);
   const [newQuestionText, setNewQuestionText] = useState('');
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);  // 新增: 待上传文件
 
   useEffect(() => {
     loadKnowledge();
@@ -193,42 +194,63 @@ export default function KnowledgePage() {
       setTags('');
       setScaleQuestions([]);
     }
+    setUploadingFile(null);  // 新增: 清空上传文件
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!user || !title.trim() || !content.trim()) {
-      toast.error('请填写标题和内容');
+    if (!user || !title.trim()) {
+      toast.error('请填写标题');
       return;
     }
 
     try {
-      const inferTag = () => {
-        if (/PHQ-9/i.test(title)) return 'PHQ-9';
-        if (/HAMD-17/i.test(title)) return 'HAMD-17';
-        if (/SDS-20/i.test(title)) return 'SDS-20';
-        return undefined;
-      };
-      const inferred = inferTag();
-      const tagsArray = editingItem?.tags ?? (
-        category === 'assessment' ? ([...(inferred ? [inferred] : []), '量表', '评估量表']) : undefined
-      );
-      const contentToSave = category === 'assessment'
-        ? JSON.stringify({
-            type: 'scale',
-            description: title,
-            version: 1,
-            questions: scaleQuestions.map((q, i) => ({ id: q.id, text: q.text, order: i }))
-          })
-        : content;
-
-      const knowledgeData = {
+      let knowledgeData: any = {
         title,
-        content: contentToSave,
         category,
-        tags: tagsArray && (tagsArray as string[]).length > 0 ? tagsArray : undefined,
         created_by: user.id,
       };
+
+      // 文档类型处理：therapy或research分类且有上传文件
+      if ((category === 'therapy' || category === 'research') && uploadingFile) {
+        const uploadResult = await uploadKnowledgeDocument(uploadingFile, category);
+        knowledgeData = {
+          ...knowledgeData,
+          content_type: 'document',
+          file_url: uploadResult.path,
+          file_name: uploadResult.name,
+          file_size: uploadResult.size,
+          file_mime_type: uploadResult.type,
+          content: content.trim() || `文档: ${uploadResult.name}`,  // 简介或占位符
+        };
+      } 
+      // 量表类型处理
+      else if (category === 'assessment') {
+        const inferTag = () => {
+          if (/PHQ-9/i.test(title)) return 'PHQ-9';
+          if (/HAMD-17/i.test(title)) return 'HAMD-17';
+          if (/SDS-20/i.test(title)) return 'SDS-20';
+          return undefined;
+        };
+        const inferred = inferTag();
+        const tagsArray = editingItem?.tags ?? ([...(inferred ? [inferred] : []), '量表', '评估量表']);
+        
+        knowledgeData.content = JSON.stringify({
+          type: 'scale',
+          description: title,
+          version: 1,
+          questions: scaleQuestions.map((q, i) => ({ id: q.id, text: q.text, order: i }))
+        });
+        knowledgeData.tags = tagsArray;
+      } 
+      // 纯文本处理
+      else {
+        if (!content.trim()) {
+          toast.error('请填写内容');
+          return;
+        }
+        knowledgeData.content = content;
+      }
 
       if (editingItem) {
         await updateKnowledge(editingItem.id, knowledgeData);
@@ -239,6 +261,7 @@ export default function KnowledgePage() {
       }
 
       setDialogOpen(false);
+      setUploadingFile(null);
       await loadKnowledge();
     } catch (error) {
       console.error('保存失败:', error);
@@ -247,9 +270,15 @@ export default function KnowledgePage() {
   };
 
   const handleDelete = async (id: string) => {
+    const item = knowledge.find(k => k.id === id);
     if (!confirm('确定要删除这条知识吗?')) return;
 
     try {
+      // 如果是文档类型，先删除Storage中的文件
+      if (item?.content_type === 'document' && item.file_url) {
+        await deleteKnowledgeDocument(item.file_url);
+      }
+      
       await deleteKnowledge(id);
       toast.success('已删除');
       await loadKnowledge();
@@ -368,6 +397,54 @@ export default function KnowledgePage() {
                   ))}
                 </div>
               </div>
+            ) : (category === 'therapy' || category === 'research') ? (
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      if (file.size > 50 * 1024 * 1024) {
+                        toast.error('文件大小不能超过50MB');
+                        return;
+                      }
+                      
+                      setUploadingFile(file);
+                    }}
+                    className="hidden"
+                    id="document-upload"
+                  />
+                  <label htmlFor="document-upload" className="cursor-pointer block">
+                    <FileText className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+                    <p className="text-sm font-medium text-foreground">点击上传文档</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      支持PDF、Word、Excel格式，最大50MB
+                    </p>
+                  </label>
+                  {uploadingFile && (
+                    <div className="mt-4 p-3 bg-primary/5 rounded-lg">
+                      <p className="text-sm font-medium text-foreground">{uploadingFile.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {(uploadingFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-bold">文档简介(可选)</Label>
+                  <Textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="为文档添加简短的描述..."
+                    rows={3}
+                    className="rounded-xl mt-2"
+                  />
+                </div>
+              </div>
             ) : (
               <Textarea
                 id="content"
@@ -428,22 +505,63 @@ export default function KnowledgePage() {
             <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden bg-card">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
-                      <Badge variant="secondary" className="text-[10px] bg-muted">{categories.find(c => c.value === item.category)?.label}</Badge>
+                  <div className="flex gap-3 flex-1">
+                    {/* 图标区分类型 */}
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                      {item.content_type === 'document' ? (
+                        <FileText className="w-6 h-6 text-primary" />
+                      ) : (
+                        <BookOpen className="w-6 h-6 text-primary" />
+                      )}
                     </div>
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="flex gap-1.5 flex-wrap">
-                        {item.tags.map((tag, idx) => (
-                          <Badge key={idx} variant="outline" className="text-[10px] py-0 px-1.5 border-primary/20 text-primary">
-                            {tag}
-                          </Badge>
-                        ))}
+                    
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
+                        <Badge variant="secondary" className="text-[10px] bg-muted">{categories.find(c => c.value === item.category)?.label}</Badge>
                       </div>
-                    )}
+                      
+                      {/* 文档信息 */}
+                      {item.content_type === 'document' && item.file_name && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="truncate">{item.file_name}</span>
+                          {item.file_size && (
+                            <>
+                              <span>·</span>
+                              <span>{(item.file_size / 1024).toFixed(1)} KB</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {item.tags && item.tags.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap">
+                          {item.tags.map((tag, idx) => (
+                            <Badge key={idx} variant="outline" className="text-[10px] py-0 px-1.5 border-primary/20 text-primary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-1">
+                  
+                  <div className="flex gap-1 shrink-0">
+                    {/* 在线查看文档按钮 */}
+                    {item.content_type === 'document' && item.file_url && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
+                        onClick={() => {
+                          const url = getKnowledgeDocumentUrl(item.file_url!);
+                          window.open(url, '_blank');
+                        }}
+                        title="查看文档"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

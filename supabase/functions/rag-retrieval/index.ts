@@ -29,24 +29,59 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { query, conversation_history = [], assessment_type = 'PHQ-9' }: RAGRequest = await req.json();
 
-    // 1. 从知识库检索相关内容
+    // 1. 从知识库检索相关内容（支持所有分类：assessment, therapy, research）
     const { data: knowledgeItems, error: kbError } = await supabase
       .from('knowledge_base')
       .select('*')
       .eq('is_active', true)
-      .or(`category.eq.assessment,tags.cs.{${assessment_type}}`)
+      .or(`category.eq.assessment,category.eq.therapy,category.eq.research,tags.cs.{${assessment_type}}`)
       .limit(5);
 
     if (kbError) {
       console.error('知识库检索失败:', kbError);
     }
 
-    // 2. 构建RAG上下文
-    const knowledgeContext = knowledgeItems && knowledgeItems.length > 0
-      ? knowledgeItems.map(item => `【${item.title}】\n${item.content}`).join('\n\n')
+    // 2. 对文档类型的知识项进行内容解析
+    const enrichedItems = await Promise.all(
+      (knowledgeItems || []).map(async (item) => {
+        // 如果是文档类型且有文件URL，尝试下载并解析
+        if (item.content_type === 'document' && item.file_url) {
+          try {
+            console.log(`正在解析文档: ${item.file_name || item.file_url}`);
+            
+            const { data: fileData, error: downloadError } = await supabase.storage
+              .from('knowledge-documents')
+              .download(item.file_url);
+            
+            if (fileData && !downloadError) {
+              const arrayBuffer = await fileData.arrayBuffer();
+              // 尝试将文档内容解码为文本
+              const text = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
+              // 过滤掉二进制字符，保留可读文本
+              const cleanText = text.replace(/[^\x20-\x7E\u4E00-\u9FA5\n\r]/g, '');
+              
+              // 使用解析后的内容替换原content字段（限制长度为3000字符）
+              return { 
+                ...item, 
+                content: cleanText.slice(0, 3000) || item.content 
+              };
+            } else {
+              console.error(`文档下载失败: ${item.file_url}`, downloadError);
+            }
+          } catch (err) {
+            console.error('文档解析失败:', err);
+          }
+        }
+        return item;
+      })
+    );
+
+    // 3. 构建RAG上下文
+    const knowledgeContext = enrichedItems.length > 0
+      ? enrichedItems.map(item => `【${item.title}】\n${item.content}`).join('\n\n')
       : '暂无相关知识库内容';
 
-    // 3. 构建主动式对话系统提示词
+    // 4. 构建主动式对话系统提示词
     const systemPrompt = `你是一位专业的心理咨询师,正在进行抑郁症评估对话。
 
 【评估量表】${assessment_type}
@@ -75,7 +110,7 @@ ${conversation_history.length === 0
 
 请以温暖、专业的方式继续对话,每次回复控制在80字以内。`;
 
-    // 4. 调用AI生成回复
+    // 5. 调用AI生成回复
     const response = await fetch(
       'https://app-97zabxvzebcx-api-zYkZz8qovQ1L-gateway.appmiaoda.com/v2/chat/completions',
       {

@@ -154,6 +154,11 @@ export interface KnowledgeBase {
   content: string;
   category: string;
   tags?: string[];
+  content_type?: 'text' | 'document';  // 新增: 内容类型
+  file_url?: string;                    // 新增: Storage文件路径
+  file_name?: string;                   // 新增: 原始文件名
+  file_size?: number;                   // 新增: 文件大小(bytes)
+  file_mime_type?: string;              // 新增: MIME类型
   is_active: boolean;
   created_by?: string;
   created_at: string;
