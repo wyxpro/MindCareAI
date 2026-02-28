@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Activity, BarChart3, Check, ChevronRight, Download, Info, Mic, Play, StopCircle, Upload, Printer, X, FileText } from 'lucide-react';
+import { Activity, BarChart3, Check, ChevronRight, Download, Info, Mic, Play, StopCircle, Upload, Printer, FileText } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { transcribeAudio } from '@/db/siliconflow';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -264,16 +264,25 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
     }
   };
 
-  const radarData = reportData ? [
-    { subject: '平静', A: reportData.emotion_vector.calm, fullMark: 1 },
-    { subject: '高兴', A: reportData.emotion_vector.happy, fullMark: 1 },
-    { subject: '悲伤', A: reportData.emotion_vector.sad, fullMark: 1 },
-    { subject: '愤怒', A: reportData.emotion_vector.angry, fullMark: 1 },
-    { subject: '惊讶', A: reportData.emotion_vector.surprised, fullMark: 1 },
-    { subject: '恐惧', A: reportData.emotion_vector.fearful, fullMark: 1 },
-    { subject: '厌恶', A: reportData.emotion_vector.disgusted, fullMark: 1 },
-    { subject: '中性', A: reportData.emotion_vector.neutral, fullMark: 1 },
-  ] : [];
+  const radarData = reportData ? (() => {
+    // 放大函数：将情绪值映射到更大的范围，使雷达图变化更明显
+    const amplify = (v: number) => {
+      // 使用非线性放大：小值放大更多，大值适当放大
+      const base = Math.max(0.05, v);
+      const amplified = Math.pow(base, 0.4) * 0.85; // 开方放大，增强小值的可见性
+      return Math.min(1, Math.max(0.15, amplified));
+    };
+    return [
+      { subject: '平静', A: amplify(reportData.emotion_vector.calm), fullMark: 1 },
+      { subject: '高兴', A: amplify(reportData.emotion_vector.happy), fullMark: 1 },
+      { subject: '悲伤', A: amplify(reportData.emotion_vector.sad), fullMark: 1 },
+      { subject: '愤怒', A: amplify(reportData.emotion_vector.angry), fullMark: 1 },
+      { subject: '惊讶', A: amplify(reportData.emotion_vector.surprised), fullMark: 1 },
+      { subject: '恐惧', A: amplify(reportData.emotion_vector.fearful), fullMark: 1 },
+      { subject: '厌恶', A: amplify(reportData.emotion_vector.disgusted), fullMark: 1 },
+      { subject: '中性', A: amplify(reportData.emotion_vector.neutral), fullMark: 1 },
+    ];
+  })() : [];
 
   return (
     <div className="pt-28 px-4 max-w-md mx-auto space-y-8 pb-10">
@@ -413,9 +422,6 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                  <p className="text-white/80 text-[11px]">声学特征分析与情绪模型匹配</p>
                </div>
              </div>
-             <DialogClose className="text-white/80 hover:text-white transition-colors">
-               <X className="w-5 h-5" />
-             </DialogClose>
           </div>
 
           <div className="p-4 space-y-5" id="voice-report-card">

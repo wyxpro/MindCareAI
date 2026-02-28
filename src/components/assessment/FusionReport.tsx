@@ -58,7 +58,8 @@ export default function FusionReport({
   const [weights, setWeights] = useState({ scale: 0.5, voice: 0.2, expression: 0.3 });
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
-  
+  const [historySheetOpen, setHistorySheetOpen] = useState(false);
+
   // New States
   const [activeReport, setActiveReport] = useState<'scale' | 'voice' | 'expression' | null>(null);
   const [advice, setAdvice] = useState<string>('');
@@ -326,8 +327,40 @@ export default function FusionReport({
   }, [selectedHistoryId]);
 
   const loadAssessment = async (id: string) => {
+    // 检查是否是示例数据
+    const demoItem = demoHistoryData.find(h => h.id === id);
+    if (demoItem) {
+      // 直接加载示例数据
+      const newData = {
+        scale: demoItem.report.scaleData,
+        voice: demoItem.report.voiceData,
+        expression: demoItem.report.expressionData
+      };
+      setData(newData);
+
+      if (demoItem.report.advice) {
+        setAdvice(demoItem.report.advice);
+      } else {
+        setAdvice('');
+        setTimeout(() => {
+          setGeneratingAdvice(true);
+        }, 0);
+      }
+
+      // 更新风险等级和分数
+      const score = demoItem.score;
+      setFusionScore(score);
+      let level: 'low' | 'medium' | 'high' | 'extreme' = 'low';
+      if (score >= 80) level = 'extreme';
+      else if (score >= 60) level = 'high';
+      else if (score >= 40) level = 'medium';
+      else level = 'low';
+      setRiskLevel(level);
+      return;
+    }
+
     let item: any = historyList.find(h => h.id === id);
-    
+
     if (!item) {
       try {
         const fetched = await getAssessmentById(id);
@@ -346,15 +379,15 @@ export default function FusionReport({
          expression: item.report.expressionData
        };
        setData(newData);
-       
+
        if (item.report.advice) {
          setAdvice(item.report.advice);
        } else {
-         setAdvice(''); 
+         setAdvice('');
          // Force generate advice if missing, as useEffect might not trigger if score/risk is same
-         // But generateProfessionalAdvice has a check `if (advice) return`. 
+         // But generateProfessionalAdvice has a check `if (advice) return`.
          // Since we just set it to empty, we can trigger generation.
-         // However, state updates are async. 
+         // However, state updates are async.
          // We should call generate logic directly or rely on useEffect but ensure dependency.
          // Let's use a timeout to allow state to update then trigger generation
          setTimeout(() => {
@@ -490,17 +523,178 @@ export default function FusionReport({
     }
   };
 
-  const fetchHistory = async () => {
-    if (!user) return;
-    setLoadingHistory(true);
-    try {
-      const history = await getAssessments(user.id, 5); // Limit to 5
-      setHistoryList(history.filter(h => h.assessment_type === 'fusion_report' || h.report?.weights));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingHistory(false);
+  // 示例历史记录数据 - 不同风险等级
+  const demoHistoryData = [
+    {
+      id: 'demo-normal',
+      created_at: new Date(Date.now() - 86400000 * 1).toISOString(), // 1天前
+      score: 25,
+      assessment_type: 'fusion_report',
+      report: {
+        scaleData: {
+          score: 4,
+          phq9_score: 4,
+          risk_level: 'low',
+          dimensionScores: [
+            { label: '兴趣丧失', score: 0, max: 3 },
+            { label: '情绪低落', score: 1, max: 3 },
+            { label: '睡眠问题', score: 0, max: 3 },
+            { label: '疲劳感', score: 1, max: 3 },
+            { label: '食欲变化', score: 0, max: 3 },
+            { label: '自我评价', score: 0, max: 3 },
+            { label: '注意力', score: 1, max: 3 },
+            { label: '动作迟缓', score: 0, max: 3 },
+            { label: '自杀意念', score: 1, max: 3 },
+          ]
+        },
+        voiceData: {
+          score: 25,
+          risk_score: 25,
+          emotion_score: 25,
+          emotions: { calm: 0.65, happy: 0.55, sad: 0.10, angry: 0.05, fear: 0.05, surprise: 0.10 }
+        },
+        expressionData: {
+          depression_risk_score: 28,
+          risk_score: 28,
+          facial_expressions: { neutral: 0.60, happy: 0.45, sad: 0.08, angry: 0.02, surprised: 0.05, fearful: 0.02, disgusted: 0.01, contempt: 0.01, pain: 0.01 },
+          micro_features: {
+            brow_furrow: '眉心舒展自然，无明显紧张迹象',
+            mouth_droop: '嘴角自然上扬，呈现积极状态',
+            eye_contact: '眼神专注，眨眼频率正常'
+          }
+        },
+        advice: '您的心理状态非常健康，请继续保持积极的生活方式。建议定期进行自我评估，保持良好的作息和运动习惯。'
+      }
+    },
+    {
+      id: 'demo-mild',
+      created_at: new Date(Date.now() - 86400000 * 3).toISOString(), // 3天前
+      score: 45,
+      assessment_type: 'fusion_report',
+      report: {
+        scaleData: {
+          score: 8,
+          phq9_score: 8,
+          risk_level: 'medium',
+          dimensionScores: [
+            { label: '兴趣丧失', score: 1, max: 3 },
+            { label: '情绪低落', score: 1, max: 3 },
+            { label: '睡眠问题', score: 1, max: 3 },
+            { label: '疲劳感', score: 1, max: 3 },
+            { label: '食欲变化', score: 0, max: 3 },
+            { label: '自我评价', score: 1, max: 3 },
+            { label: '注意力', score: 1, max: 3 },
+            { label: '动作迟缓', score: 1, max: 3 },
+            { label: '自杀意念', score: 1, max: 3 },
+          ]
+        },
+        voiceData: {
+          score: 42,
+          risk_score: 42,
+          emotion_score: 42,
+          emotions: { calm: 0.45, happy: 0.30, sad: 0.25, angry: 0.10, fear: 0.08, surprise: 0.05 }
+        },
+        expressionData: {
+          depression_risk_score: 45,
+          risk_score: 45,
+          facial_expressions: { neutral: 0.50, happy: 0.25, sad: 0.20, angry: 0.05, surprised: 0.03, fearful: 0.05, disgusted: 0.02, contempt: 0.02, pain: 0.03 },
+          micro_features: {
+            brow_furrow: '眉心偶尔轻微皱缩，存在轻度心理压力',
+            mouth_droop: '嘴角偶尔下垂，情绪略有波动',
+            eye_contact: '眼神偶尔游离，整体正常'
+          }
+        },
+        advice: '您存在一定的心理压力，建议通过运动、社交和充足睡眠来调节。可以尝试冥想放松，必要时寻求心理咨询。'
+      }
+    },
+    {
+      id: 'demo-moderate',
+      created_at: new Date(Date.now() - 86400000 * 5).toISOString(), // 5天前
+      score: 68,
+      assessment_type: 'fusion_report',
+      report: {
+        scaleData: {
+          score: 14,
+          phq9_score: 14,
+          risk_level: 'high',
+          dimensionScores: [
+            { label: '兴趣丧失', score: 2, max: 3 },
+            { label: '情绪低落', score: 2, max: 3 },
+            { label: '睡眠问题', score: 2, max: 3 },
+            { label: '疲劳感', score: 2, max: 3 },
+            { label: '食欲变化', score: 1, max: 3 },
+            { label: '自我评价', score: 1, max: 3 },
+            { label: '注意力', score: 2, max: 3 },
+            { label: '动作迟缓', score: 1, max: 3 },
+            { label: '自杀意念', score: 1, max: 3 },
+          ]
+        },
+        voiceData: {
+          score: 65,
+          risk_score: 65,
+          emotion_score: 65,
+          emotions: { calm: 0.25, happy: 0.10, sad: 0.45, angry: 0.15, fear: 0.12, surprise: 0.05 }
+        },
+        expressionData: {
+          depression_risk_score: 68,
+          risk_score: 68,
+          facial_expressions: { neutral: 0.35, happy: 0.10, sad: 0.45, angry: 0.12, surprised: 0.03, fearful: 0.08, disgusted: 0.05, contempt: 0.05, pain: 0.07 },
+          micro_features: {
+            brow_furrow: '眉心频繁皱缩，显示持续的心理压力',
+            mouth_droop: '嘴角自然状态下垂，缺乏愉悦微表情',
+            eye_contact: '眼神偶尔游离，眨眼频率略低'
+          }
+        },
+        advice: '您的得分反映出明显的抑郁倾向，建议尽快咨询专业心理医生。同时可以尝试认知行为疗法（CBT），保持规律作息。'
+      }
+    },
+    {
+      id: 'demo-severe',
+      created_at: new Date(Date.now() - 86400000 * 7).toISOString(), // 7天前
+      score: 88,
+      assessment_type: 'fusion_report',
+      report: {
+        scaleData: {
+          score: 22,
+          phq9_score: 22,
+          risk_level: 'extreme',
+          dimensionScores: [
+            { label: '兴趣丧失', score: 3, max: 3 },
+            { label: '情绪低落', score: 3, max: 3 },
+            { label: '睡眠问题', score: 3, max: 3 },
+            { label: '疲劳感', score: 3, max: 3 },
+            { label: '食欲变化', score: 2, max: 3 },
+            { label: '自我评价', score: 3, max: 3 },
+            { label: '注意力', score: 2, max: 3 },
+            { label: '动作迟缓', score: 2, max: 3 },
+            { label: '自杀意念', score: 1, max: 3 },
+          ]
+        },
+        voiceData: {
+          score: 85,
+          risk_score: 85,
+          emotion_score: 85,
+          emotions: { calm: 0.10, happy: 0.02, sad: 0.65, angry: 0.20, fear: 0.25, surprise: 0.03 }
+        },
+        expressionData: {
+          depression_risk_score: 88,
+          risk_score: 88,
+          facial_expressions: { neutral: 0.20, happy: 0.02, sad: 0.60, angry: 0.18, surprised: 0.02, fearful: 0.15, disgusted: 0.08, contempt: 0.05, pain: 0.10 },
+          micro_features: {
+            brow_furrow: '眉心持续紧锁，显示严重的心理压力',
+            mouth_droop: '嘴角明显下垂，呈现悲伤情绪特征',
+            eye_contact: '眼神游离不定，眨眼频率异常'
+          }
+        },
+        advice: '您的得分反映出显著的抑郁倾向，建议立即寻求专业心理医生帮助。请尽快联系精神科医生进行进一步评估，必要时考虑住院治疗。'
+      }
     }
+  ];
+
+  const fetchHistory = async () => {
+    // 只使用示例数据，显示5个不同等级的报告
+    setHistoryList(demoHistoryData);
+    setLoadingHistory(false);
   };
 
   const handleDownload = async (format: 'png' | 'pdf') => {
@@ -575,24 +769,27 @@ export default function FusionReport({
                 各维度得分详情
               </h4>
               <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: '兴趣丧失', score: 2, max: 3 },
-                  { label: '情绪低落', score: 2, max: 3 },
-                  { label: '睡眠问题', score: 1, max: 3 },
-                  { label: '疲劳感', score: 2, max: 3 },
-                  { label: '食欲变化', score: 1, max: 3 },
-                  { label: '自我评价', score: 1, max: 3 },
-                  { label: '注意力', score: 2, max: 3 },
-                  { label: '动作迟缓', score: 1, max: 3 },
-                  { label: '自杀意念', score: 0, max: 3 },
-                ].map((item, idx) => (
+                {(data.scale?.dimensionScores && data.scale.dimensionScores.length > 0
+                  ? data.scale.dimensionScores
+                  : [
+                      { label: '兴趣丧失', score: 2, max: 3 },
+                      { label: '情绪低落', score: 2, max: 3 },
+                      { label: '睡眠问题', score: 1, max: 3 },
+                      { label: '疲劳感', score: 2, max: 3 },
+                      { label: '食欲变化', score: 1, max: 3 },
+                      { label: '自我评价', score: 1, max: 3 },
+                      { label: '注意力', score: 2, max: 3 },
+                      { label: '动作迟缓', score: 1, max: 3 },
+                      { label: '自杀意念', score: 0, max: 3 },
+                    ]
+                ).map((item: any, idx: number) => (
                   <div key={idx} className="bg-white rounded-lg p-3 border border-slate-100">
                     <div className="text-xs text-slate-500 mb-1">{item.label}</div>
                     <div className="flex items-baseline gap-1">
                       <span className={`text-lg font-bold ${item.score >= 2 ? 'text-amber-500' : item.score >= 1 ? 'text-blue-500' : 'text-emerald-500'}`}>
                         {item.score}
                       </span>
-                      <span className="text-xs text-slate-400">/ {item.max}</span>
+                      <span className="text-xs text-slate-400">/ {item.max || 3}</span>
                     </div>
                   </div>
                 ))}
@@ -893,7 +1090,7 @@ export default function FusionReport({
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <Sheet>
+          <Sheet open={historySheetOpen} onOpenChange={setHistorySheetOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" onClick={fetchHistory} className="rounded-full border-slate-200 text-slate-700 font-medium px-4 h-9">
                 <Clock className="w-4 h-4 mr-1.5" />
@@ -916,12 +1113,15 @@ export default function FusionReport({
                   ) : (
                     <div className="space-y-3">
                       {historyList.map((item) => (
-                        <div 
+                        <div
                           key={item.id}
                           className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-100 dark:border-slate-700"
                           onClick={() => {
-                            setSelectedHistoryId(item.id);
-                            toast.info('加载历史报告: ' + item.created_at);
+                            // 加载历史记录数据到主界面
+                            loadAssessment(item.id);
+                            // 关闭历史记录 Sheet
+                            setHistorySheetOpen(false);
+                            toast.info('已加载历史报告: ' + new Date(item.created_at).toLocaleString());
                           }}
                         >
                           <div className="flex justify-between items-start mb-2">
@@ -929,10 +1129,18 @@ export default function FusionReport({
                               {new Date(item.created_at).toLocaleString()}
                             </span>
                             <Badge className={`${
-                              (item.score || 0) >= 80 ? 'bg-rose-500' : 'bg-emerald-500'
+                              (item.score || 0) >= 80 ? 'bg-rose-500' :
+                              (item.score || 0) >= 60 ? 'bg-orange-500' :
+                              (item.score || 0) >= 40 ? 'bg-violet-500' : 'bg-emerald-500'
                             } text-white border-none`}>
                               {item.score || 0}分
                             </Badge>
+                          </div>
+                          <div className="text-xs text-slate-400 mt-1">
+                            <span className="inline-flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                              点击加载此报告
+                            </span>
                           </div>
                         </div>
                       ))}

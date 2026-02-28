@@ -31,6 +31,7 @@ interface HistoryAssessment {
     score: number;
     riskLevel: 'low' | 'medium' | 'high';
     suggestion: string;
+    dimensionScores?: Array<{ label: string; score: number; max?: number }>;
   };
 }
 
@@ -343,7 +344,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       empathyPrefix = '感谢你愿意分享这些细节，这对评估很有帮助。';
     } else {
       // 其他情况
-      empathyPrefix = '你的回答我记下了，让我们继续了解更多。';
+      empathyPrefix = '我现在理解了你的情绪，让我们继续了解。';
     }
     
     return `${empathyPrefix} 下面我们继续：${nextQuestion}`;
@@ -1116,21 +1117,21 @@ ${kbText || '暂无相关知识库'}`;
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-slate-600 font-medium">PHQ-9 总分</span>
                       <Badge className={`${
-                        selectedHistory.reportData.riskLevel === 'high' ? 'bg-[#F97316]' : 
-                        selectedHistory.reportData.riskLevel === 'medium' ? 'bg-[#8B5CF6]' : 'bg-[#10B981]'
+                        selectedHistory.reportData?.riskLevel === 'high' ? 'bg-[#F97316]' : 
+                        selectedHistory.reportData?.riskLevel === 'medium' ? 'bg-[#8B5CF6]' : 'bg-[#10B981]'
                       } text-white px-3 py-1`}>
-                        {selectedHistory.reportData.riskLevel === 'high' ? '高风险' : 
-                         selectedHistory.reportData.riskLevel === 'medium' ? '中风险' : '低风险'}
+                        {selectedHistory.reportData?.riskLevel === 'high' ? '高风险' : 
+                         selectedHistory.reportData?.riskLevel === 'medium' ? '中风险' : '低风险'}
                       </Badge>
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-black text-slate-900">{selectedHistory.reportData.score}</span>
+                      <span className="text-4xl font-black text-slate-900">{selectedHistory.reportData?.score ?? selectedHistory.score ?? 0}</span>
                       <span className="text-slate-400 text-lg">/ 27</span>
                     </div>
                     <p className="text-slate-500 text-sm mt-3 leading-relaxed">
                       根据您的量表回答，您的抑郁倾向处于<span className="font-semibold text-slate-700">
-                        {selectedHistory.reportData.riskLevel === 'high' ? '高风险' : 
-                         selectedHistory.reportData.riskLevel === 'medium' ? '中风险' : '低风险'}
+                        {selectedHistory.reportData?.riskLevel === 'high' ? '高风险' : 
+                         selectedHistory.reportData?.riskLevel === 'medium' ? '中风险' : '低风险'}
                       </span>水平。
                     </p>
                   </div>
@@ -1142,7 +1143,7 @@ ${kbText || '暂无相关知识库'}`;
                       各维度得分详情
                     </h4>
                     <div className="grid grid-cols-3 gap-3">
-                      {selectedHistory.reportData.dimensionScores && selectedHistory.reportData.dimensionScores.length > 0 ? (
+                      {selectedHistory.reportData?.dimensionScores && selectedHistory.reportData.dimensionScores.length > 0 ? (
                         selectedHistory.reportData.dimensionScores.map((item: any, idx: number) => (
                           <div key={idx} className="bg-white rounded-lg p-3 border border-slate-100">
                             <div className="text-xs text-slate-500 mb-1">{item.label}</div>

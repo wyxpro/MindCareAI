@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Activity, Camera, Check, Download, Info, Maximize, RefreshCcw, ScanFace, Shield, StopCircle, Video, Printer, FileText, ChevronRight, X } from 'lucide-react';
+import { Activity, Camera, Check, Download, Info, Maximize, RefreshCcw, ScanFace, Shield, StopCircle, Video, Printer, FileText, ChevronRight } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { modelScopeVisionChat } from '@/db/modelscope';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -492,9 +492,6 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                  <p className="text-white/80 text-[11px]">微表情特征与抑郁风险关联分析</p>
                </div>
              </div>
-             <DialogClose className="text-white/80 hover:text-white transition-colors">
-               <X className="w-5 h-5" />
-             </DialogClose>
           </div>
 
           <div className="p-4 space-y-5" id="expression-report-card">
