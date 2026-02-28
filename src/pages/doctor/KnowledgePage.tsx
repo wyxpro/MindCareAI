@@ -31,7 +31,9 @@ export default function KnowledgePage() {
   const [tags, setTags] = useState('');
   const [scaleQuestions, setScaleQuestions] = useState<{ id: string; text: string; order: number }[]>([]);
   const [newQuestionText, setNewQuestionText] = useState('');
-  const [uploadingFile, setUploadingFile] = useState<File | null>(null);  // 新增: 待上传文件
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);  // 待上传文件
+  const [uploadProgress, setUploadProgress] = useState(0);  // 上传进度
+  const [isUploading, setIsUploading] = useState(false);  // 是否正在上传
 
   useEffect(() => {
     loadKnowledge();
@@ -194,7 +196,9 @@ export default function KnowledgePage() {
       setTags('');
       setScaleQuestions([]);
     }
-    setUploadingFile(null);  // 新增: 清空上传文件
+    setUploadingFile(null);  // 清空上传文件
+    setUploadProgress(0);  // 重置上传进度
+    setIsUploading(false);  // 重置上传状态
     setDialogOpen(true);
   };
 
@@ -213,16 +217,40 @@ export default function KnowledgePage() {
 
       // 文档类型处理：therapy或research分类且有上传文件
       if ((category === 'therapy' || category === 'research') && uploadingFile) {
-        const uploadResult = await uploadKnowledgeDocument(uploadingFile, category);
-        knowledgeData = {
-          ...knowledgeData,
-          content_type: 'document',
-          file_url: uploadResult.path,
-          file_name: uploadResult.name,
-          file_size: uploadResult.size,
-          file_mime_type: uploadResult.type,
-          content: content.trim() || `文档: ${uploadResult.name}`,  // 简介或占位符
-        };
+        setIsUploading(true);
+        setUploadProgress(0);
+        
+        // 模拟上传进度（因为Supabase Storage上传不支持原生进度回调）
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval);
+              return 90;
+            }
+            return prev + 10;
+          });
+        }, 200);
+        
+        try {
+          const uploadResult = await uploadKnowledgeDocument(uploadingFile, category);
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+          
+          knowledgeData = {
+            ...knowledgeData,
+            content_type: 'document',
+            file_url: uploadResult.path,
+            file_name: uploadResult.name,
+            file_size: uploadResult.size,
+            file_mime_type: uploadResult.type,
+            content: content.trim() || `文档: ${uploadResult.name}`,
+          };
+        } catch (error) {
+          clearInterval(progressInterval);
+          setIsUploading(false);
+          setUploadProgress(0);
+          throw error;
+        }
       } 
       // 量表类型处理
       else if (category === 'assessment') {
@@ -262,6 +290,8 @@ export default function KnowledgePage() {
 
       setDialogOpen(false);
       setUploadingFile(null);
+      setUploadProgress(0);
+      setIsUploading(false);
       await loadKnowledge();
     } catch (error) {
       console.error('保存失败:', error);
@@ -425,11 +455,46 @@ export default function KnowledgePage() {
                     </p>
                   </label>
                   {uploadingFile && (
-                    <div className="mt-4 p-3 bg-primary/5 rounded-lg">
-                      <p className="text-sm font-medium text-foreground">{uploadingFile.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {(uploadingFile.size / 1024).toFixed(1)} KB
-                      </p>
+                    <div className="mt-4 p-4 bg-primary/5 rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <FileText className="w-8 h-8 text-primary" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{uploadingFile.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(uploadingFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        {!isUploading && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setUploadingFile(null);
+                              setUploadProgress(0);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {/* 上传进度条 */}
+                      {isUploading && (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">上传中...</span>
+                            <span className="font-medium text-primary">{uploadProgress}%</span>
+                          </div>
+                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -458,8 +523,12 @@ export default function KnowledgePage() {
 
               
 
-              <Button onClick={handleSave} className="w-full h-12 rounded-xl text-base font-bold">
-                保存知识
+              <Button 
+                onClick={handleSave} 
+                disabled={isUploading}
+                className="w-full h-12 rounded-xl text-base font-bold disabled:opacity-50"
+              >
+                {isUploading ? `上传中 ${uploadProgress}%...` : '保存知识'}
               </Button>
             </div>
           </DialogContent>
@@ -503,93 +572,96 @@ export default function KnowledgePage() {
         ) : filteredKnowledge.length > 0 ? (
           filteredKnowledge.map((item) => (
             <Card key={item.id} className="border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden bg-card">
-              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex gap-3 flex-1">
-                    {/* 图标区分类型 */}
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <CardHeader className="p-5 pb-3">
+                <div className="flex flex-col gap-4">
+                  {/* 第一行：图标、标题、分类、操作按钮 */}
+                  <div className="flex items-start gap-4">
+                    {/* 图标 */}
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       {item.content_type === 'document' ? (
-                        <FileText className="w-6 h-6 text-primary" />
+                        <FileText className="w-5 h-5 text-primary" />
                       ) : (
-                        <BookOpen className="w-6 h-6 text-primary" />
+                        <BookOpen className="w-5 h-5 text-primary" />
                       )}
                     </div>
                     
-                    <div className="flex-1 space-y-2 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
-                        <Badge variant="secondary" className="text-[10px] bg-muted">{categories.find(c => c.value === item.category)?.label}</Badge>
+                    {/* 标题和分类 */}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <CardTitle className="text-base font-bold leading-tight">{item.title}</CardTitle>
                       </div>
-                      
-                      {/* 文档信息 */}
-                      {item.content_type === 'document' && item.file_name && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="truncate">{item.file_name}</span>
-                          {item.file_size && (
-                            <>
-                              <span>·</span>
-                              <span>{(item.file_size / 1024).toFixed(1)} KB</span>
-                            </>
-                          )}
-                        </div>
-                      )}
-                      
-                      {item.tags && item.tags.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap">
-                          {item.tags.map((tag, idx) => (
-                            <Badge key={idx} variant="outline" className="text-[10px] py-0 px-1.5 border-primary/20 text-primary">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      <Badge variant="secondary" className="text-[10px] bg-primary/5 text-primary/70 border-0">
+                        {categories.find(c => c.value === item.category)?.label}
+                      </Badge>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-1 shrink-0">
-                    {/* 在线查看文档按钮 */}
-                    {item.content_type === 'document' && item.file_url && (
+                    
+                    {/* 操作按钮组 */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {item.content_type === 'document' && item.file_url && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary"
+                          onClick={() => {
+                            const url = getKnowledgeDocumentUrl(item.file_url!);
+                            window.open(url, '_blank');
+                          }}
+                          title="查看"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-                        onClick={() => {
-                          const url = getKnowledgeDocumentUrl(item.file_url!);
-                          window.open(url, '_blank');
-                        }}
-                        title="查看文档"
+                        className="h-8 w-8 rounded-lg hover:bg-slate-100"
+                        onClick={() => handleOpenDialog(item)}
+                        title="编辑"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Edit className="w-4 h-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-                      onClick={() => handleOpenDialog(item)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
-                      onClick={() => handleDuplicate(item)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-500"
+                        onClick={() => handleDelete(item.id)}
+                        title="删除"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* 第二行：文件信息或标签 */}
+                  <div className="pl-[60px]">
+                    {item.content_type === 'document' && item.file_name ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="truncate">{item.file_name}</span>
+                        {item.file_size && (
+                          <>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="shrink-0">{(item.file_size / 1024 / 1024).toFixed(2)} MB</span>
+                          </>
+                        )}
+                      </div>
+                    ) : item.tags && item.tags.length > 0 ? (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {item.tags.slice(0, 4).map((tag, idx) => (
+                          <Badge key={idx} variant="outline" className="text-[10px] py-0 px-2 border-slate-200 text-slate-500 bg-slate-50/50">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {item.tags.length > 4 && (
+                          <Badge variant="outline" className="text-[10px] py-0 px-2 border-slate-200 text-slate-400">
+                            +{item.tags.length - 4}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+              <CardContent className="px-5 pb-5 pt-0">
                 {item.category === 'assessment' ? (
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className="text-xs px-3 py-1 border-primary/30 text-primary rounded-full">

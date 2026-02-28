@@ -4,13 +4,13 @@
 
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=flat&logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4.21-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.1.4-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Supabase](https://img.shields.io/badge/Supabase-2.76.1-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.11-06B6D4?style=flat&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat)](https://github.com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
 
-**🌟 基于多模态AI的数字医生抑郁检测与疗愈助手**
+**🌟 基于多模态AI的心理健康检测与疗愈平台**
 
 [在线体验](https://www.miaoda.cn/projects/app-97zabxvzebcx) • [功能演示](#-核心功能模块) • [快速开始](#-快速开始) • [API文档](#-api-接口) • [部署指南](#-部署指南)
 
@@ -20,20 +20,20 @@
 
 ## 📋 项目简介
 
-灵愈AI是一款专业的心理健康管理平台，集成**情绪记录**、**多模态AI评估**、**冥想疗愈**、**社区互助**、**医生后台**于一体。采用现代化医疗主题设计，结合百度文心一言多模态大模型，为用户提供科学、专业、温暖的心理健康服务。
+灵愈AI是一款专业的抑郁检测与疗愈助手，集成**情绪记录**、**多模态AI评估**、**冥想疗愈**、**社区互助**、**医生后台**于一体。采用现代化医疗主题设计，结合百度文心一言多模态大模型，为用户提供科学、专业、温暖的心理健康服务。
 
 ### ✨ 核心亮点
 
-- 📝 **情绪日记** - 大模型主动共情对话,PHQ-9、HAMD-17等专业量表评估
-- 🤖 **多模态AI情绪评估** - 支持文本、语音、表情的智能心理状态分析，生成卡片式报告
-- 📝 **AI主动式量表对话** - 语音识别、图片上传、日历集成的全功能记录
-- 🧘 **个性化冥想体验** - 3D呼吸动画、专业音频、统计追踪
-- 👥 **匿名树洞社区** - 隐私保护的情感支持和康复经验分享
-- 👨‍⚕️ **专业医生后台** - 患者管理、风险预警、数据分析系统
-- 🎨 **医疗级UI设计** - 专业可信的医疗蓝主题，符合医疗行业标准
-- 🔒 **隐私安全保障** - 端到端加密，符合医疗数据安全规范
-- 📊 **数据可视化** - 情绪趋势、健康评分、康复进度可视化展示
 
+- 🤖 **多模态AI评估** - 集成文本、语音、微表情识别的综合心理状态分析
+- 📋 **AI量表对话** - PHQ-9、HAMD-17等专业量表的智能对话式评估
+- 🧘 **沉浸式冥想** - 3D呼吸动画、专业音频、统计追踪
+- 👥 **匿名树洞社区** - 隐私保护的情感支持和康复经验分享
+- 📝 **情绪日记** - 支持文本、语音、图片多模态记录，智能日历管理
+- 📚 **知识库系统** - 支持文档上传、RAG检索的专业心理健康知识库
+- 👨‍⚕️ **医生后台** - 患者管理、风险预警、知识库管理系统
+- 📊 **数据可视化** - 情绪趋势、健康评分、康复进度展示
+- 🔒 **隐私安全** - 符合医疗数据安全规范
 ---
 
 ## 🛠️ 技术栈
@@ -65,10 +65,11 @@
 ### AI集成
 | 服务 | 用途 | 特性 |
 |------|------|------|
-| **百度文心一言4.0** | 文本对话、情绪分析 | 中文优化、上下文理解 |
-| **文心多模态大模型** | 图片情绪识别、视频分析 | 表情识别、场景理解 |
-| **百度短语音识别** | 语音转文字 | 实时识别、方言支持 |
-| **RAG检索增强** | 知识库问答 | 向量搜索、语义匹配 |
+| **火山引擎豆包大模型** | 文本对话、情绪分析 | 中文优化、上下文理解 |
+| **魔搭多模态大模型** | 图片情绪识别、视频分析 | 表情识别、场景理解 |
+| **硅基流动语音识别** | 语音转文字 | 实时识别、高准确率 |
+| **RAG检索增强** | 知识库问答 | 文档解析、语义匹配 |
+
 
 
 ---
@@ -157,15 +158,31 @@ MindCareAI/
 │   │   └── 📄 sse.ts              # 服务端推送
 │   └── 📁 services/               # 业务服务
 │       └── 📄 .keep               # 占位文件
+├── 📁 api/                        # API代理服务
+│   ├── 📁 volc/                   # 火山引擎API代理
+│   │   └── 📄 responses.ts        # 豆包大模型代理
+│   ├── 📁 siliconflow/            # 硅基流动API代理
+│   │   └── 📁 audio/              # 语音识别代理
+│   └── 📁 modelscope/             # 魔搭API代理
+│       └── 📁 chat/               # 聊天补全代理
+├── 📁 scripts/                    # 工具脚本
+│   ├── 📄 migrate-supabase.ts     # 数据库迁移
+│   ├── 📄 seed-treehole.js        # 树洞数据填充
+│   ├── 📄 seed-knowledge.js       # 知识库数据填充
+│   └── 📄 promote-user.js         # 用户权限提升
 ├── 📁 supabase/                   # Supabase配置
 │   ├── 📄 config.toml             # Supabase配置
 │   ├── 📁 functions/              # Edge Functions
 │   │   ├── 📁 text-chat/          # 文本对话
 │   │   ├── 📁 multimodal-chat/    # 多模态对话
+│   │   ├── 📁 chat-completion/    # 聊天补全
 │   │   ├── 📁 speech-recognition/ # 语音识别
 │   │   ├── 📁 multimodal-analysis/ # 多模态分析
-│   │   └── 📁 rag-retrieval/      # RAG检索
-│   └── 📁 migrations/             # 数据库迁移
+│   │   ├── 📁 multimodal-fusion/  # 多模态融合
+│   │   ├── 📁 parse-document/     # 文档解析
+│   │   ├── 📁 rag-retrieval/      # RAG检索
+│   │   └── 📁 auth-username-signup/ # 用户名注册
+│   └── 📁 migrations/             # 数据库迁移(18个迁移文件)
 ├── 📁 doc/                        # 项目文档
 │   ├── 📄 DESIGN_SYSTEM.md        # 设计系统规范
 │   ├── 📄 FEATURE_CHECKLIST.md    # 功能清单
@@ -191,24 +208,7 @@ MindCareAI/
 - **个性化建议** - 基于用户数据的每日健康提示
 - **最近评估** - 展示最新的心理评估结果和趋势
 
-### 📝 记录模块 (RecordPageNew)
-- **多模态输入系统**
-  - 📝 **富文本编辑** - 支持Markdown格式，表情符号
-  - 🎤 **智能语音识别** - WebRTC录音，实时转文字，支持方言
-  - 📷 **图片智能上传** - 拖拽上传，自动压缩，EXIF信息提取
-  - 🎬 **视频录制** - 短视频记录，情绪表达更丰富
-- **智能日历系统**
-  - 📅 **中文本地化** - 农历显示，节假日标记
-  - 🏷️ **情绪标记** - 不同颜色表示不同情绪状态
-  - 💬 **快速预览** - 悬停显示当日记录摘要
-  - 📊 **月度统计** - 情绪趋势图表，周期性分析
-- **高级记录管理**
-  - ✏️ **在线编辑** - 实时保存，版本历史
-  - 🗑️ **安全删除** - 软删除机制，30天内可恢复
-  - 🔍 **全文搜索** - 支持关键词、标签、日期范围搜索
-  - 📤 **数据导出** - 支持PDF、Excel、JSON格式导出
-
-### 🧠 评估模块 (EnhancedAssessmentPage)
+### 🧠 AI评估模块 (EnhancedAssessmentPage)
 - **多模态AI分析引擎**
   - 📝 **文本情绪分析** - NLP技术，识别情绪倾向和风险因子
   - 🎤 **语音情感识别** - 声纹分析，检测语调变化
@@ -270,7 +270,14 @@ MindCareAI/
   - 💬 **深度评论** - 多层回复，深入交流
   - 🔄 **内容分享** - 传播正能量，扩大影响
   - 🚨 **举报机制** - 维护社区环境，及时处理问题
-
+#### 📝 情绪日记模块 (RecordPageNew)
+- **多模态输入系统**
+  - 🎤 **智能语音识别** - WebRTC录音，实时转文字，支持方言
+  - 📷 **图片智能上传** - 拖拽上传，自动压缩，
+- **智能日历系统**
+  - 📅 **中文本地化** - 农历显示，节假日标记
+  - 🏷️ **情绪标记** - 不同颜色表示不同情绪状态
+  - 💬 **快速预览** - 悬停显示当日记录摘要
 #### 知识Tab - 专业心理健康知识库
 - **智能内容搜索**
   - 🔍 **多字段搜索** - 标题、内容、作者、标签全文搜索
@@ -280,10 +287,15 @@ MindCareAI/
   - 📖 **专业文章** - 心理学知识、自助指南
   - 🎬 **教学视频** - 专家讲座、技巧演示
   - 🎧 **音频课程** - 播客、冥想指导
-  - 📚 **电子书籍** - 完整的心理健康书籍
+  - � **文档资料** - 支持PDF、Word等格式文档上传和预览
+- **文档管理功能**
+  - 📤 **文档上传** - 支持多种格式文档上传
+  - � **RAG检索** - 基于文档内容的智能检索
+  - 📑 **文档解析** - 自动解析文档内容，提取关键信息
+  - 📊 **文档预览** - 在线预览文档内容
 - **个性化推荐**
   - 🎯 **智能推荐** - 基于阅读历史和兴趣推荐
-  - 🔥 **热门内容** - 浏览量、点赞数排序
+  - � **热门内容** - 浏览量、点赞数排序
   - 🆕 **最新更新** - 时间排序，获取最新知识
   - ⭐ **专家精选** - 专业医生推荐的优质内容
 - **互动功能**
@@ -325,7 +337,9 @@ MindCareAI/
   - 📚 **医学知识** - 专业的心理学知识库
   - 📋 **诊疗指南** - 标准化诊疗流程
   - 📖 **案例库** - 典型病例和治疗方案
-  - 🔄 **内容更新** - 最新研究成果和指南
+  - � **文档管理** - 支持文档上传、编辑、删除
+  - 🔍 **RAG检索** - 基于文档内容的智能检索
+  - �🔄 **内容更新** - 最新研究成果和指南
 - **预警系统 (AlertsPage)**
   - 🚨 **风险预警** - 自动识别高风险患者
   - 📝 **处理记录** - 预警处理过程记录
@@ -363,11 +377,11 @@ cd MindCareAI
 
 #### 2. 安装依赖
 ```bash
-# 使用npm (推荐)
-npm install
-
-# 或使用pnpm (更快)
+# 使用pnpm (推荐，项目使用pnpm 10.0.0)
 pnpm install
+
+# 或使用npm
+npm install
 
 # 或使用yarn
 yarn install
@@ -387,28 +401,38 @@ nano .env
 # ===========================================
 # Supabase 配置 (必须)
 # ===========================================
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_APP_ID=your-app-id
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_OFFLINE=false
+
+# Supabase 服务端配置
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # ===========================================
-# 应用配置
+# AI服务配置 (必须，用于AI功能)
 # ===========================================
-VITE_APP_ID=app-97zabxvzebcx
-VITE_APP_NAME=灵愈AI
-VITE_APP_VERSION=1.0.0
+# 火山引擎豆包大模型
+VOLC_ARK_API_KEY=your-volc-ark-key
+VITE_VOLC_ARK_API_KEY=your-volc-ark-key
+
+# 硅基流动语音识别
+SILICONFLOW_API_KEY=your-siliconflow-key
+VITE_SILICONFLOW_API_KEY=your-siliconflow-key
+
+# 魔搭多模态大模型
+MODELSCOPE_API_KEY=your-modelscope-key
+VITE_MODELSCOPE_API_KEY=your-modelscope-key
 
 # ===========================================
-# AI服务配置 (可选，用于AI功能)
+# 数据库迁移配置 (可选)
 # ===========================================
-INTEGRATIONS_API_KEY=your_baidu_ai_api_key
-VITE_AI_BASE_URL=https://aip.baidubce.com
-
-# ===========================================
-# 开发环境配置
-# ===========================================
-NODE_ENV=development
-VITE_DEV_MODE=true
-VITE_LOG_LEVEL=debug
+MIGRATE_TARGET_SUPABASE_URL=https://your-project.supabase.co
+MIGRATE_TARGET_SERVICE_ROLE_KEY=your-service-role-key
+MIGRATE_SOURCE_SUPABASE_URL=
+MIGRATE_SOURCE_SERVICE_ROLE_KEY=
 ```
 
 #### 5. 启动开发服务器
@@ -468,27 +492,49 @@ npm run preview
 #### 代码质量检查
 ```bash
 # 运行所有检查 (推荐在提交前运行)
-npm run lint
+pnpm run lint
 
 # 单独运行各项检查
 npx biome check src/          # 代码格式和质量
-npx tsc --noEmit             # TypeScript类型检查
-.rules/check.sh              # 自定义规则检查
-.rules/testBuild.sh          # 构建测试
+npx tsc -p tsconfig.check.json --noEmit  # TypeScript类型检查
+node .rules/check.cjs         # 自定义规则检查
+node .rules/tailwind-check.cjs # Tailwind CSS检查
+node .rules/testBuild.cjs     # 构建测试
+```
+
+#### 数据库管理
+```bash
+# 数据库迁移
+pnpm run migrate:supabase
+
+# 实时数据同步
+pnpm run sync:realtime
+
+# 验证迁移
+pnpm run verify:migration
+
+# 填充树洞示例数据
+pnpm run seed:treehole
+
+# 填充知识库示例数据
+pnpm run seed:knowledge
+
+# 提升用户权限
+pnpm run promote:user
 ```
 
 #### 性能优化
 ```bash
 # 分析构建包大小
-npm run build -- --analyze
+pnpm run build -- --analyze
 
 # 检查依赖更新
-npm outdated
+pnpm outdated
 
 # 清理缓存
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
+pnpm store prune
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 ```
 
 ---
@@ -498,6 +544,22 @@ npm install
 ### 前端部署
 
 #### Vercel部署 (推荐)
+项目已配置Vercel部署，包含API代理路由：
+
+```json
+{
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/innerapi/v1/volc/responses", "destination": "/api/volc/responses" },
+    { "source": "/innerapi/v1/siliconflow/audio/transcriptions", "destination": "/api/siliconflow/audio/transcriptions" },
+    { "source": "/innerapi/v1/modelscope/chat/completions", "destination": "/api/modelscope/chat/completions" }
+  ]
+}
+```
+
 ```bash
 # 安装Vercel CLI
 npm i -g vercel
@@ -505,6 +567,8 @@ npm i -g vercel
 # 部署到Vercel
 vercel --prod
 ```
+
+注意：需要在Vercel环境变量中配置所有必需的API密钥。
 
 #### Netlify部署
 ```bash
@@ -586,10 +650,16 @@ npm install -g supabase
 # 登录Supabase
 supabase login
 
-# 部署Edge Functions
+# 部署所有Edge Functions
 supabase functions deploy text-chat
 supabase functions deploy multimodal-chat
+supabase functions deploy chat-completion
 supabase functions deploy speech-recognition
+supabase functions deploy multimodal-analysis
+supabase functions deploy multimodal-fusion
+supabase functions deploy parse-document
+supabase functions deploy rag-retrieval
+supabase functions deploy auth-username-signup
 ```
 
 ### 环境变量配置
@@ -599,9 +669,12 @@ supabase functions deploy speech-recognition
 # Supabase
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# AI服务
-INTEGRATIONS_API_KEY=your-ai-api-key
+# AI服务 (必须配置)
+VOLC_ARK_API_KEY=your-volc-ark-key
+SILICONFLOW_API_KEY=your-siliconflow-key
+MODELSCOPE_API_KEY=your-modelscope-key
 
 # 应用配置
 VITE_APP_ID=app-97zabxvzebcx
@@ -753,6 +826,20 @@ Response: Stream<{
 }>
 ```
 
+#### 聊天补全
+```typescript
+POST /functions/v1/chat-completion
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "messages": Array<{role: string, content: string}>,
+  "stream": boolean
+}
+
+Response: Stream or JSON
+```
+
 #### 多模态分析
 ```typescript
 POST /functions/v1/multimodal-chat
@@ -834,88 +921,6 @@ Response: {
 }
 ```
 
-#### 发布帖子
-```typescript
-POST /api/community-posts
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "string",
-  "content": "string", 
-  "category_id": "string",
-  "anonymous_nickname": "string"
-}
-```
-
-#### 点赞帖子
-```typescript
-POST /api/community-posts/{postId}/like
-Authorization: Bearer <token>
-
-Response: {
-  "liked": boolean,
-  "like_count": number
-}
-```
-
-### 医生端接口
-
-#### 获取患者列表
-```typescript
-GET /api/doctor/patients
-Authorization: Bearer <token>
-
-Response: {
-  "data": Patient[],
-  "count": number
-}
-```
-
-#### 获取风险预警
-```typescript
-GET /api/doctor/risk-alerts?status={status}
-Authorization: Bearer <token>
-
-Response: {
-  "data": RiskAlert[],
-  "count": number
-}
-```
-
-#### 处理预警
-```typescript
-PUT /api/doctor/risk-alerts/{alertId}
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "is_handled": true,
-  "notes": "string"
-}
-```
-
-### 错误响应格式
-
-```typescript
-// 4xx/5xx错误响应
-{
-  "error": {
-    "code": "string",
-    "message": "string",
-    "details": "string"
-  }
-}
-
-// 常见错误码
-400 - Bad Request (请求参数错误)
-401 - Unauthorized (未授权)
-403 - Forbidden (权限不足)  
-404 - Not Found (资源不存在)
-429 - Too Many Requests (请求过于频繁)
-500 - Internal Server Error (服务器内部错误)
-```
-
 ---
 
 ## 💡 常见问题与解决方案
@@ -924,18 +929,19 @@ Content-Type: application/json
 
 **Q: npm install 失败怎么办？**
 ```bash
-# 方案1: 清除缓存重新安装
+# 方案1: 清除缓存重新安装 (pnpm)
+pnpm store prune
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+
+# 方案2: 使用国内镜像
+pnpm config set registry https://registry.npmmirror.com
+pnpm install
+
+# 方案3: 使用npm
 npm cache clean --force
 rm -rf node_modules package-lock.json
 npm install
-
-# 方案2: 使用国内镜像
-npm config set registry https://registry.npmmirror.com
-npm install
-
-# 方案3: 使用pnpm (推荐)
-npm install -g pnpm
-pnpm install
 ```
 
 **Q: TypeScript 类型错误怎么解决？**
@@ -959,7 +965,6 @@ npm update @types/react @types/react-dom
 - [ ] **PWA支持** - 离线使用和桌面安装
 - [ ] **国际化** - 多语言支持(英文、日文)
 - [ ] **智能手环集成** - 心率、睡眠数据同步
-- [ ] **AI助手升级** - 更智能的对话和建议
 
 #### 中期计划 (Q2-Q3 2026)  
 - [ ] **视频通话** - 在线心理咨询功能
@@ -982,7 +987,5 @@ npm update @types/react @types/react-dom
 **让我们一起为心理健康事业贡献力量** 💪
 
 Made with ❤️ by [灵愈AI团队](https://www.miaoda.cn)
-
-© 2026 灵愈AI. All rights reserved.
 
 </div>

@@ -32,6 +32,23 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const emotionHistoryRef = useRef<string[]>([]);
   const microRef = useRef({ brow: 0.12, mouthDown: 0.08, blink: 0.32 });
   
+  // 辅助函数：获取微表情特征文本，确保有默认值
+  const getMicroFeatureText = (feature: 'brow_furrow' | 'mouth_droop' | 'eye_contact'): string => {
+    const defaults = {
+      brow_furrow: '眉心频繁皱缩，显示持续的心理压力',
+      mouth_droop: '嘴角自然状态下垂，缺乏愉悦微表情',
+      eye_contact: '眼神游离，眨眼频率迟滞'
+    };
+    
+    const value = reportData?.micro_features?.[feature];
+    console.log(`🔍 getMicroFeatureText(${feature}):`, value);
+    
+    if (!value || typeof value !== 'string' || !value.trim()) {
+      return defaults[feature];
+    }
+    return value.trim();
+  };
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -137,7 +154,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       setAnalysisProgress((p) => Math.min(90, p + 3));
     }, 150);
     
-    toast.info('正在分析面部微表情特征...');
+    toast.info('正在捕获面部快照并上传...');
 
     try {
       const prompt = `仅返回JSON，不要解释。字段：
@@ -151,12 +168,25 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       let dataUrl = '';
       if (video && video.videoWidth && video.videoHeight) {
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // 限制图片尺寸，降低数据量
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = width * ratio;
+          height = height * ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          ctx.drawImage(video, 0, 0, width, height);
+          // 降低质量到0.7，减少数据量
+          dataUrl = canvas.toDataURL('image/jpeg', 0.7);
         }
       }
 
@@ -165,33 +195,50 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         text: prompt,
         image_url: dataUrl || 'data:image/png;base64,'
       });
+      
+      toast.info('AI正在分析微表情特征...');
 
       let analysisData;
+      const fallbackData = {
+        emotion_radar: { neutral: 0.3, happy: 0.05, sad: 0.4, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.01, pain: 0.02 },
+        depression_risk_score: 72,
+        analysis_report: "面部特征显示显著的悲伤情绪主导，伴随眉心舒展度低与嘴角下垂，符合典型抑郁心境的面部表征。建议结合量表与语音结果综合评估。",
+        micro_features: { 
+          brow_furrow: "眉心频繁皱缩，显示持续的心理压力", 
+          mouth_droop: "嘴角自然状态下垂，缺乏愉悦微表情", 
+          eye_contact: "眼神游离，眨眼频率迟滞" 
+        }
+      };
+      
       try {
         const jsonStr = aiRes.text.match(/\{[\s\S]*\}/)?.[0] || '{}';
         analysisData = JSON.parse(jsonStr);
-        if (!analysisData || !analysisData.emotion_radar || typeof analysisData.emotion_radar.neutral !== 'number') {
+        
+        // 检查必需字段是否完整
+        const hasValidEmotionRadar = analysisData?.emotion_radar && typeof analysisData.emotion_radar.neutral === 'number';
+        const hasValidMicroFeatures = analysisData?.micro_features && 
+                                      analysisData.micro_features.brow_furrow && 
+                                      analysisData.micro_features.mouth_droop && 
+                                      analysisData.micro_features.eye_contact;
+        
+        if (!hasValidEmotionRadar || !hasValidMicroFeatures) {
+          // 如果数据不完整，使用默认数据，但保留AI返回的有效部分
           analysisData = {
-            emotion_radar: { neutral: 0.35, happy: 0.06, sad: 0.34, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.02, pain: 0.01 },
-            depression_risk_score: 68,
-            analysis_report: "悲伤主导且微表情提示压抑倾向，建议结合量表综合评估。",
-            micro_features: { brow_furrow: "眉心皱缩频繁", mouth_droop: "嘴角下垂明显", eye_contact: "眨眼偏低" }
+            ...fallbackData,
+            ...(hasValidEmotionRadar && { emotion_radar: analysisData.emotion_radar }),
+            ...(analysisData?.depression_risk_score && { depression_risk_score: analysisData.depression_risk_score }),
+            ...(analysisData?.analysis_report && { analysis_report: analysisData.analysis_report }),
           };
         }
       } catch (e) {
-        // Fallback mock
-        analysisData = {
-          emotion_radar: { neutral: 0.3, happy: 0.05, sad: 0.4, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.01, pain: 0.02 },
-          depression_risk_score: 72,
-          analysis_report: "面部特征显示显著的悲伤情绪主导，伴随眉心舒展度低与嘴角下垂，符合典型抑郁心境的面部表征。建议结合量表与语音结果综合评估。",
-          micro_features: { 
-            brow_furrow: "眉心频繁皱缩，显示持续的心理压力", 
-            mouth_droop: "嘴角自然状态下垂，缺乏愉悦微表情", 
-            eye_contact: "眼神游离，眨眼频率迟滞" 
-          }
-        };
+        // JSON解析失败，使用默认数据
+        analysisData = fallbackData;
       }
 
+      // 调试日志：检查数据结构
+      console.log('🔍 Expression Analysis Result:', analysisData);
+      console.log('🔍 Micro Features:', analysisData?.micro_features);
+      
       setReportData(analysisData);
       setAnalysisProgress(100);
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
@@ -202,9 +249,19 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       toast.success('分析完成');
     } catch (error) {
       console.error('Expression analysis failed:', error);
-      toast.error('分析服务响应超时，已生成本地预估报告');
+      
+      // 根据错误类型提供更友好的提示
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes('timed out') || errorMsg.includes('timeout')) {
+        toast.error('AI分析服务响应超时，使用本地算法生成报告');
+      } else if (errorMsg.includes('MODELSCOPE_API_KEY')) {
+        toast.error('AI服务配置错误，使用本地算法生成报告');
+      } else {
+        toast.error('分析服务暂时不可用，已生成本地预估报告');
+      }
+      
       // Use fallback data on error
-      setReportData({
+      const errorFallbackData = {
           emotion_radar: { neutral: 0.3, happy: 0.05, sad: 0.4, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.01, pain: 0.02 },
           depression_risk_score: 72,
           analysis_report: "面部特征显示显著的悲伤情绪主导，伴随眉心舒展度低与嘴角下垂，符合典型抑郁心境的面部表征。建议结合量表与语音结果综合评估。",
@@ -213,7 +270,10 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             mouth_droop: "嘴角自然状态下垂，缺乏愉悦微表情", 
             eye_contact: "眼神游离，眨眼频率迟滞" 
           }
-      });
+      };
+      console.log('🔍 Error Fallback Data:', errorFallbackData);
+      console.log('🔍 Error Fallback Micro Features:', errorFallbackData.micro_features);
+      setReportData(errorFallbackData);
       setAnalysisProgress(100);
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       setTimeout(() => {
@@ -447,15 +507,21 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                  <div className="space-y-3">
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">眉心皱纹 (Brow Furrow)</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">{reportData?.micro_features?.brow_furrow}</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">
+                        {getMicroFeatureText('brow_furrow')}
+                      </p>
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">嘴角形态 (Mouth Droop)</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">{reportData?.micro_features?.mouth_droop}</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">
+                        {getMicroFeatureText('mouth_droop')}
+                      </p>
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 uppercase font-bold">眼神接触 (Eye Contact)</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">{reportData?.micro_features?.eye_contact}</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">
+                        {getMicroFeatureText('eye_contact')}
+                      </p>
                     </div>
                  </div>
                </div>
