@@ -16,7 +16,7 @@ interface ExpressionStepProps {
 
 export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const navigate = useNavigate();
-  const DETECT_DURATION = 10;
+  const DETECT_DURATION = 5;
   const [isCapturing, setIsCapturing] = useState(false);
   const [countdown, setCountdown] = useState(DETECT_DURATION);
   const [fps, setFps] = useState(0);
@@ -32,29 +32,90 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   const emotionHistoryRef = useRef<string[]>([]);
   const microRef = useRef({ brow: 0.12, mouthDown: 0.08, blink: 0.32 });
   
-  // 辅助函数：获取微表情特征文本，确保有默认值
+  // 根据检测到的情绪状态生成动态微表情特征描述
   const getMicroFeatureText = (feature: 'brow_furrow' | 'mouth_droop' | 'eye_contact'): string => {
-    const defaults = {
-      brow_furrow: '眉心频繁皱缩，显示持续的心理压力',
-      mouth_droop: '嘴角自然状态下垂，缺乏愉悦微表情',
-      eye_contact: '眼神游离，眨眼频率迟滞'
+    // 基于当前主导情绪生成对应的微表情描述
+    const emotionVector = reportData?.emotion_radar || {};
+    const emotions = [
+      { key: 'sad', name: '悲伤', score: emotionVector.sad || 0 },
+      { key: 'happy', name: '高兴', score: emotionVector.happy || 0 },
+      { key: 'angry', name: '愤怒', score: emotionVector.angry || 0 },
+      { key: 'fearful', name: '恐惧', score: emotionVector.fearful || 0 },
+      { key: 'surprised', name: '惊讶', score: emotionVector.surprised || 0 },
+      { key: 'neutral', name: '中性', score: emotionVector.neutral || 0 },
+      { key: 'disgusted', name: '厌恶', score: emotionVector.disgusted || 0 },
+      { key: 'contempt', name: '轻蔑', score: emotionVector.contempt || 0 },
+      { key: 'pain', name: '痛苦', score: emotionVector.pain || 0 },
+    ];
+
+    // 找出主导情绪（得分最高的）
+    const dominantEmotion = emotions.reduce((max, curr) => curr.score > max.score ? curr : max, emotions[0]);
+
+    // 根据主导情绪生成不同的微表情描述
+    const descriptions: Record<string, Record<string, string>> = {
+      sad: {
+        brow_furrow: '眉心轻微皱起，呈现悲伤情绪特征，眉头内侧上扬形成典型的悲伤表情',
+        mouth_droop: '嘴角明显下垂，面部肌肉松弛，缺乏愉悦感的自然流露',
+        eye_contact: '眼神略显黯淡，目光偶尔向下，眨眼频率较平时略低'
+      },
+      happy: {
+        brow_furrow: '眉心舒展自然，前额肌肉放松，呈现愉悦的面部状态',
+        mouth_droop: '嘴角自然上扬，颧大肌收缩明显，展现真诚的笑容特征',
+        eye_contact: '眼神明亮有神，目光专注且带有笑意，眨眼自然流畅'
+      },
+      angry: {
+        brow_furrow: '眉心紧锁下压，皱眉肌强烈收缩，呈现明显的愤怒特征',
+        mouth_droop: '嘴角紧绷或下撇，口轮匝肌紧张，面部整体紧绷',
+        eye_contact: '眼神锐利直视，目光集中且带有攻击性，眨眼减少'
+      },
+      fearful: {
+        brow_furrow: '眉心上扬并紧锁，前额出现横向皱纹，呈现恐惧时的惊讶特征',
+        mouth_droop: '嘴角向后拉伸，嘴巴可能微张，面部肌肉紧张僵硬',
+        eye_contact: '眼神飘忽不定，瞳孔放大，频繁环顾四周显示不安'
+      },
+      surprised: {
+        brow_furrow: '眉毛高高扬起，前额出现明显横向皱纹，眼睛自然睁大',
+        mouth_droop: '下巴下垂，嘴巴微张或张开，面部呈现短暂的松弛状态',
+        eye_contact: '眼神瞬间聚焦，目光直视前方，眨眼暂停后恢复正常'
+      },
+      neutral: {
+        brow_furrow: '眉心舒展平整，前额肌肉完全放松，无明显表情纹路',
+        mouth_droop: '嘴角保持自然水平状态，口周肌肉放松，呈现平静面容',
+        eye_contact: '眼神平稳自然，目光适度接触，眨眼频率处于正常范围'
+      },
+      disgusted: {
+        brow_furrow: '眉心轻微下压，鼻根处出现皱纹，上唇提升带动面部变化',
+        mouth_droop: '嘴角一侧或两侧上扬，上唇提升，呈现典型的厌恶表情',
+        eye_contact: '眼神带有回避倾向，目光可能向下或向侧方移动'
+      },
+      contempt: {
+        brow_furrow: '单侧眉毛轻微上扬，呈现不对称的轻蔑表情特征',
+        mouth_droop: '单侧嘴角上扬形成似笑非笑的表情，展现轻蔑态度',
+        eye_contact: '眼神带有审视意味，目光可能带有俯视或斜视特征'
+      },
+      pain: {
+        brow_furrow: '眉心强烈皱缩，眉毛向中间聚拢下压，呈现痛苦特征',
+        mouth_droop: '嘴角向下拉伸，面部肌肉紧绷，可能伴随咬牙或张嘴',
+        eye_contact: '眼神痛苦紧闭或半睁，目光涣散，眨眼不规律'
+      }
     };
-    
-    const value = reportData?.micro_features?.[feature];
-    console.log(`🔍 getMicroFeatureText(${feature}):`, value);
-    
-    if (!value || typeof value !== 'string' || !value.trim()) {
-      return defaults[feature];
+
+    // 使用AI返回的值或根据情绪生成的描述
+    const aiValue = reportData?.micro_features?.[feature];
+    if (aiValue && typeof aiValue === 'string' && aiValue.trim()) {
+      return aiValue.trim();
     }
-    return value.trim();
+
+    // 根据主导情绪返回对应的描述
+    return descriptions[dominantEmotion.key]?.[feature] || descriptions.neutral[feature];
   };
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTimeRef = useRef<number>(performance.now());
-  const analysisRef = useRef<NodeJS.Timeout | null>(null);
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const analysisRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     startCamera();

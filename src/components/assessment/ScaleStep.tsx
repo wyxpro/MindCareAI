@@ -79,7 +79,7 @@ const MOCK_HISTORY_ASSESSMENTS: HistoryAssessment[] = [
     score: 8,
     summary: '整体心理状态良好，偶尔有轻微焦虑情绪，建议保持规律作息。',
     messages: [
-      { role: 'assistant', content: '你好！我是灵愈AI助手。接下来我们将进行 PHQ-9 评估。我会以温暖、共情的方式引导你逐步完成，每一步都会解释目的。如果任何回答不确定，我会帮你澄清。我们开始吧？', timestamp: new Date(2024, 0, 15, 14, 30), avatar: DOCTOR_AVATAR },
+      { role: 'assistant', content: '你好！我是灵愈AI助手。接下来我们将进行 PHQ-9 评估。我会以温暖、共情的方式引导你逐步完成，每一步都会解释目的。我们开始吧？', timestamp: new Date(2024, 0, 15, 14, 30), avatar: DOCTOR_AVATAR },
       { role: 'user', content: '好的，我准备好了', timestamp: new Date(2024, 0, 15, 14, 31) },
       { role: 'assistant', content: '【第1题】在过去两周内，你是否经常感到心情低落、沮丧或绝望？', timestamp: new Date(2024, 0, 15, 14, 31), avatar: DOCTOR_AVATAR },
       { role: 'user', content: '偶尔会有这样的感觉，大概一周有2-3天吧', timestamp: new Date(2024, 0, 15, 14, 32) },
@@ -692,7 +692,7 @@ ${kbText || '暂无相关知识库'}`;
     setMessages([
       {
         role: 'assistant',
-        content: `你好！我是灵愈AI助手。接下来我们将进行 ${selectedScales.join(', ')} 评估。我会以温暖、共情的方式引导你逐步完成,每一步都会解释目的。如果任何回答不确定，我会帮你澄清。我们开始吧？`,
+        content: `你好！我是灵愈AI助手。接下来我们将进行 ${selectedScales.join(', ')} 评估。我会以温暖、共情的方式引导你逐步完成,每一步都会解释目的。我们开始吧？`,
         timestamp: new Date(),
         avatar: DOCTOR_AVATAR
       }
