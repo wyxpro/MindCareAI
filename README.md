@@ -23,6 +23,8 @@
 灵愈AI是一款专业的抑郁检测与疗愈助手，集成**情绪记录**、**多模态AI评估**、**冥想疗愈**、**社区互助**、**医生后台**于一体。采用现代化医疗主题设计，结合百度文心一言多模态大模型，为用户提供科学、专业、温暖的心理健康服务。
 
 ### ✨ 核心亮点
+<img width="1388" height="1479" alt="image" src="https://github.com/user-attachments/assets/4b6fc4ed-8ec7-45a0-a6fb-cdfa48fda079" />
+<img width="1374" height="1496" alt="image" src="https://github.com/user-attachments/assets/d1f35aca-aa46-477f-af90-6ec13de9d366" />
 
 
 - 🤖 **多模态AI评估** - 集成文本、语音、微表情识别的综合心理状态分析
