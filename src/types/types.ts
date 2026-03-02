@@ -8,6 +8,7 @@ export interface Profile {
   username: string;
   email?: string;
   phone?: string;
+  wechat?: string;
   role: UserRole;
   avatar_url?: string;
   full_name?: string;

@@ -28,10 +28,10 @@ export default function PatientsPage() {
     setLoading(true);
     try {
       const profiles = await getAllProfiles();
-      const patientList = profiles.filter(p => p.role === 'user');
-      setPatients(patientList);
+      // 显示所有用户，不再过滤角色
+      setPatients(profiles);
     } catch (error) {
-      console.error('加载患者失败:', error);
+      console.error('加载用户失败:', error);
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,25 @@ export default function PatientsPage() {
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                           {patient.full_name || patient.username}
                         </span>
-                        <Badge variant="secondary" className="text-[10px] font-medium bg-muted">@{patient.username}</Badge>
+                        <Badge variant="secondary" className="text-[10px] font-medium bg-muted">
+                          @{patient.username}
+                        </Badge>
+                        {/* 角色标识 */}
+                        {patient.role === 'doctor' && (
+                          <Badge className="text-[10px] font-medium bg-emerald-100 text-emerald-700 border-emerald-200">
+                            医生
+                          </Badge>
+                        )}
+                        {patient.role === 'admin' && (
+                          <Badge className="text-[10px] font-medium bg-purple-100 text-purple-700 border-purple-200">
+                            管理员
+                          </Badge>
+                        )}
+                        {patient.role === 'user' && (
+                          <Badge className="text-[10px] font-medium bg-blue-100 text-blue-700 border-blue-200">
+                            用户
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
                         {patient.gender && <span>{patient.gender}</span>}
@@ -137,17 +155,17 @@ export default function PatientsPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              <p>未找到患者</p>
+              <p>未找到用户</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* 患者详情对话框 */}
+      {/* 用户详情对话框 */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-2xl">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl">患者详情</DialogTitle>
+            <DialogTitle className="text-xl">用户详情</DialogTitle>
           </DialogHeader>
           {selectedPatient && (
             <div className="space-y-6">
@@ -159,11 +177,29 @@ export default function PatientsPage() {
                     {selectedPatient.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h3 className="text-xl md:text-2xl font-bold">
-                    {selectedPatient.full_name || selectedPatient.username}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">@{selectedPatient.username}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-xl md:text-2xl font-bold">
+                      {selectedPatient.full_name || selectedPatient.username}
+                    </h3>
+                    {/* 角色标识 */}
+                    {selectedPatient.role === 'doctor' && (
+                      <Badge className="text-xs font-medium bg-emerald-100 text-emerald-700 border-emerald-200">
+                        医生
+                      </Badge>
+                    )}
+                    {selectedPatient.role === 'admin' && (
+                      <Badge className="text-xs font-medium bg-purple-100 text-purple-700 border-purple-200">
+                        管理员
+                      </Badge>
+                    )}
+                    {selectedPatient.role === 'user' && (
+                      <Badge className="text-xs font-medium bg-blue-100 text-blue-700 border-blue-200">
+                        用户
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">@{selectedPatient.username}</p>
                 </div>
               </div>
 

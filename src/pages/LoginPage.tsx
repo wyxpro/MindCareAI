@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { getProfile, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/db/supabase';
+import { validateUsername, sanitizeUsername } from '@/utils/validation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -25,7 +26,11 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    
+    // 清理用户名
+    const cleanedUsername = sanitizeUsername(username);
+    
+    if (!cleanedUsername || !password) {
       toast.error('请输入用户名和密码');
       return;
     }
@@ -35,13 +40,13 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const { error } = await signInWithUsername(username, password);
+    const { error } = await signInWithUsername(cleanedUsername, password);
     setLoading(false);
 
     if (error) {
       toast.error('登录失败: ' + error.message);
     } else {
-      // 根据角色进行跳转与校验
+      // 根据数据库中的实际角色进行跳转
       try {
         const { data: { session } } = await supabase.auth.getSession();
         let userRole: 'user' | 'doctor' | 'admin' | undefined = undefined;
@@ -49,19 +54,23 @@ export default function LoginPage() {
           const p = await getProfile(session.user.id);
           userRole = p?.role;
         }
-        if (role === 'doctor') {
-          if (userRole === 'doctor' || userRole === 'admin') {
-            toast.success('医生端登录成功');
-            navigate('/doctor/dashboard', { replace: true });
-          } else {
-            toast.error('当前账号非医生/管理员角色，无法进入医生端');
-            navigate('/profile', { replace: true });
-          }
+        
+        // 根据数据库中的实际角色判断跳转，忽略界面上的角色选择
+        if (userRole === 'doctor' || userRole === 'admin') {
+          // 医生或管理员账号，跳转到医生端
+          toast.success('医生端登录成功');
+          navigate('/doctor/dashboard', { replace: true });
+        } else if (userRole === 'user') {
+          // 普通用户账号，跳转到用户端
+          toast.success('登录成功');
+          navigate(from, { replace: true });
         } else {
+          // 角色未知或未设置
           toast.success('登录成功');
           navigate(from, { replace: true });
         }
-      } catch {
+      } catch (err) {
+        console.error('获取用户角色失败:', err);
         toast.success('登录成功');
         navigate(from, { replace: true });
       }
@@ -70,8 +79,19 @@ export default function LoginPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
-      toast.error('请输入用户名和密码');
+    
+    // 清理用户名
+    const cleanedUsername = sanitizeUsername(username);
+    
+    // 验证用户名格式
+    const usernameValidation = validateUsername(cleanedUsername);
+    if (!usernameValidation.valid) {
+      toast.error(usernameValidation.message || '用户名格式不正确');
+      return;
+    }
+    
+    if (!password) {
+      toast.error('请输入密码');
       return;
     }
     if (password.length < 6) {
@@ -88,7 +108,7 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const { error } = await signUpWithUsername(username, password, role, verificationCode);
+    const { error } = await signUpWithUsername(cleanedUsername, password, role, verificationCode);
     setLoading(false);
 
     if (error) {
@@ -171,11 +191,15 @@ export default function LoginPage() {
                   <Input
                     id="signup-username"
                     type="text"
-                    placeholder="请输入用户名"
+                    placeholder="支持中文、英文、数字（2-20个字符）"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
+                    maxLength={20}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    可使用中文昵称，支持中文、英文、数字、下划线和连字符
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">密码</Label>

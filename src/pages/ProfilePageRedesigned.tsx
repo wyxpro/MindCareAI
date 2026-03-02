@@ -391,7 +391,7 @@ export default function ProfilePageRedesigned() {
               {/* 用户名和认证徽章 */}
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold text-white truncate drop-shadow-sm">
-                  {profile?.full_name || '灵愈用户'}
+                  {profile?.username || '灵愈用户'}
                 </h2>
                 <motion.div
                   initial={{ scale: 0 }}
@@ -586,7 +586,7 @@ export default function ProfilePageRedesigned() {
           </DialogHeader>
 
           <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="mt-4">
-            <TabsList className="grid w-full grid-cols-3 p-1 bg-slate-100 rounded-xl">
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-slate-100 rounded-xl">
               <TabsTrigger value="avatar" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Camera className="w-3.5 h-3.5 mr-1.5" />
                 头像设置
@@ -594,10 +594,6 @@ export default function ProfilePageRedesigned() {
               <TabsTrigger value="background" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
                 背景主题
-              </TabsTrigger>
-              <TabsTrigger value="info" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <FileText className="w-3.5 h-3.5 mr-1.5" />
-                基本信息
               </TabsTrigger>
             </TabsList>
 
@@ -742,39 +738,6 @@ export default function ProfilePageRedesigned() {
                     </motion.button>
                   ))}
                 </div>
-              </div>
-            </TabsContent>
-
-            {/* 基本信息 Tab */}
-            <TabsContent value="info" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-medium text-slate-700">姓名</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="请输入姓名"
-                  className="h-11 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium text-slate-700">手机号</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="请输入手机号"
-                  className="h-11 rounded-xl"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">邮箱</Label>
-                <Input
-                  value={user?.email || ''}
-                  disabled
-                  className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800"
-                />
-                <p className="text-xs text-slate-400">邮箱不可修改</p>
               </div>
             </TabsContent>
           </Tabs>

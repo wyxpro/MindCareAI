@@ -1,4 +1,4 @@
-import { Calendar, ChevronLeft, Ruler, Save, Scale, User } from 'lucide-react';
+import { Calendar, ChevronLeft, Mail, MessageSquare, Phone, Ruler, Save, Scale, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -28,7 +28,9 @@ export default function PersonalInfoPage() {
     age: '',
     height: '',
     weight: '',
-    phone: ''
+    phone: '',
+    wechat: '',
+    email: ''
   });
 
   useEffect(() => {
@@ -39,7 +41,9 @@ export default function PersonalInfoPage() {
         age: profile.birth_date ? calculateAge(profile.birth_date).toString() : '',
         height: '', // Assume these aren't in profile yet, or add to metadata
         weight: '',
-        phone: profile.phone || ''
+        phone: profile.phone || '',
+        wechat: profile.wechat || '',
+        email: profile.email || ''
       });
     }
   }, [profile]);
@@ -69,6 +73,8 @@ export default function PersonalInfoPage() {
         full_name: formData.full_name,
         gender: formData.gender,
         phone: formData.phone,
+        wechat: formData.wechat,
+        email: formData.email,
         // birth_date can be derived from age if needed, but for now we'll just save what we have
       });
       
@@ -191,6 +197,54 @@ export default function PersonalInfoPage() {
                 value={formData.weight} 
                 onChange={e => setFormData(prev => ({ ...prev, weight: e.target.value }))}
                 placeholder="65"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Phone className="w-5 h-5 text-purple-500" />
+              联系方式
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="flex items-center gap-1">
+                <Phone className="w-4 h-4" /> 手机号
+              </Label>
+              <Input 
+                id="phone" 
+                type="tel" 
+                value={formData.phone} 
+                onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="请输入手机号"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="wechat" className="flex items-center gap-1">
+                <MessageSquare className="w-4 h-4" /> 微信号
+              </Label>
+              <Input 
+                id="wechat" 
+                value={formData.wechat} 
+                onChange={e => setFormData(prev => ({ ...prev, wechat: e.target.value }))}
+                placeholder="请输入微信号"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-1">
+                <Mail className="w-4 h-4" /> 邮箱
+              </Label>
+              <Input 
+                id="email" 
+                type="email" 
+                value={formData.email} 
+                onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="请输入邮箱地址"
               />
             </div>
           </CardContent>

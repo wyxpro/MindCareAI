@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/db/supabase';
 import type { Profile } from '@/types';
+import { validateUsername, usernameToEmail } from '@/utils/validation';
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   try {
@@ -73,7 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithUsername = async (username: string, password: string) => {
     try {
-      const email = `${username}@miaoda.com`;
+      // 将用户名转换为有效的邮箱格式
+      const email = usernameToEmail(username);
       let { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const { data: { session } } = await supabase.auth.getSession();
@@ -89,6 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUpWithUsername = async (username: string, password: string, desiredRole: 'user' | 'doctor' = 'user', verificationCode?: string) => {
     try {
+      // 验证用户名格式
+      const usernameValidation = validateUsername(username);
+      if (!usernameValidation.valid) {
+        throw new Error(usernameValidation.message || '用户名格式不正确');
+      }
+
       // 如果是医生注册，需要验证校证码
       if (desiredRole === 'doctor') {
         if (!verificationCode) {
@@ -104,7 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
       
-      const email = `${username}@miaoda.com`;
+      // 将用户名转换为有效的邮箱格式
+      const email = usernameToEmail(username);
+      
       const { error: regErr } = await supabase.auth.signUp({ email, password, options: { data: { username, role: desiredRole } } });
       if (regErr) throw regErr;
       const { error: signErr } = await supabase.auth.signInWithPassword({ email, password });
