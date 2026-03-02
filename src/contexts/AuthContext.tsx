@@ -21,7 +21,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signInWithUsername: (username: string, password: string) => Promise<{ error: Error | null }>;
-  signUpWithUsername: (username: string, password: string) => Promise<{ error: Error | null }>;
+  signUpWithUsername: (username: string, password: string, desiredRole?: 'user' | 'doctor', verificationCode?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -87,8 +87,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUpWithUsername = async (username: string, password: string, desiredRole: 'user' | 'doctor' = 'user') => {
+  const signUpWithUsername = async (username: string, password: string, desiredRole: 'user' | 'doctor' = 'user', verificationCode?: string) => {
     try {
+      // 如果是医生注册，需要验证校证码
+      if (desiredRole === 'doctor') {
+        if (!verificationCode) {
+          throw new Error('医生注册需要校证码');
+        }
+        
+        // 验证校证码
+        const { verifyCode } = await import('@/db/api');
+        const verifyResult = await verifyCode(verificationCode);
+        
+        if (!verifyResult.valid) {
+          throw new Error(verifyResult.message || '校证码无效');
+        }
+      }
+      
       const email = `${username}@miaoda.com`;
       const { error: regErr } = await supabase.auth.signUp({ email, password, options: { data: { username, role: desiredRole } } });
       if (regErr) throw regErr;
@@ -98,6 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const uid = session?.user?.id;
       if (uid) {
         await supabase.rpc('link_username_to_user', { uid, uname: username });
+        
+        // 如果是医生注册，标记验证码已使用
+        if (desiredRole === 'doctor' && verificationCode) {
+          const { markCodeAsUsed } = await import('@/db/api');
+          await markCodeAsUsed(verificationCode, uid);
+        }
       }
       return { error: null };
     } catch (error) {

@@ -109,7 +109,7 @@ const routes: RouteConfig[] = [
     visible: false,
   },
   {
-    name: '患者管理',
+    name: '用户管理',
     path: '/doctor/patients',
     element: <DoctorPatientsPage />,
     visible: false,

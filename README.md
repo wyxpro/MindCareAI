@@ -65,10 +65,10 @@
 ### AI集成
 | 服务 | 用途 | 特性 |
 |------|------|------|
-| **火山引擎豆包大模型** | 文本对话、情绪分析 | 中文优化、上下文理解 |
-| **魔搭多模态大模型** | 图片情绪识别、视频分析 | 表情识别、场景理解 |
-| **硅基流动语音识别** | 语音转文字 | 实时识别、高准确率 |
-| **RAG检索增强** | 知识库问答 | 文档解析、语义匹配 |
+| **火山引擎豆包大模型** | AI主动式量表对话、共情洞察 | 中文优化、上下文理解 |
+| **魔搭多模态大模型** | 图片情绪识别、视频表情分析 | 表情识别、场景理解 |
+| **硅基流动语音识别** | 语音情绪识别、语音转文字 | 实时识别、高准确率 |
+| **RAG检索增强** | 医疗知识库问答 | 文档解析、语义匹配 |
 
 
 
@@ -448,32 +448,6 @@ npm run dev
 #### 6. 访问应用
 打开浏览器访问 `http://localhost:5173`
 
-### 🔧 开发工具配置
-
-#### VS Code 推荐插件
-```json
-{
-  "recommendations": [
-    "bradlc.vscode-tailwindcss",
-    "esbenp.prettier-vscode", 
-    "ms-vscode.vscode-typescript-next",
-    "biomejs.biome",
-    "ms-vscode.vscode-json"
-  ]
-}
-```
-
-#### VS Code 设置
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "biomejs.biome",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
-  ]
-}
 ```
 
 ### 🏗️ 构建和部署
@@ -489,18 +463,6 @@ npm run preview
 # 构建输出在 dist/ 目录
 ```
 
-#### 代码质量检查
-```bash
-# 运行所有检查 (推荐在提交前运行)
-pnpm run lint
-
-# 单独运行各项检查
-npx biome check src/          # 代码格式和质量
-npx tsc -p tsconfig.check.json --noEmit  # TypeScript类型检查
-node .rules/check.cjs         # 自定义规则检查
-node .rules/tailwind-check.cjs # Tailwind CSS检查
-node .rules/testBuild.cjs     # 构建测试
-```
 
 #### 数据库管理
 ```bash
@@ -523,19 +485,6 @@ pnpm run seed:knowledge
 pnpm run promote:user
 ```
 
-#### 性能优化
-```bash
-# 分析构建包大小
-pnpm run build -- --analyze
-
-# 检查依赖更新
-pnpm outdated
-
-# 清理缓存
-pnpm store prune
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-```
 
 ---
 
@@ -570,22 +519,6 @@ vercel --prod
 
 注意：需要在Vercel环境变量中配置所有必需的API密钥。
 
-#### Netlify部署
-```bash
-# 构建项目
-npm run build
-
-# 上传dist目录到Netlify
-```
-
-#### 自托管部署
-```bash
-# 构建项目
-npm run build
-
-# 将dist目录部署到Web服务器
-# 配置nginx/apache支持SPA路由
-```
 
 ### 后端配置
 
@@ -696,117 +629,6 @@ VITE_SUPABASE_ANON_KEY=local-anon-key
 
 ## 📦 API 接口
 
-### 认证接口
-
-#### 用户注册
-```typescript
-POST /auth/signup
-Content-Type: application/json
-
-{
-  "username": "string",
-  "password": "string"
-}
-
-Response: {
-  "user": User,
-  "session": Session
-}
-```
-
-#### 用户登录
-```typescript
-POST /auth/signin
-Content-Type: application/json
-
-{
-  "username": "string", 
-  "password": "string"
-}
-
-Response: {
-  "user": User,
-  "session": Session
-}
-```
-
-### 用户档案接口
-
-#### 获取用户档案
-```typescript
-GET /api/profiles/{userId}
-Authorization: Bearer <token>
-
-Response: {
-  "id": "string",
-  "username": "string",
-  "email": "string",
-  "full_name": "string",
-  "role": "user" | "doctor" | "admin",
-  "avatar_url": "string",
-  "created_at": "string"
-}
-```
-
-#### 更新用户档案
-```typescript
-PUT /api/profiles/{userId}
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "full_name": "string",
-  "phone": "string",
-  "bio": "string"
-}
-```
-
-### 情绪日记接口
-
-#### 获取日记列表
-```typescript
-GET /api/emotion-diaries?user_id={userId}&limit={limit}
-Authorization: Bearer <token>
-
-Response: {
-  "data": EmotionDiary[],
-  "count": number
-}
-```
-
-#### 创建日记
-```typescript
-POST /api/emotion-diaries
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "diary_date": "2024-01-01",
-  "emotion_level": "good",
-  "content": "string",
-  "image_urls": ["string"],
-  "voice_url": "string"
-}
-```
-
-#### 更新日记
-```typescript
-PUT /api/emotion-diaries/{id}
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "content": "string",
-  "emotion_level": "very_good"
-}
-```
-
-#### 删除日记
-```typescript
-DELETE /api/emotion-diaries/{id}
-Authorization: Bearer <token>
-```
-
 ### AI评估接口
 
 #### 文本对话
@@ -881,45 +703,6 @@ Response: {
 }
 ```
 
-### 疗愈内容接口
-
-#### 获取冥想内容
-```typescript
-GET /api/healing-contents?category={category}&content_type=meditation
-Authorization: Bearer <token>
-
-Response: {
-  "data": HealingContent[],
-  "count": number
-}
-```
-
-#### 创建冥想记录
-```typescript
-POST /api/meditation-sessions
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "content_id": "string",
-  "duration": number,
-  "completed": boolean,
-  "mood_after": "string"
-}
-```
-
-### 社区接口
-
-#### 获取社区帖子
-```typescript
-GET /api/community-posts?category={category}&limit={limit}
-Authorization: Bearer <token>
-
-Response: {
-  "data": CommunityPost[],
-  "count": number
-}
-```
 
 ---
 
@@ -986,6 +769,6 @@ npm update @types/react @types/react-dom
 
 **让我们一起为心理健康事业贡献力量** 💪
 
-Made with ❤️ by [灵愈AI团队](https://www.miaoda.cn)
+Made with ❤️ by [灵愈AI团队](https://github.com/wyxpro/MindCareAI)
 
 </div>

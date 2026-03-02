@@ -1,4 +1,4 @@
-import { Activity, Eye, Search, TrendingUp } from 'lucide-react';
+import { Activity, Eye, Key, Search, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAllProfiles, getAssessments, getEmotionDiaries } from '@/db/api';
 import type { Profile } from '@/types';
+import VerificationCodeManager from '@/components/doctor/VerificationCodeManager';
 
 export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
@@ -17,6 +18,7 @@ export default function PatientsPage() {
   const [selectedPatient, setSelectedPatient] = useState<Profile | null>(null);
   const [patientDetails, setPatientDetails] = useState<any>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [codeManagerOpen, setCodeManagerOpen] = useState(false);
 
   useEffect(() => {
     loadPatients();
@@ -57,8 +59,8 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6">
       <div className="px-1">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">患者管理</h1>
-        <p className="text-muted-foreground mt-1 text-sm md:text-base">查看和管理患者信息</p>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">用户管理</h1>
+        <p className="text-muted-foreground mt-1 text-sm md:text-base">查看和管理用户信息</p>
       </div>
 
       {/* 搜索 */}
@@ -72,12 +74,20 @@ export default function PatientsPage() {
             className="pl-10 h-11 md:h-10 rounded-xl"
           />
         </div>
+        <Button
+          variant="outline"
+          className="h-11 md:h-10 rounded-xl"
+          onClick={() => setCodeManagerOpen(true)}
+        >
+          <Key className="w-4 h-4 mr-2" />
+          验证码管理
+        </Button>
       </div>
 
-      {/* 患者列表 */}
+      {/* 用户列表 */}
       <Card className="border-0 md:border shadow-sm">
         <CardHeader className="px-4 md:px-6">
-          <CardTitle className="text-lg md:text-xl">患者列表 ({filteredPatients.length})</CardTitle>
+          <CardTitle className="text-lg md:text-xl">用户列表 ({filteredPatients.length})</CardTitle>
         </CardHeader>
         <CardContent className="px-4 md:px-6">
           {loading ? (
@@ -230,6 +240,9 @@ export default function PatientsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* 验证码管理对话框 */}
+      <VerificationCodeManager open={codeManagerOpen} onOpenChange={setCodeManagerOpen} />
     </div>
   );
 }

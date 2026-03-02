@@ -20,7 +20,7 @@ interface DoctorLayoutProps {
 
 const navItems = [
   { path: '/doctor/dashboard', label: '数据看板', icon: LayoutDashboard },
-  { path: '/doctor/patients', label: '患者管理', icon: Users },
+  { path: '/doctor/patients', label: '用户管理', icon: Users },
   { path: '/doctor/knowledge', label: '知识库', icon: BookOpen },
   { path: '/doctor/alerts', label: '预警消息', icon: AlertTriangle },
 ];

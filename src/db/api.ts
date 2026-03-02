@@ -770,3 +770,87 @@ export const getKnowledgeDocumentUrl = (filePath: string) => {
     
   return data.publicUrl;
 };
+
+// ==================== 医生验证码管理 ====================
+export interface DoctorVerificationCode {
+  id: string;
+  code: string;
+  is_permanent: boolean;
+  is_used: boolean;
+  used_by?: string;
+  used_at?: string;
+  created_by?: string;
+  created_at: string;
+  notes?: string;
+}
+
+// 获取所有验证码（仅医生和管理员可用）
+export const getVerificationCodes = async () => {
+  const { data, error } = await supabase
+    .from('doctor_verification_codes')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+};
+
+// 创建验证码
+export const createVerificationCode = async (code: string, notes?: string, createdBy?: string) => {
+  const { data, error } = await supabase
+    .from('doctor_verification_codes')
+    .insert({
+      code,
+      is_permanent: false,
+      is_used: false,
+      notes,
+      created_by: createdBy,
+    })
+    .select()
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as DoctorVerificationCode;
+};
+
+// 删除验证码（仅能删除非永久验证码）
+export const deleteVerificationCode = async (id: string) => {
+  const { error } = await supabase
+    .from('doctor_verification_codes')
+    .delete()
+    .eq('id', id)
+    .eq('is_permanent', false); // 确保不能删除永久验证码
+  
+  if (error) throw error;
+};
+
+// 验证码校验（用于注册时）
+export const verifyCode = async (code: string) => {
+  const { data, error } = await supabase
+    .from('doctor_verification_codes')
+    .select('*')
+    .eq('code', code)
+    .maybeSingle();
+  
+  if (error) throw error;
+  
+  if (!data) {
+    return { valid: false, message: '验证码不存在' };
+  }
+  
+  if (!data.is_permanent && data.is_used) {
+    return { valid: false, message: '验证码已被使用' };
+  }
+  
+  return { valid: true, data };
+};
+
+// 标记验证码为已使用
+export const markCodeAsUsed = async (code: string, userId: string) => {
+  const { error } = await supabase.rpc('verify_and_use_code', {
+    p_code: code,
+    p_user_id: userId,
+  });
+  
+  if (error) throw error;
+};

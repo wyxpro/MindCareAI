@@ -21,7 +21,19 @@ export async function volcResponses(payload: { model: string; input: VolcMessage
   }
 
   const text = isJson
-    ? (data?.output_text || data?.choices?.[0]?.delta?.content || data?.choices?.[0]?.message?.content?.[0]?.text || '')
+    ? (
+        // 优先提取 output 数组中 type=message 的 content[0].text（适配最新API）
+        data?.output?.find((item: any) => item.type === 'message')?.content?.[0]?.text ||
+        // 兼容直接 content 结构
+        data?.content?.[0]?.text ||
+        // 兼容旧版 output_text 字段
+        data?.output_text || 
+        // 兼容流式响应
+        data?.choices?.[0]?.delta?.content || 
+        // 兼容标准响应
+        data?.choices?.[0]?.message?.content?.[0]?.text || 
+        ''
+      )
     : String(data);
 
   return { raw: data, text };

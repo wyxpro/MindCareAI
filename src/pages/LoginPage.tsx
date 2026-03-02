@@ -14,6 +14,7 @@ import { supabase } from '@/db/supabase';
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { signInWithUsername, signUpWithUsername } = useAuth();
   const [role, setRole] = useState<'user' | 'doctor'>('user');
@@ -77,16 +78,29 @@ export default function LoginPage() {
       toast.error('密码至少需要6个字符');
       return;
     }
+    
+    // 医生端注册需要校证码
+    if (role === 'doctor') {
+      if (!verificationCode) {
+        toast.error('医生端注册需要校证码');
+        return;
+      }
+    }
 
     setLoading(true);
-    const { error } = await signUpWithUsername(username, password, role);
+    const { error } = await signUpWithUsername(username, password, role, verificationCode);
     setLoading(false);
 
     if (error) {
       toast.error('注册失败: ' + error.message);
     } else {
       toast.success('注册成功,正在登录...');
-      navigate(from, { replace: true });
+      // 医生端注册成功后跳转到医生端界面
+      if (role === 'doctor') {
+        navigate('/doctor/dashboard', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     }
   };
 
@@ -174,6 +188,20 @@ export default function LoginPage() {
                     disabled={loading}
                   />
                 </div>
+                {role === 'doctor' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="verification-code">校证码</Label>
+                    <Input
+                      id="verification-code"
+                      type="text"
+                      placeholder="请输入医生端校证码"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">医生端注册需要校证码，请联系管理员获取</p>
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   注册
