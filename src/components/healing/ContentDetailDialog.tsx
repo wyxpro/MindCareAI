@@ -5,17 +5,21 @@ import {
   Clock,
   Copy,
   Eye,
+  FileText,
   Heart,
   Link2,
   MessageCircle,
+  Play,
   Send,
   Share2,
   ThumbsUp,
+  Video,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -66,6 +70,14 @@ export default function ContentDetailDialog({
   const [viewCount, setViewCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  // 视频播放相关状态
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showVideoControls, setShowVideoControls] = useState(true);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (open && content) {
@@ -220,6 +232,69 @@ export default function ContentDetailDialog({
     return gradients[index % gradients.length];
   };
 
+  // 视频播放控制函数
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    if (videoRef.current) {
+      videoRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const handleVideoEnded = () => {
+    setIsPlaying(false);
+  };
+
+  const handleVideoClick = () => {
+    togglePlay();
+    // 显示控制栏
+    setShowVideoControls(true);
+    // 清除之前的定时器
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    // 3秒后隐藏控制栏
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isPlaying) {
+        setShowVideoControls(false);
+      }
+    }, 3000);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // 判断内容类型
+  const isKnowledgeContent = type === 'knowledge' && content && 'content_type' in content;
+  const contentType = isKnowledgeContent ? (content as HealingContent).content_type : null;
+  const contentUrl = isKnowledgeContent ? (content as HealingContent).content_url : null;
+
   if (!content) return null;
 
   const title = 'title' in content ? content.title : '';
@@ -270,10 +345,97 @@ export default function ContentDetailDialog({
         <ScrollArea className="flex-1 px-6 py-4 max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
             {/* 内容区域 */}
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-              <p className="text-foreground leading-relaxed whitespace-pre-wrap text-base">
-                {contentText}
-              </p>
+            <div className="space-y-4">
+              {/* 视频播放器 */}
+              {contentType === 'video' && contentUrl && (
+                <div className="relative w-full rounded-xl overflow-hidden bg-black aspect-video group/video">
+                  <video
+                    ref={videoRef}
+                    src={contentUrl}
+                    className="w-full h-full object-contain cursor-pointer"
+                    onClick={handleVideoClick}
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onEnded={handleVideoEnded}
+                    playsInline
+                  />
+
+                  {/* 播放按钮覆盖层 */}
+                  {!isPlaying && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+                      onClick={handleVideoClick}
+                    >
+                      <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                        <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 视频控制栏 */}
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 pb-4 pt-8 transition-opacity duration-300 ${
+                      showVideoControls || !isPlaying ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    {/* 进度条 */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-white text-xs font-mono">{formatTime(currentTime)}</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={duration || 0}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="flex-1 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                      />
+                      <span className="text-white text-xs font-mono">{formatTime(duration)}</span>
+                    </div>
+
+                    {/* 播放控制按钮 */}
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={togglePlay}
+                        className="text-white hover:bg-white/20 h-8 px-2"
+                      >
+                        {isPlaying ? (
+                          <div className="flex gap-0.5">
+                            <div className="w-1 h-4 bg-white rounded-sm" />
+                            <div className="w-1 h-4 bg-white rounded-sm" />
+                          </div>
+                        ) : (
+                          <Play className="w-5 h-5" fill="currentColor" />
+                        )}
+                      </Button>
+
+                      {/* 类型标签 */}
+                      <Badge className="bg-rose-500/80 text-white border-0">
+                        <Video className="w-3 h-3 mr-1" />
+                        视频
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 文章内容展示 */}
+              {contentType === 'article' && (
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge className="bg-sky-500 text-white border-0">
+                    <FileText className="w-3 h-3 mr-1" />
+                    文章
+                  </Badge>
+                </div>
+              )}
+
+              {/* 文本内容 */}
+              <div className="prose prose-slate dark:prose-invert max-w-none">
+                <div className="text-foreground leading-relaxed whitespace-pre-wrap text-base md:text-lg">
+                  {contentText}
+                </div>
+              </div>
             </div>
 
             {/* 互动按钮 */}

@@ -1,6 +1,6 @@
 import { 
   Bookmark, Heart, Moon,
-  Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Trash2, Volume2,
+  Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2,
   Sparkles, Cloud, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,24 +8,19 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import CommunityTab from '@/components/healing/CommunityTab';
-import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
 import DiaryTab from '@/components/healing/DiaryTab';
 import KnowledgeTab from '@/components/healing/KnowledgeTab';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   createMeditationSession,
-  deleteHealingContent,
-  getHealingContents, 
   getMeditationStats,
-  toggleFavorite,
 } from '@/db/api';
-import type { HealingContent } from '@/types';
 
 type LoopMode = 'one' | 'all' | 'shuffle';
 
@@ -64,34 +59,35 @@ const itemVariants = {
 
 // scaleVariants 用于组件动画
 
-const rawMusicFiles = [
-  'Lisure .mp3',
-  '叹云兮 - 鞠婧祎.mp3',
-  '相思遥 (Live版) - 郁可唯_弦子.mp3',
-  '落了白 - 蒋雪儿Snow.J.mp3',
-] as const;
+// 音乐文件元数据配置（与 public/srcs/music 目录下的实际文件对应）
+const rawMusicFiles: Array<{
+  fileName: string;
+  category: 'relax' | 'sleep' | 'focus';
+  description: string;
+}> = [
+  { fileName: '焦虑缓解呼吸法.mp3', category: 'relax', description: '通过深呼吸练习，平复焦虑情绪，找回内心平静' },
+  { fileName: '睡前放松引导.mp3', category: 'sleep', description: '温柔的引导语音，帮助身心放松，自然进入梦乡' },
+  { fileName: '身体扫描冥想.mp3', category: 'relax', description: '逐步扫描全身感受，释放紧张与压力' },
+  { fileName: '专注力训练.mp3', category: 'focus', description: '训练大脑专注力，提升工作与学习效率' },
+  { fileName: '抑郁症康复之路.mp3', category: 'focus', description: '科学引导，帮助走出低谷，重建积极心态' },
+];
 
-// 根据环境判断基础URL
-const getBaseUrl = () => {
-  // 如果是本地开发环境
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return '/srcs/music';
-  }
-  // 上线版本使用完整URL
-  return 'https://k.playe.top/srcs/music';
-};
+// 音乐资源统一使用相对路径，Vite 构建时 public/ 目录下的文件会原样复制到 dist/
+const MUSIC_BASE_URL = '/srcs/music';
 
 const meditationTracks = rawMusicFiles
-  .map((fileName) => {
+  .map(({ fileName, category, description }) => {
     const nameWithoutExt = fileName.replace(/\.(mp3|ogg|wav|m4a)$/i, '');
     const [title, artist] = nameWithoutExt.split(' - ');
-    const url = `${getBaseUrl()}/${encodeURIComponent(fileName)}`;
+    const url = `${MUSIC_BASE_URL}/${encodeURIComponent(fileName)}`;
     return {
       id: fileName,
       url,
       title: (title || nameWithoutExt).trim(),
       artist: (artist || '').trim(),
       fileName,
+      category,
+      description,
     };
   })
   .sort((a, b) => a.fileName.localeCompare(b.fileName, 'zh-Hans-CN'));
@@ -102,9 +98,6 @@ export default function HealingPageNew() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('meditation');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [healingContent, setHealingContent] = useState<HealingContent[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedContent, setSelectedContent] = useState<HealingContent | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
@@ -117,11 +110,6 @@ export default function HealingPageNew() {
   const [meditationStats, setMeditationStats] = useState({ totalMinutes: 128, totalSessions: 12, averageRating: 0 });
   const [moodDialogOpen, setMoodDialogOpen] = useState(false);
   const [moodAfter, setMoodAfter] = useState('');
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [selectedDetailContent, setSelectedDetailContent] = useState<HealingContent | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [contentToDelete, setContentToDelete] = useState<HealingContent | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const loopModeRef = useRef<LoopMode>('all');
@@ -143,12 +131,6 @@ export default function HealingPageNew() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
-
-  useEffect(() => {
-    if (healingContent.length > 0 && !selectedContent) {
-      setSelectedContent(healingContent[0]);
-    }
-  }, [healingContent]);
 
   useEffect(() => {
     if (user) {
@@ -290,19 +272,16 @@ export default function HealingPageNew() {
     };
   }, []);
 
+  // 冥想Tab直接使用本地 meditationTracks，无需远程加载
   const loadData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === 'meditation') {
-        const contentData = await getHealingContents(activeCategory === 'all' ? undefined : activeCategory);
-        setHealingContent(contentData);
-      }
-    } catch (error) {
-      console.error('加载数据失败:', error);
-    } finally {
-      setLoading(false);
-    }
+    // 此函数保留供 ContentDetailDialog onUpdate 回调使用
   };
+
+  // 根据当前分类筛选本地音乐列表
+  const filteredTracks = useMemo(() => {
+    if (activeCategory === 'all') return meditationTracks;
+    return meditationTracks.filter((t) => t.category === activeCategory);
+  }, [activeCategory]);
 
   const loadMeditationStats = async () => {
     if (!user) return;
@@ -319,20 +298,6 @@ export default function HealingPageNew() {
         totalSessions: 0,
         averageRating: 0,
       });
-    }
-  };
-
-  const handlePlayContent = (content: HealingContent) => {
-    setSelectedContent(content);
-    setCurrentTime(0);
-    const audio = audioRef.current;
-    if (audio) {
-      wantPlayRef.current = false;
-      playLockRef.current = true;
-      audio.pause();
-      audio.currentTime = 0;
-      // 解锁在下一次事件循环，避免立即触发 play 导致 AbortError
-      setTimeout(() => { playLockRef.current = false; }, 50);
     }
   };
 
@@ -421,11 +386,12 @@ export default function HealingPageNew() {
   };
 
   const handleSaveMood = async () => {
-    if (!user || !selectedContent) return;
+    const currentTrack = meditationTracks[trackIndex];
+    if (!user || !currentTrack) return;
     try {
       await createMeditationSession({
         user_id: user.id,
-        content_id: selectedContent.id,
+        content_id: currentTrack.id,
         duration: currentTime,
         completed: true,
         mood_after: moodAfter,
@@ -441,39 +407,6 @@ export default function HealingPageNew() {
     }
   };
 
-  const handleToggleFavorite = async (contentId: string) => {
-    if (!user) {
-      toast.error('请先登录');
-      return;
-    }
-    try {
-      const isFav = await toggleFavorite(user.id, contentId);
-      setFavorites(prev => {
-        const newSet = new Set(prev);
-        isFav ? newSet.add(contentId) : newSet.delete(contentId);
-        return newSet;
-      });
-      toast.success(isFav ? '已添加到收藏' : '已取消收藏');
-    } catch (error) {
-      console.error('收藏失败:', error);
-      toast.error('操作失败');
-    }
-  };
-
-  const handleDeleteContent = async () => {
-    if (!contentToDelete) return;
-    try {
-      await deleteHealingContent(contentToDelete.id);
-      setHealingContent(prev => prev.filter(c => c.id !== contentToDelete.id));
-      toast.success('删除成功');
-      setDeleteDialogOpen(false);
-      setContentToDelete(null);
-    } catch (error) {
-      console.error('删除失败:', error);
-      toast.error('删除失败');
-    }
-  };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -482,6 +415,8 @@ export default function HealingPageNew() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
+      {/* 音频元素始终挂载，确保 audioRef 在所有 useEffect 中可用 */}
+      <audio ref={(el) => { audioRef.current = el; }} preload="auto" className="hidden" />
       <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
        
         {/* 导航系统 - 冥想、树洞、日记、知识 */}
@@ -592,10 +527,10 @@ export default function HealingPageNew() {
                     transition={{ delay: 0.3 }}
                   >
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                      {selectedContent?.title || '5分钟呼吸导引'}
+                      {meditationTracks[trackIndex]?.title || '冥想音乐'}
                     </h2>
                     <p className="text-indigo-200/80 text-sm">
-                      {selectedContent?.description || '跟随圆圈来缓呼吸'}
+                      {meditationTracks[trackIndex]?.description || '让音乐带你进入冥想状态'}
                     </p>
                     {currentTrackLabel && (
                       <motion.p 
@@ -690,7 +625,6 @@ export default function HealingPageNew() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.6 }}
                   >
-                    <audio ref={(el) => { audioRef.current = el; }} preload="auto" />
                     
                     {/* 上一首 */}
                     <motion.button
@@ -783,13 +717,17 @@ export default function HealingPageNew() {
 
               {/* 内容列表 - 新设计 */}
               <div className="space-y-3">
-                {healingContent.slice(0, 4).map((content, index) => {
+                {filteredTracks.map((track, index) => {
                   const gradient = CONTENT_GRADIENTS[index % CONTENT_GRADIENTS.length];
-                  const isActive = selectedContent?.id === content.id;
+                  const globalIndex = meditationTracks.findIndex((t) => t.id === track.id);
+                  const isActive = trackIndex === globalIndex;
                   
+                  // 分类显示名称
+                  const categoryLabels: Record<string, string> = { relax: '放松', sleep: '睡眠', focus: '专注' };
+
                   return (
                     <motion.div
-                      key={content.id}
+                      key={track.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.8 + index * 0.1 }}
@@ -797,8 +735,8 @@ export default function HealingPageNew() {
                     >
                       <Card
                         onClick={() => {
-                          setSelectedDetailContent(content);
-                          setDetailDialogOpen(true);
+                          // 点击卡片切换到该曲目
+                          if (globalIndex !== -1) setTrackIndex(globalIndex);
                         }}
                         className={`cursor-pointer transition-all duration-300 overflow-hidden ${
                           isActive
@@ -808,32 +746,54 @@ export default function HealingPageNew() {
                       >
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            {/* 播放按钮 */}
+                            {/* 播放/当前指示按钮 */}
                             <motion.div 
                               whileHover={{ scale: 1.1, rotate: 5 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handlePlayContent(content);
+                                if (globalIndex !== -1) {
+                                  if (isActive) {
+                                    togglePlay();
+                                  } else {
+                                    setTrackIndex(globalIndex);
+                                    wantPlayRef.current = true;
+                                  }
+                                }
                               }}
                               className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg cursor-pointer relative overflow-hidden`}
                             >
                               <div className="absolute inset-0 bg-white/20 opacity-0 hover:opacity-100 transition-opacity" />
-                              <Play className="w-6 h-6 text-white ml-0.5 relative z-10" fill="white" />
+                              {isActive && isPlaying ? (
+                                <span className="flex gap-0.5 relative z-10">
+                                  <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite]" />
+                                  <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite_0.1s]" />
+                                  <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite_0.2s]" />
+                                </span>
+                              ) : (
+                                <Play className="w-6 h-6 text-white ml-0.5 relative z-10" fill="white" />
+                              )}
                             </motion.div>
                             
                             {/* 内容信息 */}
                             <div>
-                              <h4 className="font-semibold text-foreground mb-0.5">{content.title}</h4>
+                              <h4 className="font-semibold text-foreground mb-0.5">{track.title}</h4>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span className="px-2 py-0.5 rounded-full bg-muted">{content.category}</span>
-                                <span>•</span>
-                                <span>{content.duration ? `${Math.floor(content.duration / 60)}:00` : '5:00'}</span>
+                                <span className="px-2 py-0.5 rounded-full bg-muted">{categoryLabels[track.category] ?? track.category}</span>
+                                {track.artist && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{track.artist}</span>
+                                  </>
+                                )}
                               </div>
+                              {track.description && (
+                                <p className="text-xs text-muted-foreground/70 mt-0.5 line-clamp-1">{track.description}</p>
+                              )}
                             </div>
                           </div>
 
-                          {/* 操作按钮 */}
+                          {/* 当前播放指示 */}
                           <div className="flex items-center gap-1">
                             {isActive && (
                               <motion.div
@@ -844,35 +804,17 @@ export default function HealingPageNew() {
                                 <Volume2 className="w-4 h-4 text-indigo-600 animate-pulse" />
                               </motion.div>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleFavorite(content.id);
-                              }}
-                              className="w-9 h-9 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
-                            >
-                              <Bookmark className={`w-4 h-4 ${favorites.has(content.id) ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground'}`} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setContentToDelete(content);
-                                setDeleteDialogOpen(true);
-                              }}
-                              className="w-9 h-9 rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-rose-500" />
-                            </Button>
                           </div>
                         </CardContent>
                       </Card>
                     </motion.div>
                   );
                 })}
+                {filteredTracks.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    该分类暂无音乐
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -972,55 +914,6 @@ export default function HealingPageNew() {
           </DialogContent>
         </Dialog>
 
-        {/* 删除确认对话框 */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent className="w-[90vw] max-w-md rounded-3xl border-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl">
-            <DialogHeader className="text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-                className="w-14 h-14 mx-auto mb-3 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center"
-              >
-                <Trash2 className="w-7 h-7 text-rose-500" />
-              </motion.div>
-              <DialogTitle className="text-xl font-bold text-foreground">
-                确认删除
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground mt-2">
-                你确定要删除「{contentToDelete?.title}」吗？<br />此操作不可恢复。
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-3 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setContentToDelete(null);
-                }}
-                className="flex-1 rounded-xl border-slate-200 hover:bg-slate-100 transition-all"
-              >
-                取消
-              </Button>
-              <Button
-                onClick={handleDeleteContent}
-                className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:opacity-90 text-white shadow-lg shadow-rose-500/25 transition-all"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                确认删除
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* 冥想内容详情弹窗 */}
-        <ContentDetailDialog
-          open={detailDialogOpen}
-          onOpenChange={setDetailDialogOpen}
-          content={selectedDetailContent}
-          type="healing"
-          onUpdate={loadData}
-        />
       </div>
     </div>
   );

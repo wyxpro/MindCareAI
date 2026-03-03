@@ -1,5 +1,5 @@
-import { Award, Bookmark, 
-  BookOpen, Clock, Eye, FileText, Headphones, Play, Search, Sparkles, ThumbsUp,
+import { Award, Bookmark,
+  BookOpen, Clock, Eye, FileText, Play, Search, Sparkles, ThumbsUp,
   TrendingUp, Video, Zap
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -8,14 +8,13 @@ import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  getHealingContents, 
+import {
+  getHealingContents,
   getUserFavorites,
   incrementLikeCount,
-  toggleFavorite, 
+  toggleFavorite,
 } from '@/db/api';
 import type { HealingContent } from '@/types';
 
@@ -23,19 +22,16 @@ const CONTENT_TYPES = [
   { id: 'all', label: '全部', icon: BookOpen, gradient: 'from-violet-500 to-fuchsia-500' },
   { id: 'article', label: '文章', icon: FileText, gradient: 'from-sky-500 to-cyan-500' },
   { id: 'video', label: '视频', icon: Video, gradient: 'from-rose-500 to-pink-500' },
-  { id: 'audio', label: '音频', icon: Headphones, gradient: 'from-emerald-500 to-teal-500' },
 ];
 
 const TYPE_ICONS: Record<string, any> = {
   article: FileText,
   video: Video,
-  audio: Headphones,
 };
 
 const TYPE_COLORS: Record<string, string> = {
   article: 'from-sky-500 to-cyan-500',
   video: 'from-rose-500 to-pink-500',
-  audio: 'from-emerald-500 to-teal-500',
 };
 
 export default function KnowledgeTab() {
@@ -66,9 +62,9 @@ export default function KnowledgeTab() {
         user ? getUserFavorites(user.id) : Promise.resolve([]),
       ]);
       
-      // 过滤出知识库内容
-      const knowledgeContents = contentsData.filter(c => 
-        c.content_type === 'article' || c.content_type === 'video' || c.content_type === 'audio'
+      // 过滤出知识库内容（仅文章和视频，排除音频）
+      const knowledgeContents = contentsData.filter(c =>
+        c.content_type === 'article' || c.content_type === 'video'
       );
       
       setContents(knowledgeContents);
@@ -249,15 +245,15 @@ export default function KnowledgeTab() {
         </Button>
       </div>
 
-      {/* 内容列表 */}
-      <div className="space-y-4">
+      {/* 内容列表 - 卡片式布局，每行2个 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {loading ? (
-          <div className="text-center py-12">
+          <div className="col-span-full text-center py-12">
             <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-muted-foreground mt-4">加载中...</p>
           </div>
         ) : filteredContents.length === 0 ? (
-          <Card className="glass border-border shadow-sm">
+          <Card className="col-span-full glass border-border shadow-sm">
             <CardContent className="p-12 text-center">
               <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <Search className="w-10 h-10 text-muted-foreground" />
@@ -276,119 +272,107 @@ export default function KnowledgeTab() {
             return (
               <Card
                 key={content.id}
-                className="glass shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-border cursor-pointer animate-fade-in-up group"
+                className="glass shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-border cursor-pointer animate-fade-in-up group flex flex-col"
                 style={{ animationDelay: `${index * 0.05}s` }}
                 onClick={() => handleContentClick(content)}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-6">
-                    {/* 图标区域 */}
-                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-10 h-10 text-white" />
+                <CardContent className="p-5 flex flex-col flex-1">
+                  {/* 顶部：图标和类型标签 */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-7 h-7 text-white" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isPopular && (
+                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-glow text-xs">
+                          <Zap className="w-3 h-3 mr-1" fill="currentColor" />
+                          热门
+                        </Badge>
+                      )}
+                      <Badge
+                        variant="outline"
+                        className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs`}
+                      >
+                        {content.content_type === 'article' && '文章'}
+                        {content.content_type === 'video' && '视频'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* 标题 */}
+                  <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[48px]">
+                    {content.title}
+                  </h3>
+
+                  {/* 描述 */}
+                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+                    {content.description}
+                  </p>
+
+                  {/* 元信息 */}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mb-4">
+                    {content.author && (
+                      <span className="flex items-center gap-1">
+                        <Award className="w-3 h-3" />
+                        {content.author}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      {formatNumber(content.view_count || 0)}
+                    </span>
+                    {content.duration && content.duration > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {Math.floor(content.duration / 60)}分钟
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 操作栏 */}
+                  <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(content.id);
+                        }}
+                        className="text-muted-foreground hover:text-pink-500 transition-all duration-300 hover:scale-110 group/like h-8 px-2"
+                      >
+                        <ThumbsUp className="w-4 h-4 mr-1 group-hover/like:fill-current" />
+                        <span className="text-xs font-medium">{content.like_count || 0}</span>
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-blue-500 transition-all duration-300 hover:scale-110 group/play h-8 px-2"
+                      >
+                        <Play className="w-4 h-4 mr-1 group-hover/play:fill-current" />
+                        <span className="text-xs">{content.content_type === 'article' ? '阅读' : '观看'}</span>
+                      </Button>
                     </div>
 
-                    {/* 内容区域 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                              {content.title}
-                            </h3>
-                            
-                            {isPopular && (
-                              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-glow">
-                                <Zap className="w-3 h-3 mr-1" fill="currentColor" />
-                                热门
-                              </Badge>
-                            )}
-                            
-                            <Badge 
-                              variant="outline" 
-                              className={`bg-gradient-to-r ${gradient} text-white border-0`}
-                            >
-                              {content.content_type === 'article' && '文章'}
-                              {content.content_type === 'video' && '视频'}
-                              {content.content_type === 'audio' && '音频'}
-                            </Badge>
-                          </div>
-                          
-                          <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mb-3">
-                            {content.description}
-                          </p>
-
-                          {/* 元信息 */}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                            {content.author && (
-                              <span className="flex items-center gap-1">
-                                <Award className="w-3 h-3" />
-                                {content.author}
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1">
-                              <Eye className="w-3 h-3" />
-                              {formatNumber(content.view_count || 0)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <ThumbsUp className="w-3 h-3" />
-                              {formatNumber(content.like_count || 0)}
-                            </span>
-                            {content.duration && content.duration > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {Math.floor(content.duration / 60)}分钟
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* 收藏按钮 */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleFavorite(content.id);
-                          }}
-                          className={`flex-shrink-0 transition-all duration-300 hover:scale-110 ${
-                            isFavorited 
-                              ? 'text-amber-500 hover:text-amber-600' 
-                              : 'text-muted-foreground hover:text-amber-500'
-                          }`}
-                        >
-                          <Bookmark 
-                            className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} 
-                          />
-                        </Button>
-                      </div>
-
-                      {/* 操作栏 */}
-                      <div className="flex items-center gap-4 pt-4 border-t border-border">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLike(content.id);
-                          }}
-                          className="text-muted-foreground hover:text-pink-500 transition-all duration-300 hover:scale-110 group/like"
-                        >
-                          <ThumbsUp className="w-4 h-4 mr-2 group-hover/like:fill-current" />
-                          <span className="font-medium">{content.like_count || 0}</span>
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:text-blue-500 transition-all duration-300 hover:scale-110 group/play"
-                        >
-                          <Play className="w-4 h-4 mr-2 group-hover/play:fill-current" />
-                          {content.content_type === 'article' ? '阅读' : content.content_type === 'video' ? '观看' : '收听'}
-                        </Button>
-
-
-                      </div>
-                    </div>
+                    {/* 收藏按钮 */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleFavorite(content.id);
+                      }}
+                      className={`transition-all duration-300 hover:scale-110 h-8 px-2 ${
+                        isFavorited
+                          ? 'text-amber-500 hover:text-amber-600'
+                          : 'text-muted-foreground hover:text-amber-500'
+                      }`}
+                    >
+                      <Bookmark
+                        className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`}
+                      />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
