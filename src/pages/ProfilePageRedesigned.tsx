@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { Activity, 
-  ArrowRight, Calendar, Camera, ChevronRight, Crown, 
-  Edit, FileText, Fingerprint, HelpCircle, ImageIcon, Loader2, LogOut, 
-  Settings, ShieldCheck, Sparkles, Stethoscope, Upload, User, Watch
+import { 
+  Camera, ChevronRight, Crown, 
+  Edit, FileText, HelpCircle, ImageIcon, Loader2, LogOut, 
+  Mail, MessageSquare, Phone, Ruler, Scale, Settings, ShieldCheck, Sparkles, Stethoscope, Upload, User, Watch
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getProfile, useAuth } from '@/contexts/AuthContext';
 import { getAssessments, getEmotionDiaries, updateProfile } from '@/db/api';
 import { supabase } from '@/db/supabase';
@@ -48,6 +49,12 @@ export default function ProfilePageRedesigned() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState('other');
+  const [age, setAge] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [wechat, setWechat] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
   const [saving, setSaving] = useState(false);
   
   // 头像和背景状态 - 默认使用海浪头像 (avatar5) 和晚霞粉背景 (bg3)
@@ -56,7 +63,7 @@ export default function ProfilePageRedesigned() {
   const [selectedBackground, setSelectedBackground] = useState<string>('bg3');
   const [customBackgroundUrl, setCustomBackgroundUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [activeEditTab, setActiveEditTab] = useState('avatar');
+  const [activeEditTab, setActiveEditTab] = useState('profile');
   
   const [doctorDialogOpen, setDoctorDialogOpen] = useState(false);
   const [doctorUsername, setDoctorUsername] = useState('');
@@ -89,6 +96,28 @@ export default function ProfilePageRedesigned() {
     if (profile) {
       setFullName(profile.full_name || '');
       setPhone(profile.phone || '');
+      setGender((profile.gender as string) || 'other');
+      setWechat(profile.wechat || '');
+      setProfileEmail(profile.email || '');
+      // 计算年龄
+      if (profile.birth_date) {
+        const today = new Date();
+        const birth = new Date(profile.birth_date);
+        let calcAge = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) calcAge--;
+        setAge(calcAge.toString());
+      }
+      // 从bio中加载身高体重
+      if (profile.bio) {
+        try {
+          const bioData = JSON.parse(profile.bio);
+          if (bioData.height) setHeight(bioData.height.toString());
+          if (bioData.weight) setWeight(bioData.weight.toString());
+        } catch {
+          // bio 不是JSON格式，忽略
+        }
+      }
       // 加载保存的个性化设置
       if (profile.avatar_url) {
         // 检查是否是预设头像格式 (preset:avatar2)
@@ -210,6 +239,19 @@ export default function ProfilePageRedesigned() {
       const updates: Partial<Profile> = {};
       if (fullName) updates.full_name = fullName;
       if (phone) updates.phone = phone;
+      if (gender) updates.gender = gender;
+      if (wechat) updates.wechat = wechat;
+      if (profileEmail) updates.email = profileEmail;
+      // 将身高体重存入bio字段（JSON格式）
+      if (height || weight) {
+        let bioData: Record<string, unknown> = {};
+        try {
+          if (profile?.bio) bioData = JSON.parse(profile.bio);
+        } catch { /* empty */ }
+        if (height) bioData.height = Number(height);
+        if (weight) bioData.weight = Number(weight);
+        updates.bio = JSON.stringify(bioData);
+      }
       if (avatarUrlToSave) updates.avatar_url = avatarUrlToSave;
       if (backgroundUrlToSave) updates.background_url = backgroundUrlToSave;
       if (selectedBackground) updates.selected_background = selectedBackground;
@@ -301,7 +343,6 @@ export default function ProfilePageRedesigned() {
       title: '功能',
       items: [
         { icon: Watch, label: '手环数据', value: '智能健康监测', color: 'text-violet-600', bgColor: 'bg-violet-50', onClick: () => navigate('/profile/smart-band') },
-        { icon: User, label: '个人信息', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
         { icon: Sparkles, label: '疗愈计划', value: '专属定制方案', color: 'text-indigo-600', bgColor: 'bg-indigo-50', onClick: () => navigate('/profile/healing-plan') },
         { icon: Stethoscope, label: '对接医生', value: '专业专家问诊', color: 'text-rose-600', bgColor: 'bg-rose-50', onClick: () => navigate('/profile/connect-doctor') },
         { icon: Crown, label: '会员订阅', value: '开通享特权', color: 'text-amber-600', bgColor: 'bg-amber-50', onClick: () => navigate('/profile/subscription') },
@@ -587,7 +628,11 @@ export default function ProfilePageRedesigned() {
           </DialogHeader>
 
           <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="mt-4">
-            <TabsList className="grid w-full grid-cols-2 p-1 bg-slate-100 rounded-xl">
+            <TabsList className="grid w-full grid-cols-3 p-1 bg-slate-100 rounded-xl">
+              <TabsTrigger value="profile" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <User className="w-3.5 h-3.5 mr-1.5" />
+                基本信息
+              </TabsTrigger>
               <TabsTrigger value="avatar" className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Camera className="w-3.5 h-3.5 mr-1.5" />
                 头像设置
@@ -738,6 +783,151 @@ export default function ProfilePageRedesigned() {
                       )}
                     </motion.button>
                   ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* 基本信息 Tab */}
+            <TabsContent value="profile" className="space-y-4 mt-4">
+              {/* 身份信息 */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">身份信息</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="pf-full-name" className="text-sm font-medium text-slate-700">真实姓名</Label>
+                  <Input
+                    id="pf-full-name"
+                    placeholder="请输入您的姓名"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">性别</Label>
+                  <RadioGroup
+                    value={gender}
+                    onValueChange={setGender}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="pf-male" />
+                      <Label htmlFor="pf-male" className="text-sm cursor-pointer">👨 男</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="pf-female" />
+                      <Label htmlFor="pf-female" className="text-sm cursor-pointer">👩 女</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="other" id="pf-other" />
+                      <Label htmlFor="pf-other" className="text-sm cursor-pointer">其他</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium text-slate-700">年龄</Label>
+                  <Input
+                    type="number"
+                    placeholder="请输入年龄"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="h-10 rounded-xl text-sm"
+                    min="1"
+                    max="120"
+                  />
+                </div>
+              </div>
+
+              {/* 身体数据 */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-md bg-emerald-100 flex items-center justify-center">
+                    <Scale className="w-3.5 h-3.5 text-emerald-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">身体数据</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pf-height" className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      <Ruler className="w-3.5 h-3.5" /> 身高 (cm)
+                    </Label>
+                    <Input
+                      id="pf-height"
+                      type="number"
+                      placeholder="175"
+                      value={height}
+                      onChange={(e) => setHeight(e.target.value)}
+                      className="h-10 rounded-xl text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pf-weight" className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                      <Scale className="w-3.5 h-3.5" /> 体重 (kg)
+                    </Label>
+                    <Input
+                      id="pf-weight"
+                      type="number"
+                      placeholder="65"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      className="h-10 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 联系方式 */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-md bg-purple-100 flex items-center justify-center">
+                    <Phone className="w-3.5 h-3.5 text-purple-600" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">联系方式</span>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pf-phone" className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5" /> 手机号
+                  </Label>
+                  <Input
+                    id="pf-phone"
+                    type="tel"
+                    placeholder="请输入手机号"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pf-wechat" className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                    <MessageSquare className="w-3.5 h-3.5" /> 微信号
+                  </Label>
+                  <Input
+                    id="pf-wechat"
+                    placeholder="请输入微信号"
+                    value={wechat}
+                    onChange={(e) => setWechat(e.target.value)}
+                    className="h-10 rounded-xl text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pf-email" className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                    <Mail className="w-3.5 h-3.5" /> 邮箱
+                  </Label>
+                  <Input
+                    id="pf-email"
+                    type="email"
+                    placeholder="请输入邮箱"
+                    value={profileEmail}
+                    onChange={(e) => setProfileEmail(e.target.value)}
+                    className="h-10 rounded-xl text-sm"
+                  />
                 </div>
               </div>
             </TabsContent>
