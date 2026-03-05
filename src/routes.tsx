@@ -14,6 +14,7 @@ import PersonalInfoPage from './pages/PersonalInfoPage';
 import PrivacySettingsPage from './pages/PrivacySettingsPage';
 import ProfilePageRedesigned from './pages/ProfilePageRedesigned';
 import RecordPageNew from './pages/RecordPageNew';
+import SmartBandPage from './pages/SmartBandPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import VoiceTest from './components/test/VoiceTest';
 
@@ -55,6 +56,12 @@ const routes: RouteConfig[] = [
     name: '个人信息',
     path: '/profile/personal',
     element: <PersonalInfoPage />,
+    visible: false,
+  },
+  {
+    name: '手环数据',
+    path: '/profile/smart-band',
+    element: <SmartBandPage />,
     visible: false,
   },
   {

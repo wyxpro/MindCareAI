@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Activity, 
   ArrowRight, Calendar, Camera, ChevronRight, Crown, 
   Edit, FileText, Fingerprint, HelpCircle, ImageIcon, Loader2, LogOut, 
-  Settings, ShieldCheck, Sparkles, Stethoscope, Upload, User
+  Settings, ShieldCheck, Sparkles, Stethoscope, Upload, User, Watch
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -300,6 +300,7 @@ export default function ProfilePageRedesigned() {
     {
       title: '功能',
       items: [
+        { icon: Watch, label: '手环数据', value: '智能健康监测', color: 'text-violet-600', bgColor: 'bg-violet-50', onClick: () => navigate('/profile/smart-band') },
         { icon: User, label: '个人信息', value: '完善身体数据', color: 'text-blue-600', bgColor: 'bg-blue-50', onClick: () => navigate('/profile/personal') },
         { icon: Sparkles, label: '疗愈计划', value: '专属定制方案', color: 'text-indigo-600', bgColor: 'bg-indigo-50', onClick: () => navigate('/profile/healing-plan') },
         { icon: Stethoscope, label: '对接医生', value: '专业专家问诊', color: 'text-rose-600', bgColor: 'bg-rose-50', onClick: () => navigate('/profile/connect-doctor') },

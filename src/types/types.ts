@@ -63,9 +63,32 @@ export interface WearableData {
   steps?: number;
   calories?: number;
   stress_level?: number;
+  blood_oxygen?: number;
+  temperature?: number;
   data_json?: any;
   created_at: string;
 }
+
+// 智能手环设备信息
+export interface SmartBandDevice {
+  id: string;
+  name: string;
+  manufacturer?: string;
+  model?: string;
+  rssi?: number; // 信号强度
+  gatt?: BluetoothRemoteGATTServer;
+}
+
+// 手环连接状态
+export type BandConnectionStatus = 
+  | 'disconnected' 
+  | 'scanning' 
+  | 'connecting' 
+  | 'connected' 
+  | 'connection_failed';
+
+// 时间维度类型
+export type TimeRange = 'day' | 'week' | 'month';
 
 export interface HealingContent {
   id: string;

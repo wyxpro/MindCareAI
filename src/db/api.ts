@@ -168,10 +168,66 @@ export const getWearableData = async (userId: string, limit = 30) => {
   return Array.isArray(data) ? data : [];
 };
 
+export const getWearableDataByDateRange = async (
+  userId: string,
+  startDate: string,
+  endDate: string
+) => {
+  const { data, error } = await supabase
+    .from('wearable_data')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('record_date', startDate)
+    .lte('record_date', endDate)
+    .order('record_date', { ascending: true });
+  
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+};
+
+export const getLatestWearableData = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('wearable_data')
+    .select('*')
+    .eq('user_id', userId)
+    .order('record_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as WearableData | null;
+};
+
 export const createWearableData = async (wearableData: Partial<WearableData>) => {
   const { data, error } = await supabase
     .from('wearable_data')
     .insert(wearableData)
+    .select()
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as WearableData;
+};
+
+export const updateWearableData = async (
+  id: string,
+  updates: Partial<WearableData>
+) => {
+  const { data, error } = await supabase
+    .from('wearable_data')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as WearableData;
+};
+
+export const upsertWearableData = async (wearableData: Partial<WearableData>) => {
+  const { data, error } = await supabase
+    .from('wearable_data')
+    .upsert(wearableData, { onConflict: 'user_id,record_date' })
     .select()
     .maybeSingle();
   
