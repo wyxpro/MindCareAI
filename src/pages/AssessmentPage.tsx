@@ -231,28 +231,29 @@ export default function AssessmentPage() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* 顶部标题 */}
-      <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
+      <div className="bg-primary text-primary-foreground p-4 md:p-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold flex items-center">
-            <Brain className="w-5 h-5 mr-2" />
+          <h1 className="text-xl md:text-2xl font-bold flex items-center">
+            <Brain className="w-5 h-5 md:w-6 md:h-6 mr-2" />
             AI心理评估
           </h1>
-          <p className="text-sm text-primary-foreground/90">多模态情绪识别与分析</p>
+          <p className="text-sm md:text-base text-primary-foreground/90">多模态情绪识别与分析</p>
         </div>
         <Button
           variant="secondary"
           size="sm"
           onClick={handleGenerateReport}
           disabled={loading || messages.length < 5}
+          className="md:text-base md:px-6 md:py-5"
         >
-          <FileText className="w-4 h-4 mr-1" />
+          <FileText className="w-4 h-4 md:w-5 md:h-5 mr-1" />
           生成报告
         </Button>
       </div>
 
       {/* 对话区域 */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="max-w-3xl mx-auto space-y-4 pb-4">
+      <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
+        <div className="max-w-3xl md:max-w-5xl mx-auto space-y-4 pb-4">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -295,16 +296,17 @@ export default function AssessmentPage() {
       </ScrollArea>
 
       {/* 输入区域 */}
-      <div className="border-t border-border p-4 bg-card">
-        <div className="max-w-3xl mx-auto">
+      <div className="border-t border-border p-4 md:p-6 bg-card">
+        <div className="max-w-3xl md:max-w-5xl mx-auto">
           <div className="flex gap-2 mb-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={loading}
+              className="md:text-base md:px-4 md:py-5"
             >
-              <ImageIcon className="w-4 h-4 mr-1" />
+              <ImageIcon className="w-4 h-4 md:w-5 md:h-5 mr-1" />
               图片
             </Button>
             <Button
@@ -312,8 +314,9 @@ export default function AssessmentPage() {
               size="sm"
               onClick={handleVoiceRecord}
               disabled={loading}
+              className="md:text-base md:px-4 md:py-5"
             >
-              <Mic className="w-4 h-4 mr-1" />
+              <Mic className="w-4 h-4 md:w-5 md:h-5 mr-1" />
               语音
             </Button>
             <input
@@ -343,9 +346,9 @@ export default function AssessmentPage() {
               onClick={handleSendMessage}
               disabled={loading || !inputText.trim()}
               size="icon"
-              className="h-auto"
+              className="h-auto md:w-14 md:h-14"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-5 h-5 md:w-6 md:h-6" />
             </Button>
           </div>
         </div>

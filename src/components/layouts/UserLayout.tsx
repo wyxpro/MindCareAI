@@ -1,6 +1,8 @@
 import { Activity, Heart, Home, User } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { motion } from 'framer-motion';
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -15,36 +17,120 @@ const navItems = [
 
 export default function UserLayout({ children }: UserLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
+  const handleLogoClick = () => {
+    // 跳转到官网首页
+    window.location.href = '/index.html';
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background">
+      {/* 桌面端左侧导航栏 */}
+      {!isMobile && (
+        <aside className="fixed left-0 top-0 bottom-0 w-64 border-r bg-card/50 backdrop-blur-xl z-50 flex flex-col">
+          {/* Logo区域 */}
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLogoClick}
+            className="p-6 border-b cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">
+                  灵愈AI
+                </span>
+                <p className="text-xs text-muted-foreground">智能心理健康助手</p>
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* 导航菜单 */}
+          <nav className="flex-1 p-4 space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                >
+                  <motion.div
+                    whileHover={{ x: 4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative overflow-hidden',
+                      isActive 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    )}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeNav"
+                        className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500"
+                        initial={false}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      />
+                    )}
+                    <Icon className={cn("w-5 h-5 relative z-10", isActive && "drop-shadow-sm")} />
+                    <span className={cn("text-sm font-medium relative z-10", isActive && "drop-shadow-sm")}>
+                      {item.label}
+                    </span>
+                  </motion.div>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* 底部装饰 */}
+          <div className="p-4 border-t">
+            <div className="px-4 py-3 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+              <p className="text-xs text-muted-foreground text-center">
+                © 2026 灵愈AI
+              </p>
+            </div>
+          </div>
+        </aside>
+      )}
+
       {/* 主内容区 */}
-      <main className="flex-1 pb-16 overflow-auto">
+      <main className={cn(
+        "flex-1 overflow-auto",
+        isMobile ? "pb-16" : "ml-64"
+      )}>
         {children}
       </main>
 
-      {/* 底部导航栏 */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-        <div className="flex items-center justify-around h-16 max-w-screen-xl mx-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  'flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors',
-                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {/* 移动端底部导航栏 */}
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
+          <div className="flex items-center justify-around h-16 max-w-screen-xl mx-auto">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    'flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors',
+                    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-xs">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

@@ -370,12 +370,12 @@ export default function ProfilePageRedesigned() {
   const currentBg = PRESET_BACKGROUNDS.find(b => b.id === selectedBackground);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 md:pb-0 pb-24">
       {/* 紧凑美化后的顶部 Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`relative px-5 pt-8 pb-16 overflow-hidden ${!customBackgroundUrl && currentBg ? `bg-gradient-to-br ${currentBg.gradient}` : 'bg-primary'}`}
+        className={`relative px-5 md:px-8 pt-8 md:pt-12 pb-16 md:pb-20 overflow-hidden ${!customBackgroundUrl && currentBg ? `bg-gradient-to-br ${currentBg.gradient}` : 'bg-primary'}`}
         style={getCurrentBackground()}
       >
         {/* 动态背景装饰 */}
@@ -398,9 +398,9 @@ export default function ProfilePageRedesigned() {
           />
         </div>
         
-        <div className="max-w-md mx-auto relative z-10">
+        <div className="max-w-md md:max-w-4xl mx-auto relative z-10">
           {/* 用户信息卡片 - 按照图片样式重新排版 */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 md:gap-6">
             {/* 左侧：头像 */}
             <motion.div 
               whileHover={{ scale: 1.05 }}
@@ -408,22 +408,22 @@ export default function ProfilePageRedesigned() {
             >
               <div className="absolute inset-0 bg-white/30 rounded-full blur-md scale-110" />
               <div className="relative">
-                <Avatar className="w-16 h-16 border-[3px] border-white/80 shadow-xl bg-white">
+                <Avatar className="w-16 h-16 md:w-20 md:h-20 border-[3px] border-white/80 shadow-xl bg-white">
                   {typeof currentAvatar === 'string' ? (
                     <AvatarImage src={currentAvatar} alt="头像" className="object-cover" />
                   ) : currentAvatar && typeof currentAvatar === 'object' ? (
-                    <AvatarFallback className={`${currentAvatar.bg} text-2xl`}>
+                    <AvatarFallback className={`${currentAvatar.bg} text-2xl md:text-3xl`}>
                       {currentAvatar.emoji}
                     </AvatarFallback>
                   ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-primary text-xl font-black">
+                    <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-primary text-xl md:text-2xl font-black">
                       {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 {/* 在线状态指示器 */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 border-[2px] border-white rounded-full flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 md:w-6 md:h-6 bg-emerald-500 border-[2px] border-white rounded-full flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-white rounded-full" />
                 </div>
               </div>
             </motion.div>
@@ -432,7 +432,7 @@ export default function ProfilePageRedesigned() {
             <div className="flex-1 min-w-0 pt-1">
               {/* 用户名和认证徽章 */}
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-bold text-white truncate drop-shadow-sm">
+                <h2 className="text-xl md:text-2xl font-bold text-white truncate drop-shadow-sm">
                   {profile?.username || '灵愈用户'}
                 </h2>
                 <motion.div
@@ -480,13 +480,13 @@ export default function ProfilePageRedesigned() {
         </div>
       </motion.div>
 
-      <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-3">
+      <div className="max-w-md md:max-w-4xl mx-auto px-4 md:px-6 -mt-8 relative z-20 space-y-3 md:space-y-4">
         {/* 重新设计的健康报告卡片 - 玻璃透明效果 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl p-5 shadow-xl relative overflow-hidden group cursor-pointer bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/50 dark:border-slate-700/50"
+          className="rounded-2xl md:rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden group cursor-pointer bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/50 dark:border-slate-700/50"
           onClick={() => {
             if (reportLoading) return;
             setReportLoading(true);
@@ -519,11 +519,11 @@ export default function ProfilePageRedesigned() {
           )}
 
           <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 md:gap-4">
               {/* 图标容器 */}
               <motion.div 
                 whileHover={{ rotate: 5, scale: 1.05 }}
-                className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
+                className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-lg ${
                   reportLoading 
                     ? 'bg-gradient-to-br from-indigo-400 to-purple-500' 
                     : 'bg-gradient-to-br from-indigo-500 to-purple-600'
@@ -534,20 +534,20 @@ export default function ProfilePageRedesigned() {
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   >
-                    <Loader2 className="w-6 h-6 text-white" />
+                    <Loader2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </motion.div>
                 ) : (
-                  <FileText className="w-6 h-6 text-white" />
+                  <FileText className="w-6 h-6 md:w-7 md:h-7 text-white" />
                 )}
               </motion.div>
               
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-800 dark:text-slate-100 font-bold text-base">
+                  <span className="text-slate-800 dark:text-slate-100 font-bold text-base md:text-lg">
                     {reportLoading ? '生成报告中...' : '查看健康报告'}
                   </span>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+                <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">
                   {reportLoading ? 'AI正在分析您的健康数据' : '多模态评估结果与康复建议'}
                 </p>
               </div>
@@ -561,30 +561,30 @@ export default function ProfilePageRedesigned() {
 
         {/* 菜单列表（仅显示功能项，无分组标题） */}
         {menuSections.map((section) => (
-          <Card key={section.title} className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+          <Card key={section.title} className="border-0 shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
             <CardContent className="p-0">
               {section.items.map((item, index) => (
                 <div
                   key={item.label}
                   onClick={item.onClick}
-                  className={`flex items-center gap-4 p-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
+                  className={`flex items-center gap-4 md:gap-5 p-5 md:p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
                     index !== section.items.length - 1 ? 'border-b border-slate-50 dark:border-slate-800' : ''
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-xl ${item.bgColor} dark:bg-slate-800 flex items-center justify-center flex-shrink-0`}>
-                    <item.icon className={`w-4 h-4 ${item.color} dark:text-slate-300`} />
+                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl ${item.bgColor} dark:bg-slate-800 flex items-center justify-center flex-shrink-0`}>
+                    <item.icon className={`w-4 h-4 md:w-5 md:h-5 ${item.color} dark:text-slate-300`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    <div className="text-sm md:text-base font-bold text-slate-700 dark:text-slate-200">
                       {item.label}
                     </div>
                     {item.value && (
-                      <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      <div className="text-[10px] md:text-xs text-slate-400 font-medium mt-0.5">
                         {item.value}
                       </div>
                     )}
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-300 flex-shrink-0" />
                 </div>
               ))}
             </CardContent>
@@ -595,9 +595,9 @@ export default function ProfilePageRedesigned() {
         <Button
           onClick={handleLogout}
           variant="ghost"
-          className="w-full h-14 rounded-[32px] text-rose-500 font-bold hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30 transition-all"
+          className="w-full h-14 md:h-16 rounded-[32px] text-rose-500 font-bold hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30 transition-all md:text-base"
         >
-          <LogOut className="w-5 h-5 mr-2" />
+          <LogOut className="w-5 h-5 md:w-6 md:h-6 mr-2" />
           退出当前账号
         </Button>
 
@@ -614,7 +614,7 @@ export default function ProfilePageRedesigned() {
 
       {/* 增强的编辑资料对话框 */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg md:max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
@@ -824,10 +824,7 @@ export default function ProfilePageRedesigned() {
                       <RadioGroupItem value="female" id="pf-female" />
                       <Label htmlFor="pf-female" className="text-sm cursor-pointer">👩 女</Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="other" id="pf-other" />
-                      <Label htmlFor="pf-other" className="text-sm cursor-pointer">其他</Label>
-                    </div>
+                   
                   </RadioGroup>
                 </div>
 

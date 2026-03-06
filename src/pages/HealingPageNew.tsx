@@ -417,14 +417,14 @@ export default function HealingPageNew() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/20">
       {/* 音频元素始终挂载，确保 audioRef 在所有 useEffect 中可用 */}
       <audio ref={(el) => { audioRef.current = el; }} preload="auto" className="hidden" />
-      <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
+      <div className="max-w-2xl md:max-w-6xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
        
         {/* 导航系统 - 冥想、树洞、日记、知识 */}
         <motion.div 
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-4 gap-2"
+          className="grid grid-cols-4 gap-2 md:gap-3"
         >
           {[
             { id: 'meditation', label: '冥想', icon: Music, colors: 'from-indigo-500 via-purple-500 to-pink-500' },
@@ -435,7 +435,7 @@ export default function HealingPageNew() {
             <motion.div key={tab.id} variants={itemVariants}>
               <Button
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative overflow-hidden rounded-2xl py-5 text-sm font-medium transition-all duration-300 w-full ${
+                className={`relative overflow-hidden rounded-2xl py-5 md:py-6 text-sm md:text-base font-medium transition-all duration-300 w-full ${
                   activeTab === tab.id
                     ? 'text-white shadow-lg'
                     : 'bg-white/80 dark:bg-slate-800/80 text-muted-foreground hover:text-foreground backdrop-blur-sm'
@@ -453,8 +453,9 @@ export default function HealingPageNew() {
                   />
                 )}
                 <span className="relative z-10 flex items-center justify-center gap-1.5">
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
+                  <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label}</span>
                 </span>
               </Button>
             </motion.div>
@@ -493,15 +494,15 @@ export default function HealingPageNew() {
                 <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
                 
-                <CardContent className="relative p-6 md:p-8">
+                <CardContent className="relative p-6 md:p-10">
                   {/* 状态标签 */}
                   <motion.div 
-                    className="flex justify-center mb-4"
+                    className="flex justify-center mb-4 md:mb-6"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <Badge className={`px-4 py-1.5 text-xs font-medium border-0 ${
+                    <Badge className={`px-4 py-1.5 text-xs md:text-sm font-medium border-0 ${
                       isPlaying 
                         ? 'bg-indigo-500/30 text-indigo-100 backdrop-blur-md shadow-lg shadow-indigo-500/20' 
                         : 'bg-indigo-500/20 text-indigo-200/80 backdrop-blur-sm'
@@ -521,15 +522,15 @@ export default function HealingPageNew() {
 
                   {/* 标题区域 */}
                   <motion.div 
-                    className="text-center mb-6"
+                    className="text-center mb-6 md:mb-8"
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                    <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                       {meditationTracks[trackIndex]?.title || '冥想音乐'}
                     </h2>
-                    <p className="text-indigo-200/80 text-sm">
+                    <p className="text-indigo-200/80 text-sm md:text-base">
                       {meditationTracks[trackIndex]?.description || '让音乐带你进入冥想状态'}
                     </p>
                     {currentTrackLabel && (
@@ -545,12 +546,12 @@ export default function HealingPageNew() {
 
                   {/* 呼吸动画圆形 - 星空版 */}
                   <motion.div 
-                    className="flex justify-center mb-8"
+                    className="flex justify-center mb-8 md:mb-10"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.4, type: 'spring' }}
                   >
-                    <div className="relative w-32 h-32">
+                    <div className="relative w-32 h-32 md:w-40 md:h-40">
                       {/* 外层波纹 - 星空紫 */}
                       <motion.div 
                         className="absolute inset-0 rounded-full border-2 border-indigo-400/30"
@@ -578,7 +579,7 @@ export default function HealingPageNew() {
                       />
                       {/* 中心圆 - 深空效果 */}
                       <motion.div 
-                        className="absolute inset-6 rounded-full bg-gradient-to-br from-indigo-500/80 to-purple-600/80 backdrop-blur-md shadow-2xl flex items-center justify-center border border-indigo-400/50"
+                        className="absolute inset-6 md:inset-8 rounded-full bg-gradient-to-br from-indigo-500/80 to-purple-600/80 backdrop-blur-md shadow-2xl flex items-center justify-center border border-indigo-400/50"
                         animate={isPlaying ? {
                           boxShadow: [
                             '0 0 30px rgba(99, 102, 241, 0.5)',
@@ -588,7 +589,7 @@ export default function HealingPageNew() {
                         } : {}}
                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                       >
-                        <Music className="w-8 h-8 text-white" />
+                        <Music className="w-8 h-8 md:w-10 md:h-10 text-white" />
                       </motion.div>
                     </div>
                   </motion.div>
@@ -620,7 +621,7 @@ export default function HealingPageNew() {
 
                   {/* 播放控制 - 星空版 */}
                   <motion.div 
-                    className="flex items-center justify-center gap-4"
+                    className="flex items-center justify-center gap-4 md:gap-6"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.6 }}
@@ -632,9 +633,9 @@ export default function HealingPageNew() {
                       whileTap={{ scale: 0.95 }}
                       onClick={playPrev}
                       disabled={meditationTracks.length === 0}
-                      className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all disabled:opacity-30 border border-white/20"
+                      className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all disabled:opacity-30 border border-white/20"
                     >
-                      <SkipBack className="w-5 h-5" />
+                      <SkipBack className="w-5 h-5 md:w-6 md:h-6" />
                     </motion.button>
                     
                     {/* 播放/暂停 - 主按钮 */}
@@ -643,14 +644,14 @@ export default function HealingPageNew() {
                       whileTap={{ scale: 0.95 }}
                       onClick={togglePlay}
                       disabled={meditationTracks.length === 0}
-                      className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all disabled:opacity-50 border border-indigo-400/50"
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all disabled:opacity-50 border border-indigo-400/50"
                     >
                       {buffering ? (
-                        <span className="w-6 h-6 rounded-full border-3 border-indigo-300 border-t-white animate-spin" />
+                        <span className="w-6 h-6 md:w-8 md:h-8 rounded-full border-3 border-indigo-300 border-t-white animate-spin" />
                       ) : isPlaying ? (
-                        <Pause className="w-7 h-7 text-white" fill="currentColor" />
+                        <Pause className="w-7 h-7 md:w-9 md:h-9 text-white" fill="currentColor" />
                       ) : (
-                        <Play className="w-7 h-7 text-white ml-1" fill="currentColor" />
+                        <Play className="w-7 h-7 md:w-9 md:h-9 text-white ml-1" fill="currentColor" />
                       )}
                     </motion.button>
                     
@@ -660,9 +661,9 @@ export default function HealingPageNew() {
                       whileTap={{ scale: 0.95 }}
                       onClick={playNext}
                       disabled={meditationTracks.length === 0}
-                      className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all disabled:opacity-30 border border-white/20"
+                      className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all disabled:opacity-30 border border-white/20"
                     >
-                      <SkipForward className="w-5 h-5" />
+                      <SkipForward className="w-5 h-5 md:w-6 md:h-6" />
                     </motion.button>
                   </motion.div>
 
@@ -677,23 +678,23 @@ export default function HealingPageNew() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="space-y-4"
+              className="space-y-4 md:space-y-5"
             >
               {/* 标题区域 */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                    <Music className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                    <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">冥想库</h3>
-                    <p className="text-xs text-muted-foreground">探索内心的宁静</p>
+                    <h3 className="text-lg md:text-xl font-bold text-foreground">冥想库</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">探索内心的宁静</p>
                   </div>
                 </div>
               </div>
 
               {/* 分类标签 - 新设计 */}
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {MEDITATION_CATEGORIES.map((cat) => {
                   const CatIcon = cat.icon;
                   return (
@@ -702,13 +703,13 @@ export default function HealingPageNew() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setActiveCategory(cat.id)}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                      className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-5 py-2.5 md:py-3 rounded-xl text-sm md:text-base font-medium whitespace-nowrap transition-all ${
                         activeCategory === cat.id
                           ? `bg-gradient-to-r ${cat.color} text-white shadow-lg`
                           : 'bg-white dark:bg-slate-800 text-muted-foreground hover:text-foreground shadow-sm border border-border/50'
                       }`}
                     >
-                      <CatIcon className="w-4 h-4" />
+                      <CatIcon className="w-4 h-4 md:w-5 md:h-5" />
                       {cat.label}
                     </motion.button>
                   );

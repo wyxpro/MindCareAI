@@ -141,10 +141,6 @@ export default function PersonalInfoPage() {
                   <RadioGroupItem value="female" id="female" />
                   <Label htmlFor="female">女</Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other">其他</Label>
-                </div>
               </RadioGroup>
             </div>
 

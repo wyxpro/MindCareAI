@@ -147,7 +147,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-slate-950 pb-24">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-slate-950 md:pb-0 pb-24">
       {/* 顶部区域 - 柔和渐变背景 */}
       <div className="relative overflow-hidden">
         {/* 背景渐变 */}
@@ -171,8 +171,8 @@ export default function HomePage() {
           className="absolute top-20 -left-20 w-64 h-64 bg-gradient-to-br from-violet-200/40 to-purple-200/40 rounded-full blur-3xl" 
         />
 
-        <div className="relative z-10 px-5 pt-8 pb-6">
-          <div className="max-w-md mx-auto">
+        <div className="relative z-10 px-5 md:px-8 pt-8 pb-6">
+          <div className="max-w-md md:max-w-4xl mx-auto">
             {/* 顶部导航 */}
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -181,7 +181,7 @@ export default function HomePage() {
             >
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-0.5">{greeting}</p>
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">
                   {profile?.full_name || '朋友'} ✨
                 </h1>
               </div>
@@ -193,7 +193,7 @@ export default function HomePage() {
       </div>
 
       {/* 主要内容区 */}
-      <div className="px-5 max-w-md mx-auto space-y-6">
+      <div className="px-5 md:px-8 max-w-md md:max-w-4xl mx-auto space-y-6">
         {/* 主要功能 - 瀑布流卡片 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -201,26 +201,26 @@ export default function HomePage() {
           transition={{ delay: 0.2 }}
         >
           
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {/* 大卡片 */}
             <motion.div
               whileHover={{ scale: 1.02, y: -3 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(mainFeatures[0].link)}
-              className={`col-span-2 relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${mainFeatures[0].gradient} ${mainFeatures[0].shadow} shadow-lg cursor-pointer`}
+              className={`col-span-2 md:col-span-1 relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-br ${mainFeatures[0].gradient} ${mainFeatures[0].shadow} shadow-lg cursor-pointer`}
             >
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/3" />
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   </div>
-                  <Badge className="bg-white/30 text-white border-none text-[10px]">
+                  <Badge className="bg-white/30 text-white border-none text-[10px] md:text-xs">
                     {mainFeatures[0].subtitle}
                   </Badge>
                 </div>
-                <h4 className="text-xl font-bold text-white mb-1">{mainFeatures[0].title}</h4>
-                <p className="text-white/80 text-sm">{mainFeatures[0].desc}</p>
+                <h4 className="text-xl md:text-2xl font-bold text-white mb-1">{mainFeatures[0].title}</h4>
+                <p className="text-white/80 text-sm md:text-base">{mainFeatures[0].desc}</p>
               </div>
             </motion.div>
 
@@ -233,15 +233,15 @@ export default function HomePage() {
                   whileHover={{ scale: 1.03, y: -3 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => navigate(feature.link)}
-                  className={`relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br ${feature.gradient} ${feature.shadow} shadow-lg cursor-pointer`}
+                  className={`relative overflow-hidden rounded-2xl md:rounded-3xl p-4 md:p-6 bg-gradient-to-br ${feature.gradient} ${feature.shadow} shadow-lg cursor-pointer`}
                 >
-                  <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-white/20 rounded-full" />
+                  <div className="absolute -bottom-4 -right-4 w-20 h-20 md:w-32 md:h-32 bg-white/20 rounded-full" />
                   <div className="relative z-10">
-                    <div className="w-9 h-9 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center mb-3">
-                      <FeatureIcon className="w-4 h-4 text-white" />
+                    <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center mb-3">
+                      <FeatureIcon className="w-4 h-4 md:w-6 md:h-6 text-white" />
                     </div>
-                    <h4 className="text-base font-bold text-white mb-0.5">{feature.title}</h4>
-                    <p className="text-white/70 text-xs">{feature.desc}</p>
+                    <h4 className="text-base md:text-lg font-bold text-white mb-0.5">{feature.title}</h4>
+                    <p className="text-white/70 text-xs md:text-sm">{feature.desc}</p>
                   </div>
                 </motion.div>
               );
@@ -256,7 +256,7 @@ export default function HomePage() {
           transition={{ delay: 0.5 }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">精选内容</h3>
+            <h3 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100">精选内容</h3>
             <motion.button 
               whileHover={{ x: 3 }}
               onClick={() => navigate('/healing')}
@@ -278,27 +278,27 @@ export default function HomePage() {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => navigate('/healing', { state: { activeTab: 'community' } })}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 p-5 shadow-xl shadow-blue-200 cursor-pointer"
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 p-5 md:p-6 shadow-xl shadow-blue-200 cursor-pointer"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000" />
             
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-5 h-5 text-white" />
-                  <span className="text-white font-bold">树洞社区</span>
+                  <Users className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  <span className="text-white font-bold md:text-lg">树洞社区</span>
                 </div>
-                <p className="text-white/80 text-sm">
+                <p className="text-white/80 text-sm md:text-base">
                   与 2,000+ 伙伴分享心情
                 </p>
               </div>
               <div className="flex -space-x-2">
                 {['🧘', '🌸', '🌿'].map((emoji, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-lg border-2 border-white/50">
+                  <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-lg md:text-xl border-2 border-white/50">
                     {emoji}
                   </div>
                 ))}
-                <div className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border-2 border-white/50">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-xs md:text-sm font-bold text-white border-2 border-white/50">
                   +99
                 </div>
               </div>
@@ -312,7 +312,7 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
             {featuredContent.map((item, index) => (
               <motion.div
                 key={item.title}
@@ -321,14 +321,14 @@ export default function HomePage() {
                 transition={{ delay: 0.5 + index * 0.1 }}
                 whileHover={{ y: -5 }}
                 onClick={() => navigate('/healing')}
-                className="flex-shrink-0 w-40 bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer"
+                className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer"
               >
-                <div className={`h-24 ${item.bgColor} flex items-center justify-center text-4xl relative`}>
+                <div className={`h-24 md:h-32 ${item.bgColor} flex items-center justify-center text-4xl md:text-5xl relative`}>
                   {item.image}
                 </div>
-                <div className="p-3">
-                  <p className="text-[10px] text-slate-400 mb-1">{item.type} · {item.duration}</p>
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                <div className="p-3 md:p-4">
+                  <p className="text-[10px] md:text-xs text-slate-400 mb-1">{item.type} · {item.duration}</p>
+                  <h4 className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight">
                     {item.title}
                   </h4>
                 </div>
@@ -343,7 +343,7 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="flex justify-between">
+          <div className="flex justify-between md:justify-center md:gap-8">
             {quickActions.map((action, index) => (
               <motion.button
                 key={action.title}
@@ -353,16 +353,16 @@ export default function HomePage() {
                 whileHover={{ scale: 1.1, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate(action.link)}
-                className="flex flex-col items-center gap-2"
+                className="flex flex-col items-center gap-2 md:gap-3"
               >
-                <div className={`w-14 h-14 rounded-2xl ${action.color} flex items-center justify-center shadow-lg`}>
-                  {action.icon === MessageCircle && <MessageCircle className="w-6 h-6" />}
-                  {action.icon === Moon && <Moon className="w-6 h-6" />}
-                  {action.icon === Wind && <Wind className="w-6 h-6" />}
-                  {action.icon === Music && <Music className="w-6 h-6" />}
-                  {action.icon === Palette && <Palette className="w-6 h-6" />}
+                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg`}>
+                  {action.icon === MessageCircle && <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />}
+                  {action.icon === Moon && <Moon className="w-6 h-6 md:w-7 md:h-7" />}
+                  {action.icon === Wind && <Wind className="w-6 h-6 md:w-7 md:h-7" />}
+                  {action.icon === Music && <Music className="w-6 h-6 md:w-7 md:h-7" />}
+                  {action.icon === Palette && <Palette className="w-6 h-6 md:w-7 md:h-7" />}
                 </div>
-                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                <span className="text-xs md:text-sm text-slate-600 dark:text-slate-400 font-medium">
                   {action.title}
                 </span>
               </motion.button>
