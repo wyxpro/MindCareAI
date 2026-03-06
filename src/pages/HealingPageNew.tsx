@@ -4,7 +4,7 @@ import {
   Sparkles, Cloud, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import CommunityTab from '@/components/healing/CommunityTab';
@@ -118,25 +118,56 @@ export default function HealingPageNew() {
   const playLockRef = useRef(false);
   const lastActionAtRef = useRef(0);
 
+  // 冥想Tab直接使用本地 meditationTracks，无需远程加载
+  const loadData = useCallback(async () => {
+    // 此函数保留供 ContentDetailDialog onUpdate 回调使用
+  }, []);
+
+  const loadMeditationStats = useCallback(async () => {
+    if (!user) return;
+    try {
+      const stats = await getMeditationStats(user.id);
+      setMeditationStats({
+        totalMinutes: (stats as any).totalMinutes ?? 0,
+        totalSessions: (stats as any).totalSessions ?? 0,
+        averageRating: (stats as any).averageRating ?? 0,
+      });
+    } catch (error) {
+      setMeditationStats({
+        totalMinutes: 0,
+        totalSessions: 0,
+        averageRating: 0,
+      });
+    }
+  }, [user]);
+
   useEffect(() => {
     loadData();
-  }, [activeCategory]);
+  }, [activeCategory, loadData]);
 
-  // 处理从其他页面传入的 tab 状态
+  // 处理从其他页面传入的 tab 状态和音乐索引
   useEffect(() => {
-    const state = location.state as { activeTab?: string } | null;
+    const state = location.state as { activeTab?: string; trackIndex?: number } | null;
     if (state?.activeTab) {
       setActiveTab(state.activeTab);
-      // 清除 state 避免刷新后仍生效
+    }
+    if (state?.trackIndex !== undefined && meditationTracks.length > 0) {
+      setTrackIndex(state.trackIndex);
+      // 自动播放
+      wantPlayRef.current = true;
+    }
+    // 清除 state 避免刷新后仍生效
+    if (state) {
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, location.pathname, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, location.pathname]);
 
   useEffect(() => {
     if (user) {
       loadMeditationStats();
     }
-  }, [user]);
+  }, [user, loadMeditationStats]);
 
   useEffect(() => {
     loopModeRef.current = loopMode;
@@ -272,34 +303,11 @@ export default function HealingPageNew() {
     };
   }, []);
 
-  // 冥想Tab直接使用本地 meditationTracks，无需远程加载
-  const loadData = async () => {
-    // 此函数保留供 ContentDetailDialog onUpdate 回调使用
-  };
-
   // 根据当前分类筛选本地音乐列表
   const filteredTracks = useMemo(() => {
     if (activeCategory === 'all') return meditationTracks;
     return meditationTracks.filter((t) => t.category === activeCategory);
   }, [activeCategory]);
-
-  const loadMeditationStats = async () => {
-    if (!user) return;
-    try {
-      const stats = await getMeditationStats(user.id);
-      setMeditationStats({
-        totalMinutes: (stats as any).totalMinutes ?? 0,
-        totalSessions: (stats as any).totalSessions ?? 0,
-        averageRating: (stats as any).averageRating ?? 0,
-      });
-    } catch (error) {
-      setMeditationStats({
-        totalMinutes: 0,
-        totalSessions: 0,
-        averageRating: 0,
-      });
-    }
-  };
 
   const togglePlay = async () => {
     if (meditationTracks.length === 0) {
@@ -471,8 +479,10 @@ export default function HealingPageNew() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="space-y-6"
+              className="md:grid md:grid-cols-2 md:gap-6 md:items-start space-y-6 md:space-y-0"
             >
+              {/* 左列：主播放器 */}
+              <div className="md:sticky md:top-6">
               {/* 主播放器 - 全新设计 */}
               <Card className="relative overflow-hidden border-0 shadow-2xl shadow-indigo-900/30">
                 {/* 动态背景渐变 - 深邃星空蓝紫 */}
@@ -670,9 +680,10 @@ export default function HealingPageNew() {
 
                 </CardContent>
               </Card>
+              </div>{/* 结束左列 */}
 
-            
-
+              {/* 右列：冥想库 */}
+              <div>
             {/* 冥想库 - 重新设计 */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -818,6 +829,7 @@ export default function HealingPageNew() {
                 )}
               </div>
             </motion.div>
+            </div>{/* 结束右列 */}
           </motion.div>
         )}
         </AnimatePresence>

@@ -272,35 +272,80 @@ export default function KnowledgeTab() {
             return (
               <Card
                 key={content.id}
-                className="glass shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-border cursor-pointer animate-fade-in-up group flex flex-col"
+                className="glass shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border-border cursor-pointer animate-fade-in-up group flex flex-col overflow-hidden"
                 style={{ animationDelay: `${index * 0.05}s` }}
                 onClick={() => handleContentClick(content)}
               >
-                <CardContent className="p-5 flex flex-col flex-1">
-                  {/* 顶部：图标和类型标签 */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-7 h-7 text-white" />
+                {/* 视频封面区域 */}
+                {content.content_type === 'video' && (
+                  <div className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+                    {/* 视频图标背景 */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="relative">
+                        {/* 装饰圆环 */}
+                        <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-pulse" />
+                        <div className="absolute inset-0 rounded-full border-4 border-white/10 scale-125 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                        
+                        {/* 播放按钮 */}
+                        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-2xl shadow-rose-500/50 group-hover:scale-110 transition-transform duration-300">
+                          <Play className="w-10 h-10 text-white ml-1" fill="white" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {isPopular && (
-                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-glow text-xs">
+                    
+                    {/* 视频标题覆盖层 */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+                      <div className="flex items-center gap-2 text-white/90 text-xs mb-1">
+                        <Video className="w-3 h-3" />
+                        <span>视频内容</span>
+                        {content.duration && content.duration > 0 && (
+                          <>
+                            <span>•</span>
+                            <Clock className="w-3 h-3" />
+                            <span>{Math.floor(content.duration / 60)}分钟</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 热门标签 */}
+                    {isPopular && (
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg text-xs">
                           <Zap className="w-3 h-3 mr-1" fill="currentColor" />
                           热门
                         </Badge>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs`}
-                      >
-                        {content.content_type === 'article' && '文章'}
-                        {content.content_type === 'video' && '视频'}
-                      </Badge>
-                    </div>
+                      </div>
+                    )}
                   </div>
+                )}
+
+                <CardContent className="p-5 flex flex-col flex-1">
+                  {/* 文章类型显示图标和标签 */}
+                  {content.content_type === 'article' && (
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-7 h-7 text-white" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isPopular && (
+                          <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-glow text-xs">
+                            <Zap className="w-3 h-3 mr-1" fill="currentColor" />
+                            热门
+                          </Badge>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={`bg-gradient-to-r ${gradient} text-white border-0 text-xs`}
+                        >
+                          文章
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 标题 */}
-                  <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[48px]">
+                  <h3 className={`text-base font-bold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 ${content.content_type === 'video' ? '' : 'min-h-[48px]'}`}>
                     {content.title}
                   </h3>
 
@@ -321,7 +366,7 @@ export default function KnowledgeTab() {
                       <Eye className="w-3 h-3" />
                       {formatNumber(content.view_count || 0)}
                     </span>
-                    {content.duration && content.duration > 0 && (
+                    {content.content_type === 'article' && content.duration && content.duration > 0 && (
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {Math.floor(content.duration / 60)}分钟

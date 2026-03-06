@@ -66,14 +66,14 @@ export default function UserLayout({ children }: UserLayoutProps) {
                     className={cn(
                       'flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative overflow-hidden',
                       isActive 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25' 
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-lg shadow-blue-500/25' 
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     )}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="activeNav"
-                        className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500"
+                        className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-400"
                         initial={false}
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                       />

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Check, ClipboardList, Mic, Video } from 'lucide-react';
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type AssessmentStep = 'scale' | 'voice' | 'expression' | 'report';
 
@@ -18,9 +19,10 @@ const steps: { id: AssessmentStep; label: string; icon: any }[] = [
 
 export default function StepNavigation({ currentStep, onStepChange, completedSteps }: StepNavigationProps) {
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
+  const isMobile = useIsMobile();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+    <div className={`fixed top-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 ${isMobile ? 'left-0' : 'left-64'}`}>
       <div className="max-w-md mx-auto flex items-center justify-between relative">
         {/* 背景连接线 */}
         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-100 dark:bg-slate-800 -translate-y-1/2 -z-10 mx-6" />

@@ -50,7 +50,7 @@ export default function EnhancedAssessmentPage() {
       )}
 
       {/* 步骤内容 */}
-      <main className="relative h-full">
+      <main className={`relative h-full ${currentStep !== 'report' ? 'pt-20' : ''}`}>
         <AnimatePresence mode="wait">
           {currentStep === 'scale' && (
             <motion.div

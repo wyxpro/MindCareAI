@@ -119,30 +119,47 @@ export default function HomePage() {
     { title: '更多', icon: Palette, color: 'bg-amber-100 text-amber-600', link: '/healing' },
   ];
 
-  // 精选内容
+  // 精选内容 - 对应冥想库的音乐
   const featuredContent = [
     {
-      title: '3分钟缓解焦虑',
-      type: '冥想',
+      title: '焦虑缓解呼吸法',
+      type: '放松',
       duration: '3分钟',
       image: '🌸',
       bgColor: 'bg-gradient-to-br from-pink-100 to-rose-100',
-      tag: '热门'
+      trackIndex: 0 // 对应冥想库中的索引
     },
     {
-      title: '深度睡眠引导',
-      type: '助眠',
+      title: '睡前放松引导',
+      type: '睡眠',
       duration: '15分钟',
       image: '🌙',
       bgColor: 'bg-gradient-to-br from-indigo-100 to-purple-100',
-      tag: '推荐'
+      trackIndex: 1
     },
     {
-      title: '正念晨间练习',
-      type: '正念',
+      title: '身体扫描冥想',
+      type: '放松',
       duration: '10分钟',
       image: '☀️',
       bgColor: 'bg-gradient-to-br from-amber-100 to-orange-100',
+      trackIndex: 2
+    },
+    {
+      title: '专注力训练',
+      type: '专注',
+      duration: '8分钟',
+      image: '🎯',
+      bgColor: 'bg-gradient-to-br from-emerald-100 to-teal-100',
+      trackIndex: 3
+    },
+    {
+      title: '抑郁症康复之路',
+      type: '专注',
+      duration: '12分钟',
+      image: '🌈',
+      bgColor: 'bg-gradient-to-br from-violet-100 to-purple-100',
+      trackIndex: 4
     }
   ];
 
@@ -306,34 +323,43 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
 
-        {/* 精选内容卡片 */}
+        {/* 精选内容卡片 - 可左右滑动 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-            {featuredContent.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + index * 0.1 }}
-                whileHover={{ y: -5 }}
-                onClick={() => navigate('/healing')}
-                className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer"
-              >
-                <div className={`h-24 md:h-32 ${item.bgColor} flex items-center justify-center text-4xl md:text-5xl relative`}>
-                  {item.image}
-                </div>
-                <div className="p-3 md:p-4">
-                  <p className="text-[10px] md:text-xs text-slate-400 mb-1">{item.type} · {item.duration}</p>
-                  <h4 className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                    {item.title}
-                  </h4>
-                </div>
-              </motion.div>
-            ))}
+          <div className="overflow-x-auto scrollbar-hide -mx-5 md:-mx-8 px-5 md:px-8">
+            <div className="flex gap-3 md:gap-4 pb-2">
+              {featuredContent.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  onClick={() => navigate('/healing', { state: { activeTab: 'meditation', trackIndex: item.trackIndex } })}
+                  className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer flex-shrink-0 w-[140px] md:w-[180px]"
+                >
+                  <div className={`h-24 md:h-32 ${item.bgColor} flex items-center justify-center text-4xl md:text-5xl relative`}>
+                    {item.tag && (
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-white/80 text-slate-700 text-[10px] border-none">
+                          {item.tag}
+                        </Badge>
+                      </div>
+                    )}
+                    {item.image}
+                  </div>
+                  <div className="p-3 md:p-4">
+                    <p className="text-[10px] md:text-xs text-slate-400 mb-1">{item.type} · {item.duration}</p>
+                    <h4 className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight line-clamp-2">
+                      {item.title}
+                    </h4>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
         

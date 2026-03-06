@@ -219,7 +219,9 @@ export default function CommunityTab() {
   const displayPosts = activeTab === 'recovery' ? recoveryStories : posts;
 
   return (
-    <div className="space-y-6">
+    <div className="md:grid md:grid-cols-[1fr_1.5fr] md:gap-6 md:items-start space-y-6 md:space-y-0">
+      {/* 左列：发布卡片 + Tab切换 + 分类筛选（桌面端固定） */}
+      <div className="md:sticky md:top-6 space-y-4">
       {/* 发布卡片 */}
       <Card className="glass border-0 shadow-xl overflow-hidden animate-fade-in-up">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-sky-500/10" />
@@ -351,9 +353,11 @@ export default function CommunityTab() {
           })}
         </div>
       )}
+      </div>{/* 结束左列 */}
 
-      {/* 帖子列表 */}
+      {/* 右列：帖子列表 */}
       <div className="space-y-4">
+      {/* 帖子列表 */}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -515,7 +519,6 @@ export default function CommunityTab() {
             );
           })
         )}
-      </div>
 
       {/* 底部提示 */}
       {!loading && displayPosts.length > 0 && (
@@ -571,6 +574,7 @@ export default function CommunityTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>{/* 结束右列 */}
     </div>
   );
 }

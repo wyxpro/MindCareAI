@@ -309,7 +309,7 @@ export default function DiaryTab() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="animate-fade-in-up">
       {/* 情绪反馈遮罩 */}
       <MoodFeedbackOverlay 
         type={feedbackType} 
@@ -317,76 +317,78 @@ export default function DiaryTab() {
         onClose={() => setFeedbackType(null)} 
       />
 
-      {/* 日历卡片 */}
-      <Card className="glass border-0 shadow-xl overflow-hidden">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              情绪日历
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="text-sm font-medium min-w-[80px] text-center">
-                {format(currentMonth, 'yyyy年MM月', { locale: zhCN })}
-              </span>
-              <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* 星期标题 */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['日', '一', '二', '三', '四', '五', '六'].map(day => (
-              <div key={day} className="text-center text-xs text-muted-foreground py-2">
-                {day}
+      {/* 左右布局容器 - 电脑端左右排列，移动端上下排列 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 左侧：日历卡片 */}
+        <Card className="glass border-0 shadow-xl overflow-hidden h-fit lg:sticky lg:top-6">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                情绪日历
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-medium min-w-[80px] text-center">
+                  {format(currentMonth, 'yyyy年MM月', { locale: zhCN })}
+                </span>
+                <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
-            ))}
-          </div>
-          
-          {/* 日期网格 */}
-          <div className="grid grid-cols-7 gap-1">
-            {emptyDays.map((_, index) => (
-              <div key={`empty-${index}`} className="aspect-square" />
-            ))}
-            {daysInMonth.map(date => {
-              const diary = getLatestDiaryForDate(date);
-              const isToday = isSameDay(date, new Date());
-              const isSelected = isSameDay(date, selectedDate);
-              
-              return (
-                <motion.button
-                  key={date.toISOString()}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDayClick(date)}
-                  className={`
-                    aspect-square rounded-xl flex flex-col items-center justify-center gap-1
-                    transition-all duration-200 relative
-                    ${isToday ? 'ring-2 ring-primary ring-offset-2' : ''}
-                    ${isSelected ? 'bg-primary/10' : 'hover:bg-muted/50'}
-                    ${diary ? getEmotionColor(diary.emotion_level as EmotionLevel) : 'bg-muted/30'}
-                  `}
-                >
-                  <span className={`text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
-                    {format(date, 'd')}
-                  </span>
-                  {diary && (
-                    <span className="text-lg">{getEmotionEmoji(diary.emotion_level as EmotionLevel)}</span>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* 星期标题 */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {['日', '一', '二', '三', '四', '五', '六'].map(day => (
+                <div key={day} className="text-center text-xs text-muted-foreground py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+            
+            {/* 日期网格 */}
+            <div className="grid grid-cols-7 gap-1">
+              {emptyDays.map((_, index) => (
+                <div key={`empty-${index}`} className="aspect-square" />
+              ))}
+              {daysInMonth.map(date => {
+                const diary = getLatestDiaryForDate(date);
+                const isToday = isSameDay(date, new Date());
+                const isSelected = isSameDay(date, selectedDate);
+                
+                return (
+                  <motion.button
+                    key={date.toISOString()}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDayClick(date)}
+                    className={`
+                      aspect-square rounded-xl flex flex-col items-center justify-center gap-1
+                      transition-all duration-200 relative
+                      ${isToday ? 'ring-2 ring-primary ring-offset-2' : ''}
+                      ${isSelected ? 'bg-primary/10' : 'hover:bg-muted/50'}
+                      ${diary ? getEmotionColor(diary.emotion_level as EmotionLevel) : 'bg-muted/30'}
+                    `}
+                  >
+                    <span className={`text-sm font-medium ${isToday ? 'text-primary' : ''}`}>
+                      {format(date, 'd')}
+                    </span>
+                    {diary && (
+                      <span className="text-lg">{getEmotionEmoji(diary.emotion_level as EmotionLevel)}</span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* 日记编辑区域 - 直接显示在日历下方 */}
-      <Card className="glass border-0 shadow-xl overflow-hidden">
+        {/* 右侧：日记编辑区域 */}
+        <Card className="glass border-0 shadow-xl overflow-hidden">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -594,6 +596,7 @@ export default function DiaryTab() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

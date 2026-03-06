@@ -11,6 +11,7 @@
     "verify:migration": "node --loader @typescript/native-preview scripts/verify-migration.ts",
     "seed:treehole": "node scripts/seed-treehole.js",
     "seed:knowledge": "node scripts/seed-knowledge.js",
+    "seed:video": "node scripts/seed-video-knowledge.js",
     "promote:user": "node scripts/promote-user.js"
   },
   "dependencies": {
