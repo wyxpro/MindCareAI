@@ -213,15 +213,30 @@ export default function SmartBandPage() {
       </motion.div>
 
       {/* 主内容区 */}
-      <div className="max-w-md mx-auto px-4 -mt-4">
+      <div className="max-w-md mx-auto px-4 mt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="overview">数据概览</TabsTrigger>
-            <TabsTrigger value="charts">趋势图表</TabsTrigger>
-            <TabsTrigger value="ai">AI评估</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-6 h-14 bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl shadow-md">
+            <TabsTrigger 
+              value="overview"
+              className="rounded-xl h-full text-base font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              数据概览
+            </TabsTrigger>
+            <TabsTrigger 
+              value="charts"
+              className="rounded-xl h-full text-base font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              趋势图表
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ai"
+              className="rounded-xl h-full text-base font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg"
+            >
+              AI评估
+            </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[calc(100vh-280px)]">
+          <ScrollArea className="h-[calc(100vh-300px)]">
             {/* 数据概览 Tab */}
             <TabsContent value="overview" className="space-y-4 mt-0">
               {/* 今日数据卡片 - 采用图片中的美化样式 */}

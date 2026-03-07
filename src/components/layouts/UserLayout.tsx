@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -19,6 +21,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { user, profile } = useAuth();
 
   const handleLogoClick = () => {
     // 跳转到官网首页
@@ -88,12 +91,33 @@ export default function UserLayout({ children }: UserLayoutProps) {
             })}
           </nav>
 
-          {/* 底部装饰 */}
-          <div className="p-4 border-t">
-            <div className="px-4 py-3 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
-              <p className="text-xs text-muted-foreground text-center">
-                © 2026 灵愈AI
-              </p>
+          {/* 底部区域 - 登录按钮和版权 */}
+          <div className="mt-auto">
+            {/* 用户登录按钮 */}
+            <div className="p-4 border-t">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate('/login', { state: { role: 'user' } })}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-400 to-purple-400 text-white text-sm font-medium shadow-lg shadow-indigo-400/25 hover:shadow-xl hover:shadow-indigo-400/30 transition-all"
+              >
+                <Avatar className="w-8 h-8 border-2 border-white/30">
+                  <AvatarImage src={profile?.avatar_url || ''} />
+                  <AvatarFallback className="bg-white/20 text-white text-xs">
+                    {profile?.full_name?.charAt(0) || profile?.username?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate">{profile?.full_name || profile?.username || '用户登录'}</span>
+              </motion.button>
+            </div>
+
+            {/* 底部版权 */}
+            <div className="p-4 border-t">
+              <div className="px-4 py-3 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+                <p className="text-xs text-muted-foreground text-center">
+                  © 2026 灵愈AI
+                </p>
+              </div>
             </div>
           </div>
         </aside>

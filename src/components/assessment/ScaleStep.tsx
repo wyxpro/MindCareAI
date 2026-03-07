@@ -1239,10 +1239,10 @@ ${kbText || '暂无相关知识库'}`;
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-30 pb-20">
+    <div className="h-full bg-slate-50 dark:bg-slate-950 flex flex-col">
       {/* 沉浸式顶部 - 调整padding避免与导航栏重叠 */}
-      <div className="pt-24 px-4 pb-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
-        <div className="max-w-md mx-auto space-y-3">
+      <div className="px-4 py-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="max-w-md mx-auto space-y-2">
           <div className="flex justify-between items-end">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progress</span>
             <span className="text-sm font-black text-primary">{currentQuestionIndex} / {totalQuestions}</span>
@@ -1253,7 +1253,7 @@ ${kbText || '暂无相关知识库'}`;
 
       {/* 对话区域 */}
       <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
-        <div className="max-w-md mx-auto space-y-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 6rem)' }}>
+        <div className="max-w-md mx-auto space-y-6 pb-6">
           <AnimatePresence>
             {messages.map((msg, i) => (
               <motion.div
@@ -1314,10 +1314,7 @@ ${kbText || '暂无相关知识库'}`;
       </div>
 
       {/* 输入区域 */}
-      <div
-        className="fixed left-0 right-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}
-      >
+      <div className="shrink-0 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-md mx-auto space-y-2">
           {/* 表情选择面板 - 位于最上方 */}
           <AnimatePresence>

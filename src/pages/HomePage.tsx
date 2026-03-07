@@ -188,8 +188,8 @@ export default function HomePage() {
           className="absolute top-20 -left-20 w-64 h-64 bg-gradient-to-br from-violet-200/40 to-purple-200/40 rounded-full blur-3xl" 
         />
 
-        <div className="relative z-10 px-5 md:px-8 pt-8 pb-6">
-          <div className="max-w-md md:max-w-4xl mx-auto">
+        <div className="relative z-10 px-5 md:px-8 lg:px-12 pt-8 pb-6">
+          <div className="max-w-md md:max-w-5xl lg:max-w-7xl mx-auto">
             {/* 顶部导航 */}
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -210,7 +210,7 @@ export default function HomePage() {
       </div>
 
       {/* 主要内容区 */}
-      <div className="px-5 md:px-8 max-w-md md:max-w-4xl mx-auto space-y-6">
+      <div className="px-5 md:px-8 lg:px-12 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto space-y-6">
         {/* 主要功能 - 瀑布流卡片 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -218,13 +218,13 @@ export default function HomePage() {
           transition={{ delay: 0.2 }}
         >
           
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
             {/* 大卡片 */}
             <motion.div
               whileHover={{ scale: 1.02, y: -3 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(mainFeatures[0].link)}
-              className={`col-span-2 md:col-span-1 relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-br ${mainFeatures[0].gradient} ${mainFeatures[0].shadow} shadow-lg cursor-pointer`}
+              className={`col-span-2 md:col-span-1 lg:col-span-2 relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-br ${mainFeatures[0].gradient} ${mainFeatures[0].shadow} shadow-lg cursor-pointer`}
             >
               <div className="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/3" />
               <div className="relative z-10">
@@ -329,8 +329,8 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="overflow-x-auto scrollbar-hide -mx-5 md:-mx-8 px-5 md:px-8">
-            <div className="flex gap-3 md:gap-4 pb-2">
+          <div className="overflow-x-auto scrollbar-hide -mx-5 md:-mx-8 lg:-mx-12 px-5 md:px-8 lg:px-12">
+            <div className="flex lg:grid lg:grid-cols-5 gap-3 md:gap-4 lg:gap-5 pb-2">
               {featuredContent.map((item, index) => (
                 <motion.div
                   key={item.title}
@@ -339,7 +339,7 @@ export default function HomePage() {
                   transition={{ delay: 0.5 + index * 0.1 }}
                   whileHover={{ y: -5 }}
                   onClick={() => navigate('/healing', { state: { activeTab: 'meditation', trackIndex: item.trackIndex } })}
-                  className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer flex-shrink-0 w-[140px] md:w-[180px]"
+                  className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer flex-shrink-0 w-[140px] md:w-[180px] lg:w-auto"
                 >
                   <div className={`h-24 md:h-32 ${item.bgColor} flex items-center justify-center text-4xl md:text-5xl relative`}>
                     {item.tag && (
