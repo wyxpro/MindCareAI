@@ -363,8 +363,8 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   })() : [];
 
   return (
-    <div className="fixed inset-0 bg-slate-950 flex flex-col z-40 overflow-hidden">
-      <div className="absolute top-20 left-0 right-0 z-50 px-6 py-4 flex justify-between items-start pointer-events-none">
+    <div className="fixed inset-0 bg-slate-950 flex flex-col z-30 overflow-hidden">
+      <div className="absolute top-24 left-0 right-0 z-40 px-6 py-4 flex justify-between items-start pointer-events-none">
         <div className="space-y-2">
           <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 flex items-center gap-2 px-3 py-1.5 rounded-full">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

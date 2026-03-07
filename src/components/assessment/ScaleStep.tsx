@@ -878,12 +878,12 @@ ${kbText || '暂无相关知识库'}`;
 
   if (!started) {
     return (
-      <div className="pt-28 px-4 max-w-md mx-auto space-y-8 pb-10">
-        <div className="space-y-2">
+      <div className="pt-4 px-4 max-w-md mx-auto space-y-3 pb-10">
+        <div>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white">AI主动式对话量表评估</h2>
-              <p className="text-slate-500 text-sm mt-1">您可以选择一个或多个量表进行综合评估</p>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">AI主动式对话量表评估</h2>
+              <p className="text-slate-500 text-xs mt-0">您可以选择一个或多个量表进行综合评估</p>
             </div>
             <Button
               variant="outline"
@@ -1239,10 +1239,10 @@ ${kbText || '暂无相关知识库'}`;
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-40 pb-20">
-      {/* 沉浸式顶部 */}
-      <div className="pt-20 px-4 pb-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
-        <div className="max-w-md mx-auto space-y-3 mt-3">
+    <div className="fixed inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col z-30 pb-20">
+      {/* 沉浸式顶部 - 调整padding避免与导航栏重叠 */}
+      <div className="pt-24 px-4 pb-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+        <div className="max-w-md mx-auto space-y-3">
           <div className="flex justify-between items-end">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progress</span>
             <span className="text-sm font-black text-primary">{currentQuestionIndex} / {totalQuestions}</span>

@@ -50,19 +50,23 @@ export default function EnhancedAssessmentPage() {
       )}
 
       {/* 步骤内容 */}
-      <main className={`relative h-full ${currentStep !== 'report' ? 'pt-20' : ''}`}>
+      <main className={`relative min-h-screen ${currentStep !== 'report' ? 'pt-24' : ''}`}>
         <AnimatePresence mode="wait">
           {currentStep === 'scale' && (
             <motion.div
               key="scale"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="h-full"
+              exit={{ opacity: 0, x: 30 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+              className="min-h-screen"
             >
-              <ScaleStep 
-                userId={user?.id || ''} 
-                onComplete={(data) => handleStepComplete('scale', data)} 
+              <ScaleStep
+                userId={user?.id || ''}
+                onComplete={(data) => handleStepComplete('scale', data)}
               />
             </motion.div>
           )}
@@ -70,13 +74,17 @@ export default function EnhancedAssessmentPage() {
           {currentStep === 'voice' && (
             <motion.div
               key="voice"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="h-full"
+              exit={{ opacity: 0, x: -30 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+              className="min-h-screen"
             >
-              <VoiceStep 
-                onComplete={(data) => handleStepComplete('voice', data)} 
+              <VoiceStep
+                onComplete={(data) => handleStepComplete('voice', data)}
               />
             </motion.div>
           )}
@@ -84,13 +92,17 @@ export default function EnhancedAssessmentPage() {
           {currentStep === 'expression' && (
             <motion.div
               key="expression"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="h-full"
+              exit={{ opacity: 0, x: -30 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+              className="min-h-screen"
             >
-              <ExpressionStep 
-                onComplete={(data) => handleStepComplete('expression', data)} 
+              <ExpressionStep
+                onComplete={(data) => handleStepComplete('expression', data)}
               />
             </motion.div>
           )}
@@ -98,11 +110,15 @@ export default function EnhancedAssessmentPage() {
           {currentStep === 'report' && (
             <motion.div
               key="report"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="h-full"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+              className="min-h-screen"
             >
-              <FusionReport 
+              <FusionReport
                 scaleData={scaleData}
                 voiceData={voiceData}
                 expressionData={expressionData}

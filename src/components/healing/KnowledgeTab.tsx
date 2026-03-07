@@ -34,6 +34,134 @@ const TYPE_COLORS: Record<string, string> = {
   video: 'from-rose-500 to-pink-500',
 };
 
+// 视频缩略图组件 - 自动提取视频第一帧作为封面
+interface VideoThumbnailCardProps {
+  thumbnailUrl?: string;
+  videoUrl?: string;
+  title: string;
+  duration?: number;
+  isPopular: boolean;
+}
+
+function VideoThumbnailCard({ thumbnailUrl, videoUrl, title, duration, isPopular }: VideoThumbnailCardProps) {
+  const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(!thumbnailUrl && !!videoUrl);
+
+  useEffect(() => {
+    // 如果有上传的封面，直接使用
+    if (thumbnailUrl) return;
+
+    // 如果没有上传封面但有视频URL，提取第一帧
+    if (videoUrl) {
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.src = videoUrl;
+      video.muted = true;
+      video.playsInline = true;
+
+      video.onloadeddata = () => {
+        // 跳转到第一帧
+        video.currentTime = 0.1;
+      };
+
+      video.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 360;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            setGeneratedThumbnail(dataUrl);
+          }
+        } catch (error) {
+          console.error('生成视频缩略图失败:', error);
+        }
+        setIsLoading(false);
+      };
+
+      video.onerror = () => {
+        console.error('视频加载失败:', videoUrl);
+        setIsLoading(false);
+      };
+
+      // 设置超时，防止视频一直加载
+      const timeout = setTimeout(() => {
+        setIsLoading(false);
+      }, 5000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [thumbnailUrl, videoUrl]);
+
+  // 优先使用上传的封面，其次是生成的第一帧，最后是渐变背景
+  const displayThumbnail = thumbnailUrl || generatedThumbnail;
+
+  return (
+    <div className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+      {/* 视频封面图片 */}
+      {displayThumbnail ? (
+        <img
+          src={displayThumbnail}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+      ) : null}
+
+      {/* 暗色遮罩层 */}
+      <div className="absolute inset-0 bg-black/30" />
+
+      {/* 加载状态 */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* 视频图标背景 */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative">
+          {/* 装饰圆环 */}
+          <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-pulse" />
+          <div className="absolute inset-0 rounded-full border-4 border-white/10 scale-125 animate-pulse" style={{ animationDelay: '0.5s' }} />
+
+          {/* 播放按钮 */}
+          <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-2xl shadow-rose-500/50 group-hover:scale-110 transition-transform duration-300">
+            <Play className="w-10 h-10 text-white ml-1" fill="white" />
+          </div>
+        </div>
+      </div>
+
+      {/* 视频标题覆盖层 */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+        <div className="flex items-center gap-2 text-white/90 text-xs mb-1">
+          <Video className="w-3 h-3" />
+          <span>视频内容</span>
+          {duration && duration > 0 && (
+            <>
+              <span>•</span>
+              <Clock className="w-3 h-3" />
+              <span>{Math.floor(duration / 60)}分钟</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 热门标签 */}
+      {isPopular && (
+        <div className="absolute top-3 right-3">
+          <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg text-xs">
+            <Zap className="w-3 h-3 mr-1" fill="currentColor" />
+            热门
+          </Badge>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function KnowledgeTab() {
   const { user } = useAuth();
   const [contents, setContents] = useState<HealingContent[]>([]);
@@ -184,22 +312,22 @@ export default function KnowledgeTab() {
           </div>
 
           {/* 类型筛选 */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-nowrap gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {CONTENT_TYPES.map((type) => {
               const Icon = type.icon;
               const isSelected = selectedType === type.id;
-              
+
               return (
                 <Button
                   key={type.id}
                   onClick={() => setSelectedType(type.id)}
-                  className={`rounded-full px-6 py-6 text-base font-medium transition-all duration-300 ${
+                  className={`rounded-full px-4 sm:px-6 py-5 sm:py-6 text-sm sm:text-base font-medium transition-all duration-300 flex-shrink-0 ${
                     isSelected
                       ? `bg-gradient-to-r ${type.gradient} text-white shadow-glow scale-105`
                       : 'bg-muted/70 text-muted-foreground hover:bg-muted/80 hover:scale-105 ring-1 ring-border backdrop-blur'
                   }`}
                 >
-                  <Icon className="w-5 h-5 mr-2" />
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                   {type.label}
                 </Button>
               );
@@ -278,46 +406,13 @@ export default function KnowledgeTab() {
               >
                 {/* 视频封面区域 */}
                 {content.content_type === 'video' && (
-                  <div className="relative w-full aspect-video bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-                    {/* 视频图标背景 */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="relative">
-                        {/* 装饰圆环 */}
-                        <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-pulse" />
-                        <div className="absolute inset-0 rounded-full border-4 border-white/10 scale-125 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                        
-                        {/* 播放按钮 */}
-                        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-2xl shadow-rose-500/50 group-hover:scale-110 transition-transform duration-300">
-                          <Play className="w-10 h-10 text-white ml-1" fill="white" />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* 视频标题覆盖层 */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-                      <div className="flex items-center gap-2 text-white/90 text-xs mb-1">
-                        <Video className="w-3 h-3" />
-                        <span>视频内容</span>
-                        {content.duration && content.duration > 0 && (
-                          <>
-                            <span>•</span>
-                            <Clock className="w-3 h-3" />
-                            <span>{Math.floor(content.duration / 60)}分钟</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 热门标签 */}
-                    {isPopular && (
-                      <div className="absolute top-3 right-3">
-                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg text-xs">
-                          <Zap className="w-3 h-3 mr-1" fill="currentColor" />
-                          热门
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
+                  <VideoThumbnailCard
+                    thumbnailUrl={content.thumbnail_url}
+                    videoUrl={content.content_url}
+                    title={content.title}
+                    duration={content.duration}
+                    isPopular={isPopular}
+                  />
                 )}
 
                 <CardContent className="p-5 flex flex-col flex-1">
@@ -345,12 +440,12 @@ export default function KnowledgeTab() {
                   )}
 
                   {/* 标题 */}
-                  <h3 className={`text-base font-bold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 ${content.content_type === 'video' ? '' : 'min-h-[48px]'}`}>
+                  <h3 className={`text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-3 line-clamp-2 ${content.content_type === 'video' ? '' : 'min-h-[56px]'}`}>
                     {content.title}
                   </h3>
 
                   {/* 描述 */}
-                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4 mb-4 flex-1 min-h-[80px]">
                     {content.description}
                   </p>
 

@@ -285,18 +285,18 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
   })() : [];
 
   return (
-    <div className="pt-28 px-4 max-w-md mx-auto space-y-8 pb-10">
-      <div className="text-center space-y-2">
-        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Mic className={`w-10 h-10 ${isRecording ? 'text-rose-500 animate-pulse' : 'text-primary'}`} />
+    <div className="pt-4 px-4 max-w-md mx-auto space-y-4 pb-6">
+      <div className="text-center space-y-1">
+        <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+          <Mic className={`w-7 h-7 ${isRecording ? 'text-rose-500 animate-pulse' : 'text-primary'}`} />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">语音情绪识别</h2>
-        <p className="text-slate-500 text-sm">请朗读一段文字或随意诉说 10 秒，系统将分析您的语速、音调及能量分布。</p>
+        <h2 className="text-xl font-black text-slate-900 dark:text-white">语音情绪识别</h2>
+        <p className="text-slate-500 text-xs">请朗读一段文字或随意诉说 10 秒，系统将分析您的语速、音调及能量分布。</p>
       </div>
 
       {/* 状态面板 */}
-      <Card className="rounded-[32px] border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
-        <CardContent className="p-8 space-y-8">
+      <Card className="rounded-2xl border-none shadow-lg bg-white dark:bg-slate-900 overflow-hidden">
+        <CardContent className="p-5 space-y-4">
           {/* 实时波形 - 优化视觉效果，增强整体波动 */}
           <div className="h-28 flex items-center justify-center gap-[2px] px-4">
             {waveform.map((h, i) => (
@@ -368,7 +368,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
               onClick={isRecording ? stopRecording : startRecording}
               variant={isRecording ? 'destructive' : 'default'}
               disabled={isAnalyzing}
-              className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
+              className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
             >
               {isRecording ? (
                 <><StopCircle className="w-5 h-5 mr-2" /> 停止采集</>
@@ -378,16 +378,16 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                 <><Mic className="w-5 h-5 mr-2" /> 开始实时录音</>
               )}
             </Button>
-            <input 
-              type="file" 
-              accept="audio/*" 
-              className="hidden" 
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
               ref={fileInputRef}
               onChange={handleFileUpload}
             />
-            <Button 
-              variant="outline" 
-              className="h-14 rounded-2xl border-slate-100 dark:border-slate-800"
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl border-slate-200 dark:border-slate-700 text-sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isRecording || isAnalyzing}
             >
@@ -398,9 +398,9 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       </Card>
 
       {/* 提示信息 */}
-      <div className="p-4 bg-primary/5 rounded-2xl flex gap-3 items-start">
-        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-        <p className="text-xs text-primary/70 leading-relaxed font-medium">
+      <div className="p-3 bg-primary/5 rounded-xl flex gap-2 items-start">
+        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+        <p className="text-xs text-primary/70 leading-relaxed">
           提示：请尽量在安静的环境下录音。当有效语音时长满 10s 且停顿在合理范围内时，系统将自动结束采集。
         </p>
       </div>
