@@ -1,7 +1,7 @@
 import { addMonths, eachDayOfInterval, endOfMonth, format, isSameDay, startOfMonth, subMonths } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronLeft, ChevronRight, CloudRain, Edit2, Image as ImageIcon, Loader2, Mic, Plus, Sparkles, StopCircle, Sun, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, CloudRain, Edit2, Image as ImageIcon, Loader2, Mic, Plus, Sparkles, StopCircle, Sun, X, TrendingUp, Calendar, Tag, PenLine, Heart, Smile } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import MoodFeedbackOverlay from '@/components/record/MoodFeedbackOverlay';
@@ -319,8 +319,9 @@ export default function DiaryTab() {
 
       {/* 左右布局容器 - 电脑端左右排列，移动端上下排列 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左侧：日历卡片 */}
-        <Card className="glass border-0 shadow-xl overflow-hidden h-fit lg:sticky lg:top-6">
+        {/* 左侧：日历卡片 + 补充组件 */}
+        <div className="space-y-4 lg:sticky lg:top-6">
+        <Card className="glass border-0 shadow-xl overflow-hidden h-fit">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -386,6 +387,171 @@ export default function DiaryTab() {
             </div>
           </CardContent>
         </Card>
+
+        {/* 写作统计卡片 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="hidden lg:grid grid-cols-3 gap-3"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{diaries.length}</p>
+              <p className="text-xs text-muted-foreground">日记总数</p>
+            </CardContent>
+          </Card>
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                <PenLine className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{Math.min(7, diaries.filter(d => {
+                const diaryDate = new Date(d.diary_date);
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return diaryDate >= weekAgo;
+              }).length)}</p>
+              <p className="text-xs text-muted-foreground">本周记录</p>
+            </CardContent>
+          </Card>
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <Heart className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{Math.round((diaries.filter(d => d.emotion_level === 'very_good' || d.emotion_level === 'good').length / (diaries.length || 1)) * 100)}%</p>
+              <p className="text-xs text-muted-foreground">积极情绪</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* 心情趋势 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="hidden lg:block"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-foreground">心情趋势</span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { label: '极好', emoji: '😄', count: diaries.filter(d => d.emotion_level === 'very_good').length, color: 'from-success to-success/70' },
+                  { label: '不错', emoji: '😊', count: diaries.filter(d => d.emotion_level === 'good').length, color: 'from-info to-info/70' },
+                  { label: '一般', emoji: '😐', count: diaries.filter(d => d.emotion_level === 'neutral').length, color: 'from-muted-foreground to-muted-foreground/70' },
+                  { label: '难过', emoji: '😔', count: diaries.filter(d => d.emotion_level === 'bad').length, color: 'from-warning to-warning/70' },
+                  { label: '糟糕', emoji: '😢', count: diaries.filter(d => d.emotion_level === 'very_bad').length, color: 'from-destructive to-destructive/70' },
+                ].map((item) => {
+                  const maxCount = Math.max(...[
+                    diaries.filter(d => d.emotion_level === 'very_good').length,
+                    diaries.filter(d => d.emotion_level === 'good').length,
+                    diaries.filter(d => d.emotion_level === 'neutral').length,
+                    diaries.filter(d => d.emotion_level === 'bad').length,
+                    diaries.filter(d => d.emotion_level === 'very_bad').length,
+                  ], 1);
+                  const percentage = (item.count / maxCount) * 100;
+                  return (
+                    <div key={item.label} className="flex items-center gap-3">
+                      <span className="text-lg w-6">{item.emoji}</span>
+                      <span className="text-xs text-muted-foreground w-10">{item.label}</span>
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          className={`h-full bg-gradient-to-r ${item.color} rounded-full`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium w-6 text-right">{item.count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* 标签云 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="hidden lg:block"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center">
+                  <Tag className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-foreground">常用标签</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { tag: '好消息', count: 12, type: 'positive' },
+                  { tag: '运动', count: 8, type: 'positive' },
+                  { tag: '冥想', count: 6, type: 'positive' },
+                  { tag: '工作压力', count: 5, type: 'negative' },
+                  { tag: '睡眠不足', count: 4, type: 'negative' },
+                  { tag: '社交活动', count: 4, type: 'positive' },
+                  { tag: '音乐', count: 3, type: 'positive' },
+                  { tag: '阅读', count: 3, type: 'positive' },
+                  { tag: '家庭琐事', count: 2, type: 'negative' },
+                  { tag: '宠物陪伴', count: 2, type: 'positive' },
+                ].map((item) => (
+                  <motion.div
+                    key={item.tag}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                      item.type === 'positive'
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 hover:bg-emerald-200'
+                        : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 hover:bg-rose-200'
+                    }`}
+                  >
+                    {item.tag}
+                    <span className="ml-1 opacity-60">{item.count}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* 心情提示 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="hidden lg:block"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                  <Smile className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground mb-1">每日小贴士</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    记录情绪是自我关怀的第一步。坚持写日记可以帮助你发现情绪模式，更好地了解自己。
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+        </div>{/* 结束左侧容器 */}
 
         {/* 右侧：日记编辑区域 */}
         <Card className="glass border-0 shadow-xl overflow-hidden">

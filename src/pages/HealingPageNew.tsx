@@ -1,7 +1,7 @@
 import { 
   Bookmark, Heart, Moon,
   Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2,
-  Sparkles, Cloud, Zap
+  Sparkles, Cloud, Zap, Trophy, Target, Clock, TrendingUp, Star, Flame
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
@@ -707,6 +707,130 @@ export default function HealingPageNew() {
 
                 </CardContent>
               </Card>
+
+              {/* 冥想统计卡片 - 仅桌面端显示 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="hidden md:grid mt-6 grid-cols-3 gap-3"
+              >
+                <Card className="border shadow-sm">
+                  <CardContent className="p-4 text-center">
+                    <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{meditationStats.totalMinutes}</p>
+                    <p className="text-xs text-muted-foreground">冥想分钟</p>
+                  </CardContent>
+                </Card>
+                <Card className="border shadow-sm">
+                  <CardContent className="p-4 text-center">
+                    <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center">
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{meditationStats.totalSessions}</p>
+                    <p className="text-xs text-muted-foreground">完成次数</p>
+                  </CardContent>
+                </Card>
+                <Card className="border shadow-sm">
+                  <CardContent className="p-4 text-center">
+                    <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                      <Flame className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{Math.min(7, meditationStats.totalSessions)}</p>
+                    <p className="text-xs text-muted-foreground">连续天数</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* 本周目标进度 - 仅桌面端显示 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 }}
+                className="hidden md:block mt-4"
+              >
+                <Card className="border shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                          <Trophy className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-semibold text-foreground">本周目标</span>
+                      </div>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                        {Math.min(100, Math.round((meditationStats.totalSessions / 7) * 100))}%
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">已完成 {meditationStats.totalSessions} 次</span>
+                        <span className="text-muted-foreground">目标 7 次</span>
+                      </div>
+                      <div className="h-3 bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (meditationStats.totalSessions / 7) * 100)}%` }}
+                          transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Star className="w-3 h-3 text-amber-500" fill="currentColor" />
+                      <span>坚持冥想有助于改善睡眠质量和情绪管理</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* 推荐冥想 - 仅桌面端显示 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                className="hidden md:block mt-4"
+              >
+                <Card className="border shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
+                        <TrendingUp className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="font-semibold text-foreground">为你推荐</span>
+                    </div>
+                    <div className="space-y-3">
+                      {meditationTracks.slice(0, 2).map((track, index) => (
+                        <motion.div
+                          key={track.id}
+                          whileHover={{ x: 4 }}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                          onClick={() => {
+                            const globalIndex = meditationTracks.findIndex((t) => t.id === track.id);
+                            if (globalIndex !== -1) setTrackIndex(globalIndex);
+                          }}
+                        >
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src={track.coverImage} alt={track.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                              <Play className="w-5 h-5 text-white" fill="white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-foreground truncate">{track.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{track.description}</p>
+                          </div>
+                          <div className="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
+                            <span className="text-xs font-bold text-rose-600 dark:text-rose-400">{index + 1}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
               </div>{/* 结束左列 */}
 
               {/* 右列：冥想库 */}

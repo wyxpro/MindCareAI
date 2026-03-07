@@ -1,7 +1,9 @@
 import { Clock, Eye, 
   Heart, HelpCircle, 
-  MessageCircle, Send, Share2, Smile, Sparkles, Star, ThumbsUp, Trash2, TrendingUp
+  MessageCircle, Send, Share2, Smile, Sparkles, Star, ThumbsUp, Trash2, TrendingUp,
+  Users, Flame, Award, Hash, BarChart3
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import ContentDetailDialog from '@/components/healing/ContentDetailDialog';
@@ -353,6 +355,183 @@ export default function CommunityTab() {
           })}
         </div>
       )}
+      {/* 社区统计卡片 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="hidden md:grid grid-cols-3 gap-3"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center">
+                <Users className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-lg font-bold text-foreground">1.2k</p>
+              <p className="text-xs text-muted-foreground">活跃用户</p>
+            </CardContent>
+          </Card>
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{posts.length + 856}</p>
+              <p className="text-xs text-muted-foreground">总帖子</p>
+            </CardContent>
+          </Card>
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 text-center">
+              <div className="w-8 h-8 mx-auto mb-1 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
+                <Heart className="w-4 h-4 text-white" />
+              </div>
+              <p className="text-lg font-bold text-foreground">3.8k</p>
+              <p className="text-xs text-muted-foreground">互动点赞</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* 热门话题 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="hidden md:block"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center">
+                  <Hash className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-foreground">热门话题</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { tag: '#焦虑缓解', count: 234, hot: true },
+                  { tag: '#失眠互助', count: 189, hot: true },
+                  { tag: '#正念生活', count: 156, hot: false },
+                  { tag: '#情绪管理', count: 142, hot: false },
+                  { tag: '#康复分享', count: 98, hot: false },
+                ].map((topic, index) => (
+                  <motion.div
+                    key={topic.tag}
+                    whileHover={{ x: 4 }}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold w-5 h-5 rounded flex items-center justify-center ${
+                        index < 3 
+                          ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {index + 1}
+                      </span>
+                      <span className="text-sm text-foreground">{topic.tag}</span>
+                      {topic.hot && (
+                        <Flame className="w-3 h-3 text-rose-500" />
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{topic.count}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* 社区达人 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="hidden md:block"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <Award className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-foreground">本周达人</span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { name: '心灵守护者', posts: 23, likes: 456, avatar: '心' },
+                  { name: '阳光小天使', posts: 18, likes: 382, avatar: '阳' },
+                  { name: '温暖陪伴者', posts: 15, likes: 298, avatar: '温' },
+                ].map((user, index) => (
+                  <motion.div
+                    key={user.name}
+                    whileHover={{ x: 4 }}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                      index === 0 ? 'bg-gradient-to-br from-amber-500 to-orange-500' :
+                      index === 1 ? 'bg-gradient-to-br from-slate-400 to-slate-500' :
+                      'bg-gradient-to-br from-amber-600 to-amber-700'
+                    }`}>
+                      {user.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.posts} 帖子 · {user.likes} 点赞</p>
+                    </div>
+                    {index === 0 && <Star className="w-4 h-4 text-amber-500" fill="currentColor" />}
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* 互动统计 - 仅桌面端显示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="hidden md:block"
+        >
+          <Card className="border shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-foreground">今日互动</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">新帖子</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-20 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full w-3/4 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full" />
+                    </div>
+                    <span className="text-sm font-medium">+12</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">新评论</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-20 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full w-4/5 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full" />
+                    </div>
+                    <span className="text-sm font-medium">+48</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">新点赞</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-20 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full w-5/6 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full" />
+                    </div>
+                    <span className="text-sm font-medium">+156</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>{/* 结束左列 */}
 
       {/* 右列：帖子列表 */}

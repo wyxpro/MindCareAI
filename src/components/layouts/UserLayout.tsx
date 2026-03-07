@@ -99,11 +99,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/login', { state: { role: 'user' } })}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-400 to-purple-400 text-white text-sm font-medium shadow-lg shadow-indigo-400/25 hover:shadow-xl hover:shadow-indigo-400/30 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-sm font-medium border border-border transition-all"
               >
-                <Avatar className="w-8 h-8 border-2 border-white/30">
+                <Avatar className="w-8 h-8 border-2 border-border">
                   <AvatarImage src={profile?.avatar_url || ''} />
-                  <AvatarFallback className="bg-white/20 text-white text-xs">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
                     {profile?.full_name?.charAt(0) || profile?.username?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>

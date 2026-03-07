@@ -143,30 +143,6 @@ export default function EnhancedAssessmentPage() {
           </div>
         </div>
 
-        {/* 中：三个模块完成状态指示 */}
-        <div className="flex items-center gap-5">
-          {desktopModules.map((mod) => {
-            const Icon = mod.icon;
-            return (
-              <div key={mod.id} className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                  mod.done
-                    ? 'bg-emerald-500 shadow-md shadow-emerald-500/30'
-                    : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
-                }`}>
-                  {mod.done
-                    ? <Check className="w-4 h-4 text-white" />
-                    : <Icon className="w-3.5 h-3.5 text-slate-400" />
-                  }
-                </div>
-                <span className={`text-xs font-semibold ${mod.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                  {mod.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
         {/* 右：进度 + 报告按钮 */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-full">
