@@ -64,19 +64,45 @@ const rawMusicFiles: Array<{
   fileName: string;
   category: 'relax' | 'sleep' | 'focus';
   description: string;
+  coverImage: string;
 }> = [
-  { fileName: '焦虑缓解呼吸法.mp3', category: 'relax', description: '通过深呼吸练习，平复焦虑情绪，找回内心平静' },
-  { fileName: '睡前放松引导.mp3', category: 'sleep', description: '温柔的引导语音，帮助身心放松，自然进入梦乡' },
-  { fileName: '身体扫描冥想.mp3', category: 'relax', description: '逐步扫描全身感受，释放紧张与压力' },
-  { fileName: '专注力训练.mp3', category: 'focus', description: '训练大脑专注力，提升工作与学习效率' },
-  { fileName: '抑郁症康复之路.mp3', category: 'focus', description: '科学引导，帮助走出低谷，重建积极心态' },
+  {
+    fileName: '焦虑缓解呼吸法.mp3',
+    category: 'relax',
+    description: '通过深呼吸练习，平复焦虑情绪，找回内心平静',
+    coverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop&q=80'
+  },
+  {
+    fileName: '睡前放松引导.mp3',
+    category: 'sleep',
+    description: '温柔的引导语音，帮助身心放松，自然进入梦乡',
+    coverImage: 'https://images.unsplash.com/photo-1515894203077-9cd36032142f?w=400&h=400&fit=crop&q=80'
+  },
+  {
+    fileName: '身体扫描冥想.mp3',
+    category: 'relax',
+    description: '逐步扫描全身感受，释放紧张与压力',
+    coverImage: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop&q=80'
+  },
+  {
+    fileName: '专注力训练.mp3',
+    category: 'focus',
+    description: '训练大脑专注力，提升工作与学习效率',
+    coverImage: 'https://images.unsplash.com/photo-1528319725582-ddc096101511?w=400&h=400&fit=crop&q=80'
+  },
+  {
+    fileName: '抑郁症康复之路.mp3',
+    category: 'focus',
+    description: '科学引导，帮助走出低谷，重建积极心态',
+    coverImage: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=400&fit=crop&q=80'
+  },
 ];
 
 // 音乐资源统一使用相对路径，Vite 构建时 public/ 目录下的文件会原样复制到 dist/
 const MUSIC_BASE_URL = '/srcs/music';
 
 const meditationTracks = rawMusicFiles
-  .map(({ fileName, category, description }) => {
+  .map(({ fileName, category, description, coverImage }) => {
     const nameWithoutExt = fileName.replace(/\.(mp3|ogg|wav|m4a)$/i, '');
     const [title, artist] = nameWithoutExt.split(' - ');
     const url = `${MUSIC_BASE_URL}/${encodeURIComponent(fileName)}`;
@@ -88,6 +114,7 @@ const meditationTracks = rawMusicFiles
       fileName,
       category,
       description,
+      coverImage,
     };
   })
   .sort((a, b) => a.fileName.localeCompare(b.fileName, 'zh-Hans-CN'));
@@ -437,8 +464,8 @@ export default function HealingPageNew() {
           {[
             { id: 'meditation', label: '冥想', icon: Music, colors: 'from-indigo-500 via-purple-500 to-pink-500' },
             { id: 'community', label: '树洞', icon: Heart, colors: 'from-blue-500 via-cyan-500 to-teal-500' },
-            { id: 'diary', label: '日记', icon: PenLine, colors: 'from-rose-500 via-pink-500 to-fuchsia-500' },
             { id: 'knowledge', label: '知识', icon: Bookmark, colors: 'from-emerald-500 via-teal-500 to-cyan-500' },
+            { id: 'diary', label: '日记', icon: PenLine, colors: 'from-rose-500 via-pink-500 to-fuchsia-500' },
           ].map((tab) => (
             <motion.div key={tab.id} variants={itemVariants}>
               <Button
@@ -758,9 +785,9 @@ export default function HealingPageNew() {
                       >
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            {/* 播放/当前指示按钮 */}
-                            <motion.div 
-                              whileHover={{ scale: 1.1, rotate: 5 }}
+                            {/* 封面图片 */}
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -773,17 +800,29 @@ export default function HealingPageNew() {
                                   }
                                 }
                               }}
-                              className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg cursor-pointer relative overflow-hidden`}
+                              className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0"
                             >
-                              <div className="absolute inset-0 bg-white/20 opacity-0 hover:opacity-100 transition-opacity" />
-                              {isActive && isPlaying ? (
-                                <span className="flex gap-0.5 relative z-10">
-                                  <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite]" />
-                                  <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite_0.1s]" />
-                                  <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite_0.2s]" />
-                                </span>
-                              ) : (
-                                <Play className="w-6 h-6 text-white ml-0.5 relative z-10" fill="white" />
+                              <img
+                                src={track.coverImage}
+                                alt={track.title}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                              {/* 播放状态遮罩 */}
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                {isActive && isPlaying ? (
+                                  <span className="flex gap-0.5">
+                                    <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite]" />
+                                    <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite_0.1s]" />
+                                    <span className="w-1 h-4 bg-white rounded-full animate-[bounce_1s_infinite_0.2s]" />
+                                  </span>
+                                ) : (
+                                  <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+                                )}
+                              </div>
+                              {/* 当前播放指示器 */}
+                              {isActive && (
+                                <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                               )}
                             </motion.div>
                             

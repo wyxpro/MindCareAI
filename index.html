@@ -577,7 +577,7 @@
         }
       }
 
-      /* 立即使用按钮 - 红色到深红色渐变 */
+      /* 在线使用按钮 - 红色到深红色渐变 */
       .btn-primary {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -603,7 +603,7 @@
         transition: left 0.6s ease;
       }
 
-      /* 项目文档按钮 - 绿色到青绿色渐变 */
+      /* 产品文档按钮 - 绿色到青绿色渐变 */
       .btn-docs {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -611,6 +611,238 @@
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
         border: none;
+      }
+
+      /* 下载安装按钮 - 蓝色到紫色渐变 */
+      .btn-download {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        border: none;
+      }
+
+      .btn-download::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        transition: left 0.6s ease;
+      }
+
+      .btn-download::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s ease, height 0.3s ease;
+        pointer-events: none;
+      }
+
+      .btn-download:hover {
+        transform: translateY(-6px) scale(1.05);
+        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4), 0 0 30px rgba(96, 165, 250, 0.3);
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        animation: bluePulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes bluePulse {
+        0%, 100% {
+          box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4), 0 0 30px rgba(96, 165, 250, 0.3);
+        }
+        50% {
+          box-shadow: 0 25px 50px rgba(59, 130, 246, 0.6), 0 0 40px rgba(96, 165, 250, 0.5);
+        }
+      }
+
+      .btn-download:hover::before {
+        left: 100%;
+      }
+
+      .btn-download:active {
+        transform: translateY(-2px) scale(1.02);
+        transition: all 0.15s ease;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6);
+      }
+
+      /* 下载弹窗样式 */
+      .download-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .download-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .download-modal-content {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(50px) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .download-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .download-close:hover {
+        background: #e5e7eb;
+        transform: rotate(90deg);
+      }
+
+      .download-option {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        margin: 12px 0;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: #1f2937;
+      }
+
+      .download-option:hover {
+        transform: translateX(8px) scale(1.02);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      }
+
+      .download-option.windows {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      }
+
+      .download-option.android {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      }
+
+      .download-option.ios {
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      }
+
+      .download-icon {
+        width: 48px;
+        height: 48px;
+        margin-right: 16px;
+        flex-shrink: 0;
+      }
+
+      .download-info h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .download-info p {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      /* 移动端弹窗适配 */
+      @media (max-width: 640px) {
+        .download-modal-content {
+          padding: 24px;
+          width: 95%;
+          max-width: none;
+        }
+
+        .download-modal-content h2 {
+          font-size: 24px;
+          margin-bottom: 8px;
+        }
+
+        .download-modal-content > p {
+          font-size: 14px;
+          margin-bottom: 20px;
+        }
+
+        .download-option {
+          padding: 16px;
+          margin: 10px 0;
+        }
+
+        .download-icon {
+          width: 40px;
+          height: 40px;
+          margin-right: 12px;
+        }
+
+        .download-info h3 {
+          font-size: 16px;
+        }
+
+        .download-info p {
+          font-size: 13px;
+        }
+
+        .download-close {
+          width: 28px;
+          height: 28px;
+          top: 12px;
+          right: 12px;
+        }
+
+        .download-close svg {
+          width: 16px;
+          height: 16px;
+        }
       }
 
       .btn-docs::before {
@@ -1083,13 +1315,13 @@
             data-aos="fade-up"
             data-aos-delay="400"
             data-aos-duration="1000"
-            class="flex flex-row items-center justify-center gap-3 sm:gap-6 mb-16 px-4"
+            class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-16 px-4"
           >
             <a
               href="/#/"
-              class="btn-primary text-white px-6 sm:px-16 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 sm:space-x-3 hover:scale-105 transition-all duration-300 hover:shadow-3xl flex-1 sm:flex-none justify-center max-w-[160px] sm:max-w-none"
+              class="btn-primary text-white px-6 sm:px-12 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 hover:scale-105 transition-all duration-300 hover:shadow-3xl w-full sm:w-auto justify-center max-w-[280px] sm:max-w-none"
             >
-              <span>立即使用</span>
+              <span>在线使用</span>
               <svg
                 class="w-4 h-4 sm:w-6 sm:h-6"
                 fill="none"
@@ -1104,13 +1336,32 @@
                 ></path>
               </svg>
             </a>
+            <button
+              id="downloadBtn"
+              class="btn-download text-white px-6 sm:px-12 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 hover:scale-105 transition-all duration-300 hover:shadow-3xl w-full sm:w-auto justify-center max-w-[280px] sm:max-w-none"
+            >
+              <span>下载安装</span>
+              <svg
+                class="w-4 h-4 sm:w-6 sm:h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                ></path>
+              </svg>
+            </button>
             <a
               href="https://my.feishu.cn/wiki/DH7gw3RumiZLNikKj6zcKFNpnuh"
               target="_blank"
               rel="noopener noreferrer"
-              class="btn-docs text-white px-6 sm:px-16 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 sm:space-x-3 hover:scale-105 transition-all duration-300 hover:shadow-3xl flex-1 sm:flex-none justify-center max-w-[160px] sm:max-w-none"
+              class="btn-docs text-white px-6 sm:px-12 py-4 sm:py-6 rounded-full text-base sm:text-xl font-bold shadow-2xl inline-flex items-center space-x-2 hover:scale-105 transition-all duration-300 hover:shadow-3xl w-full sm:w-auto justify-center max-w-[280px] sm:max-w-none"
             >
-              <span>项目文档</span>
+              <span>产品文档</span>
               <svg
                 class="w-4 h-4 sm:w-6 sm:h-6"
                 fill="none"
@@ -2085,7 +2336,7 @@
               <div>
                 <h3 class="text-white font-semibold mb-3">联系方式</h3>
                 <ul class="space-y-2">
-                  <li>开发者：晓叶</li>
+                  <li>团队：情感计算实验室</li>
                   <li>微信：wyx200265</li>
                   <li>赞助：模法黑客松</li>
                 </ul>
@@ -2102,6 +2353,80 @@
           </div>
         </div>
       </footer>
+
+      <!-- 下载弹窗 -->
+      <div id="downloadModal" class="download-modal">
+        <div class="download-modal-content">
+          <button class="download-close" id="closeModal">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+          
+          <h2 class="text-3xl font-bold gradient-text mb-3 text-center">下载 MindCare AI</h2>
+          <p class="text-gray-600 text-center mb-8">选择适合您设备的版本</p>
+          
+          <div class="space-y-3">
+            <!-- Windows -->
+            <a href="https://github.com/wyxpro/MindCareAI/releases" target="_blank" rel="noopener noreferrer" class="download-option windows">
+              <svg class="download-icon" viewBox="0 0 48 48" fill="none">
+                <rect width="48" height="48" rx="8" fill="#0078D4"/>
+                <path d="M20 14L12 15.5V23.5H20V14Z" fill="white"/>
+                <path d="M36 12L22 14V23.5H36V12Z" fill="white"/>
+                <path d="M20 25.5H12V33.5L20 35V25.5Z" fill="white"/>
+                <path d="M36 25.5H22V35L36 37V25.5Z" fill="white"/>
+              </svg>
+              <div class="download-info">
+                <h3>Windows 版本</h3>
+                <p>支持 Windows 10/11</p>
+              </div>
+              <svg class="w-6 h-6 ml-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+
+            <!-- Android -->
+            <a href="https://github.com/wyxpro/MindCareAI/releases" target="_blank" rel="noopener noreferrer" class="download-option android">
+              <svg class="download-icon" viewBox="0 0 48 48" fill="none">
+                <rect width="48" height="48" rx="8" fill="#3DDC84"/>
+                <path d="M14 18C14 16.8954 14.8954 16 16 16H32C33.1046 16 34 16.8954 34 18V32C34 33.1046 33.1046 34 32 34H16C14.8954 34 14 33.1046 14 32V18Z" fill="white"/>
+                <circle cx="20" cy="22" r="1.5" fill="#3DDC84"/>
+                <circle cx="28" cy="22" r="1.5" fill="#3DDC84"/>
+                <path d="M20 28H28" stroke="#3DDC84" stroke-width="2" stroke-linecap="round"/>
+                <path d="M18 14L20 16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <path d="M30 14L28 16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <div class="download-info">
+                <h3>Android 版本</h3>
+                <p>支持 Android 8.0+</p>
+              </div>
+              <svg class="w-6 h-6 ml-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+
+            <!-- iOS -->
+            <a href="https://github.com/wyxpro/MindCareAI/releases" target="_blank" rel="noopener noreferrer" class="download-option ios">
+              <svg class="download-icon" viewBox="0 0 48 48" fill="none">
+                <rect width="48" height="48" rx="8" fill="#000000"/>
+                <path d="M28.5 14.5C27.5 15.5 26 16 24.5 16C24.3 14.5 25 13 26 12C27 11 28.5 10.5 30 10.5C30.2 12 29.5 13.5 28.5 14.5Z" fill="white"/>
+                <path d="M30 16.5C27.5 16.5 26.5 18 24.5 18C22.5 18 21 16.5 18.5 16.5C16 16.5 13.5 18.5 12.5 21.5C11 25.5 12 32 15.5 36C16.5 37 18 38 19.5 38C21 38 21.5 37 23.5 37C25.5 37 26 38 27.5 38C29 38 30.5 37 31.5 36C33 34.5 34 32.5 34.5 30.5C31.5 29.5 30.5 25.5 33 23C32 20.5 30 16.5 30 16.5Z" fill="white"/>
+              </svg>
+              <div class="download-info">
+                <h3>iPhone 版本</h3>
+                <p>支持 iOS 13.0+</p>
+              </div>
+              <svg class="w-6 h-6 ml-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+
+          <p class="text-sm text-gray-500 text-center mt-6">
+            所有版本均为免费下载使用
+          </p>
+        </div>
+      </div>
 
       <!-- JavaScript交互 -->
       <script>
@@ -2297,26 +2622,34 @@
         
         // 窗口大小变化时重新应用按钮样式
         const applyButtonStyles = () => {
-          document.querySelectorAll('.btn-primary, .btn-docs').forEach(button => {
+          document.querySelectorAll('.btn-primary, .btn-docs, .btn-download').forEach(button => {
             if (isMobile()) {
-              // 移动端颜色交换：立即使用(btn-primary)显示红色，项目文档(btn-docs)显示绿色
+              // 移动端颜色交换：在线使用(btn-primary)显示红色，产品文档(btn-docs)显示绿色，下载安装(btn-download)显示蓝色
               if (button.classList.contains('btn-primary')) {
-                // 立即使用按钮在移动端显示红色
+                // 在线使用按钮在移动端显示红色
                 button.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
                 button.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.3)';
               } else if (button.classList.contains('btn-docs')) {
-                // 项目文档按钮在移动端显示绿色
+                // 产品文档按钮在移动端显示绿色
                 button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
                 button.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
+              } else if (button.classList.contains('btn-download')) {
+                // 下载安装按钮在移动端显示蓝色
+                button.style.background = 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)';
+                button.style.boxShadow = '0 10px 30px rgba(59, 130, 246, 0.3)';
               }
             } else {
               // 桌面端保持原始CSS颜色
               if (button.classList.contains('btn-primary')) {
-                // 立即使用按钮在桌面端保持红色（CSS原始样式）
+                // 在线使用按钮在桌面端保持红色（CSS原始样式）
                 button.style.background = '';
                 button.style.boxShadow = '';
               } else if (button.classList.contains('btn-docs')) {
-                // 项目文档按钮在桌面端保持绿色（CSS原始样式）
+                // 产品文档按钮在桌面端保持绿色（CSS原始样式）
+                button.style.background = '';
+                button.style.boxShadow = '';
+              } else if (button.classList.contains('btn-download')) {
+                // 下载安装按钮在桌面端保持蓝色（CSS原始样式）
                 button.style.background = '';
                 button.style.boxShadow = '';
               }
@@ -2328,7 +2661,7 @@
         window.addEventListener('resize', applyButtonStyles);
         
         // 按钮点击波纹效果增强
-        document.querySelectorAll('.btn-primary, .btn-docs').forEach(button => {
+        document.querySelectorAll('.btn-primary, .btn-docs, .btn-download').forEach(button => {
           // 初始化按钮样式
           applyButtonStyles();
           
@@ -2358,17 +2691,23 @@
             // 根据按钮类型和设备类型创建不同颜色的成功反馈粒子
             let particleColors;
             if (isMobile()) {
-              // 移动端：立即使用(btn-primary)用红色粒子，项目文档(btn-docs)用绿色粒子
-              const isMobilePrimaryButton = this.classList.contains('btn-primary');
-              particleColors = isMobilePrimaryButton 
-                ? ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5']
-                : ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
+              // 移动端：在线使用(btn-primary)用红色粒子，下载安装(btn-download)用蓝色粒子，产品文档(btn-docs)用绿色粒子
+              if (this.classList.contains('btn-primary')) {
+                particleColors = ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5'];
+              } else if (this.classList.contains('btn-download')) {
+                particleColors = ['#3b82f6', '#2563eb', '#1d4ed8', '#8b5cf6', '#7c3aed', '#60a5fa'];
+              } else {
+                particleColors = ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
+              }
             } else {
-              // 桌面端：立即使用(btn-primary)用红色粒子，项目文档(btn-docs)用绿色粒子
-              const isDesktopPrimaryButton = this.classList.contains('btn-primary');
-              particleColors = isDesktopPrimaryButton 
-                ? ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5']
-                : ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
+              // 桌面端：在线使用(btn-primary)用红色粒子，下载安装(btn-download)用蓝色粒子，产品文档(btn-docs)用绿色粒子
+              if (this.classList.contains('btn-primary')) {
+                particleColors = ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#f87171', '#fca5a5'];
+              } else if (this.classList.contains('btn-download')) {
+                particleColors = ['#3b82f6', '#2563eb', '#1d4ed8', '#8b5cf6', '#7c3aed', '#60a5fa'];
+              } else {
+                particleColors = ['#10b981', '#059669', '#047857', '#065f46', '#34d399', '#6ee7b7'];
+              }
             }
             
             for (let i = 0; i < 12; i++) {
@@ -2423,11 +2762,11 @@
             const isMobilePrimaryButton = this.classList.contains('btn-primary');
             
             if (isMobilePrimaryButton) {
-              // 移动端立即使用按钮悬停时的红色效果
+              // 移动端在线使用按钮悬停时的红色效果
               this.style.background = 'linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)';
               this.style.boxShadow = '0 15px 35px rgba(239, 68, 68, 0.5), 0 0 20px rgba(248, 113, 113, 0.3)';
             } else {
-              // 移动端项目文档按钮悬停时的绿色效果
+              // 移动端产品文档按钮悬停时的绿色效果
               this.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%)';
               this.style.boxShadow = '0 15px 35px rgba(16, 185, 129, 0.5), 0 0 20px rgba(52, 211, 153, 0.3)';
             }
@@ -2439,11 +2778,11 @@
             const isMobilePrimaryButton = this.classList.contains('btn-primary');
             
             if (isMobilePrimaryButton) {
-              // 移动端立即使用按钮恢复红色
+              // 移动端在线使用按钮恢复红色
               this.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
               this.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.3)';
             } else {
-              // 移动端项目文档按钮恢复绿色
+              // 移动端产品文档按钮恢复绿色
               this.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
               this.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
             }
@@ -2456,11 +2795,11 @@
             const isMobilePrimaryButton = this.classList.contains('btn-primary');
             
             if (isMobilePrimaryButton) {
-              // 移动端立即使用按钮按下时的深红色效果
+              // 移动端在线使用按钮按下时的深红色效果
               this.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
               this.style.boxShadow = '0 5px 15px rgba(239, 68, 68, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
             } else {
-              // 移动端项目文档按钮按下时的深绿色效果
+              // 移动端产品文档按钮按下时的深绿色效果
               this.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
               this.style.boxShadow = '0 5px 15px rgba(16, 185, 129, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
             }
@@ -2869,6 +3208,142 @@
             element.style.transform = `translateY(${yPos}px)`;
           });
         });
+
+        // 下载弹窗交互
+        const downloadBtn = document.getElementById('downloadBtn');
+        const downloadModal = document.getElementById('downloadModal');
+        const closeModal = document.getElementById('closeModal');
+
+        // 打开弹窗
+        if (downloadBtn) {
+          downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            downloadModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // 按钮点击粒子效果
+            const rect = downloadBtn.getBoundingClientRect();
+            const particleColors = ['#3b82f6', '#2563eb', '#1d4ed8', '#8b5cf6', '#7c3aed', '#60a5fa'];
+            
+            for (let i = 0; i < 12; i++) {
+              const particle = document.createElement('div');
+              particle.style.position = 'absolute';
+              particle.style.width = '6px';
+              particle.style.height = '6px';
+              particle.style.background = particleColors[Math.floor(Math.random() * particleColors.length)];
+              particle.style.borderRadius = '50%';
+              particle.style.pointerEvents = 'none';
+              particle.style.zIndex = '1000';
+              particle.style.boxShadow = `0 0 10px ${particleColors[0]}`;
+              
+              const centerX = rect.left + rect.width / 2;
+              const centerY = rect.top + rect.height / 2;
+              particle.style.left = centerX + 'px';
+              particle.style.top = centerY + 'px';
+              
+              document.body.appendChild(particle);
+              
+              const angle = (i / 12) * Math.PI * 2;
+              const distance = 40 + Math.random() * 30;
+              const duration = 600 + Math.random() * 400;
+              
+              particle.animate([
+                {
+                  transform: 'translate(0, 0) scale(1)',
+                  opacity: 1
+                },
+                {
+                  transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`,
+                  opacity: 0
+                }
+              ], {
+                duration: duration,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+              }).onfinish = () => {
+                particle.remove();
+              };
+            }
+          });
+        }
+
+        // 关闭弹窗
+        if (closeModal) {
+          closeModal.addEventListener('click', () => {
+            downloadModal.classList.remove('active');
+            document.body.style.overflow = '';
+          });
+        }
+
+        // 点击背景关闭弹窗
+        if (downloadModal) {
+          downloadModal.addEventListener('click', (e) => {
+            if (e.target === downloadModal) {
+              downloadModal.classList.remove('active');
+              document.body.style.overflow = '';
+            }
+          });
+        }
+
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && downloadModal.classList.contains('active')) {
+            downloadModal.classList.remove('active');
+            document.body.style.overflow = '';
+          }
+        });
+
+        // 下载选项点击效果
+        document.querySelectorAll('.download-option').forEach(option => {
+          option.addEventListener('click', function(e) {
+            // 创建下载成功提示
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            toast.style.color = 'white';
+            toast.style.padding = '16px 24px';
+            toast.style.borderRadius = '12px';
+            toast.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.3)';
+            toast.style.zIndex = '10000';
+            toast.style.fontWeight = '600';
+            toast.style.animation = 'slideInRight 0.3s ease';
+            toast.textContent = '正在跳转到下载页面...';
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+              toast.style.animation = 'slideOutRight 0.3s ease';
+              setTimeout(() => toast.remove(), 300);
+            }, 2000);
+          });
+        });
+
+        // 添加toast动画
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes slideInRight {
+            from {
+              transform: translateX(400px);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          @keyframes slideOutRight {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(400px);
+              opacity: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
       </script>
     </div>
     <div id="root"></div>

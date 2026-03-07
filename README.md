@@ -12,7 +12,7 @@
 
 **🌟 基于多模态AI的心理健康检测与疗愈平台**
 
-[在线体验](https://www.miaoda.cn/projects/app-97zabxvzebcx) • [功能演示](#-核心功能模块) • [快速开始](#-快速开始) • [API文档](#-api-接口) • [部署指南](#-部署指南)
+[在线使用](https://www.miaoda.cn/projects/app-97zabxvzebcx) • [功能演示](#-核心功能模块) • [快速开始](#-快速开始) • [API文档](#-api-接口) • [部署指南](#-部署指南)
 
 </div>
 
@@ -185,7 +185,7 @@ MindCareAI/
 │   │   ├── 📁 rag-retrieval/      # RAG检索
 │   │   └── 📁 auth-username-signup/ # 用户名注册
 │   └── 📁 migrations/             # 数据库迁移(18个迁移文件)
-├── 📁 doc/                        # 项目文档
+├── 📁 doc/                        # 产品文档
 │   ├── 📄 DESIGN_SYSTEM.md        # 设计系统规范
 │   ├── 📄 FEATURE_CHECKLIST.md    # 功能清单
 │   ├── 📄 MULTIMODAL_ASSESSMENT.md # 多模态评估文档
