@@ -50,7 +50,10 @@ export default function EnhancedAssessmentPage() {
   // 融合报告展示（桌面端和移动端均使用）
   if ((isMobile && currentStep === 'report') || showReport) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div
+        className={isMobile ? "bg-slate-50 dark:bg-slate-950 overflow-auto" : "min-h-screen bg-slate-50 dark:bg-slate-950"}
+        style={isMobile ? { height: 'calc(100dvh - 64px)' } : undefined}
+      >
         <FusionReport
           scaleData={scaleData}
           voiceData={voiceData}
@@ -64,14 +67,17 @@ export default function EnhancedAssessmentPage() {
   // ─── 移动端：原有步骤式流程 ───────────────────────────────────────────────
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div
+        className="bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden"
+        style={{ height: 'calc(100dvh - 64px)' }}
+      >
         <StepNavigation
           currentStep={currentStep}
           onStepChange={handleStepChange}
           completedSteps={completedSteps}
         />
-        <main className="relative min-h-screen pt-24">
-          <AnimatePresence mode="wait">
+        <main className="flex-1 overflow-hidden relative">
+          <AnimatePresence mode="wait" initial={false}>
             {currentStep === 'scale' && (
               <motion.div
                 key="scale"
@@ -79,7 +85,7 @@ export default function EnhancedAssessmentPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30 }}
                 transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                className="min-h-screen"
+                className="absolute inset-0 overflow-hidden"
               >
                 <ScaleStep
                   userId={user?.id || ''}
@@ -94,7 +100,7 @@ export default function EnhancedAssessmentPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
                 transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                className="min-h-screen"
+                className="absolute inset-0 overflow-hidden"
               >
                 <VoiceStep onComplete={(data) => handleStepComplete('voice', data)} />
               </motion.div>
@@ -106,7 +112,7 @@ export default function EnhancedAssessmentPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
                 transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                className="min-h-screen"
+                className="absolute inset-0 overflow-hidden"
               >
                 <ExpressionStep onComplete={(data) => handleStepComplete('expression', data)} />
               </motion.div>

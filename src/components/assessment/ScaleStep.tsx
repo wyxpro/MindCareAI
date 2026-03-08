@@ -878,7 +878,8 @@ ${kbText || '暂无相关知识库'}`;
 
   if (!started) {
     return (
-      <div className="pt-4 px-4 max-w-md mx-auto space-y-3 pb-10">
+      <div className="h-full overflow-y-auto bg-slate-50 dark:bg-slate-950">
+        <div className="pt-4 px-4 max-w-md mx-auto space-y-3 pb-10">
         <div>
           <div className="flex items-center justify-between">
             <div>
@@ -1234,12 +1235,13 @@ ${kbText || '暂无相关知识库'}`;
             )}
           </DialogContent>
         </Dialog>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-slate-50 dark:bg-slate-950 flex flex-col">
+    <div className="h-full bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       {/* 沉浸式顶部 - 调整padding避免与导航栏重叠 */}
       <div className="px-4 py-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shrink-0">
         <div className="max-w-md mx-auto space-y-2">

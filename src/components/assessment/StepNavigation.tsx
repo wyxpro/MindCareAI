@@ -22,7 +22,7 @@ export default function StepNavigation({ currentStep, onStepChange, completedSte
   const isMobile = useIsMobile();
 
   return (
-    <div className={`fixed top-0 right-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-4 ${isMobile ? 'left-0' : 'left-64'}`}>
+    <div className={`${isMobile ? 'shrink-0' : 'fixed top-0 right-0 left-64'} z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-4`}>
       <div className="max-w-md mx-auto flex items-center justify-between relative">
         {/* 背景连接线 */}
         <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 mx-8" />
