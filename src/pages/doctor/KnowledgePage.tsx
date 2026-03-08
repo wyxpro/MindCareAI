@@ -48,6 +48,7 @@ export default function KnowledgePage() {
         title,
         content: JSON.stringify({
           type: 'scale',
+          scale_id: tag,
           description,
           version: 1,
           questions: questions.map((t, i) => ({ id: crypto.randomUUID(), text: t, order: i }))
@@ -149,10 +150,15 @@ export default function KnowledgePage() {
             if (needFix) {
               const newContent = JSON.stringify({
                 type: 'scale',
+                scale_id: tag,
                 description: j.description || (tag === 'PHQ-9' ? '抑郁筛查量表' : tag === 'HAMD-17' ? '临床评估抑郁状态的标准量表' : '自评抑郁量表'),
                 version: j.version || 1,
                 questions: desired.map((t, i) => ({ id: sorted[i]?.id || crypto.randomUUID(), text: t, order: i }))
               });
+              await updateKnowledge(item.id, { content: newContent });
+            } else if (!j.scale_id) {
+              // 已有正确题目但缺少 scale_id，补充写入
+              const newContent = JSON.stringify({ ...j, scale_id: tag });
               await updateKnowledge(item.id, { content: newContent });
             }
           }

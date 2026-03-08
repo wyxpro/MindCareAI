@@ -43,10 +43,94 @@ interface ScaleStepProps {
 
 type ScaleJson = { type: 'scale'; scale_id: string; name: string; description?: string; questions: { text: string }[] }
 const SCALES = [
-  { id: 'PHQ-9', name: '患者健康问卷', total: 9, description: '用于筛查抑郁症状及其严重程度' },
-  { id: 'HAMD-17', name: '汉密尔顿抑郁量表', total: 17, description: '临床评估抑郁状态的标准量表' },
-  { id: 'SDS-20', name: '自评抑郁量表', total: 20, description: '直观反映抑郁的主观感受' },
+  { id: 'PHQ-9', name: '患者健康问卷', total: 9, description: '用于筛查抑郁症状及其严重程度', duration: 5 },
+  { id: 'HAMD-17', name: '汉密尔顿抑郁量表', total: 17, description: '临床评估抑郁状态的标准量表', duration: 8 },
+  { id: 'SDS-20', name: '自评抑郁量表', total: 20, description: '直观反映抑郁的主观感受', duration: 10 },
 ];
+
+// 内置标准量表题目（与医生端知识库保持一致），确保网络不可用时也能正常运作
+const BUILTIN_SCALE_QUESTIONS: Record<string, string[]> = {
+  'PHQ-9': [
+    '兴趣减退：做事提不起劲或没有兴趣？',
+    '情绪低落：感到忧郁、沮丧或绝望？',
+    '睡眠问题：入睡困难、多梦、早醒或睡眠过多？',
+    '精力不足：感觉疲倦或没有体力？',
+    '食欲改变：食欲不振或暴饮暴食？',
+    '自我评价低：觉得自己很失败或让自己/家人失望？',
+    '注意力困难：很难集中注意力，例如阅读或看电视？',
+    '精神运动改变：行动或说话变慢，或烦躁坐立不安？',
+    '自伤/自杀意念：有轻生或自残的念头？',
+  ],
+  'HAMD-17': [
+    '抑郁心境：过去一周大部分时间感到抑郁、悲伤？',
+    '罪疚感：对过往或现状有明显内疚或自责？',
+    '自杀意念：出现轻生或自伤想法与言语？',
+    '入睡困难：卧床后半小时以上不能入睡？',
+    '睡眠维持：夜间多次醒来且难以再入睡？',
+    '早醒：较平时更早醒且无法再睡？',
+    '工作/活动减少：工作效率下降或兴趣显著降低？',
+    '精神运动迟滞：动作、言语明显缓慢？',
+    '激越：烦躁不安，坐立不宁或来回走动？',
+    '焦虑（心理）：紧张、担忧、容易紧张的主观体验？',
+    '焦虑（躯体）：心悸、出汗、手抖等躯体症状？',
+    '胃肠道症状：食欲下降、恶心或胃部不适？',
+    '全身躯体症状：头痛、乏力、身体不适？',
+    '性功能症状：性欲减退或相关问题？',
+    '疑病倾向：过度担心身体疾病？',
+    '体重下降：近期体重较以往明显减少？',
+    '洞察力：对自身病情的认识与配合程度如何？',
+  ],
+  'SDS-20': [
+    '心境低落：我觉得心情不好，心里很难过？',
+    '早晨状态：我觉得早晨心情最好？',
+    '哭泣倾向：我要哭，或者想哭？',
+    '睡眠问题：我夜间睡眠不好？',
+    '食欲情况：我吃饭跟平时一样多？',
+    '人际愉悦：我跟异性接触时，和以往一样感到愉快？',
+    '体重变化：我发觉我的体重在下降？',
+    '便秘困扰：我有便秘的苦恼？',
+    '心率变化：我心跳比平时快？',
+    '疲乏感：我无缘无故地感到疲乏？',
+    '思维清晰度：我的头脑跟平时一样清楚？',
+    '做事难度：我觉得做任何事情都没有困难？',
+    '焦虑不安：我觉得不安而平静不下来？',
+    '未来期望：我对未来抱有希望？',
+    '易激惹：我比平时更容易激怒？',
+    '决策能力：我觉得决定什么事很容易？',
+    '自我价值：我觉得自己是个有用的人，有人需要我？',
+    '生活意义：我的生活很有意义？',
+    '自杀意念：我觉得如果我死了，别人会生活得更好？',
+    '兴趣保持：我仍然喜爱我平时喜爱的东西？',
+  ],
+};
+
+/** 确保字符串末尾有中文问号（模块级可复用） */
+function ensureQuestionMark(question: string): string {
+  const trimmed = question.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.endsWith('？') || trimmed.endsWith('?')) return trimmed;
+  return `${trimmed}？`;
+}
+
+/** 从内置题库或 questionBank 中获取指定索引的题目（已含问号） */
+function getQuestionAt(
+  index: number,
+  questionBank: string[],
+  selectedScales: string[]
+): string {
+  // 优先使用已加载的 questionBank
+  if (questionBank.length > 0) {
+    const q = questionBank[index] ?? questionBank[questionBank.length - 1] ?? '';
+    return ensureQuestionMark(q);
+  }
+  // 降级到内置题库：按 selectedScales 顺序拼接所有题目
+  const allBuiltin = selectedScales.flatMap(id => BUILTIN_SCALE_QUESTIONS[id] ?? []);
+  if (allBuiltin.length > 0) {
+    const q = allBuiltin[index] ?? allBuiltin[allBuiltin.length - 1] ?? '';
+    return ensureQuestionMark(q);
+  }
+  return ensureQuestionMark('请描述一下您最近两周的心情与兴趣变化');
+}
 
 // 常用表情列表
 const EMOJI_LIST = [
@@ -404,17 +488,58 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     setLoading(true);
 
     try {
-      // 构建RAG上下文（简版）
+      // nextQ：AI 在本条回复中要引导的下一题
+      // currentQuestionIndex = 0 时代表"用户刚回应了开场白，AI 需要引出第1题（index 0）"
+      // currentQuestionIndex = N 时代表"用户刚答完第N题，AI 需要引出第N+1题（index N）"
+      // 因此 nextQ 直接取 questionBank[currentQuestionIndex]
+      let nextQ: string;
       let kbText = '';
       try {
         const kb = await getKnowledgeBase('assessment');
+        // 构建 kbText（取前5条摘要）
         kbText = (kb || []).slice(0, 5)
           .map(k => `【${k.title}】\n${(k.content || '').slice(0, 400)}`)
           .join('\n\n');
-      } catch {}
 
-      const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
-      
+        if (questionBank.length > 0) {
+          // 优先使用已缓存的 questionBank
+          nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
+        } else {
+          // questionBank 尚未缓存：从本次 KB 查询结果中提取，并同步缓存
+          const scales = kb
+            .map(k => {
+              try {
+                const json = JSON.parse(k.content || '{}');
+                return { ...json, _title: k.title, _tags: (k.tags || []) as string[] };
+              } catch { return null; }
+            })
+            .filter(Boolean) as any[];
+          const matched = scales.filter(
+            s => selectedScales.includes(s.scale_id) ||
+              selectedScales.some((id: string) => (s._tags as string[]).includes(id)) ||
+              selectedScales.some((id: string) => s._title?.includes(id))
+          );
+          const allQs = matched.flatMap((s: any) =>
+            (s.questions || [])
+              .slice()
+              .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+              .map((q: any) => q.text as string)
+          );
+          if (allQs.length > 0) {
+            // 同步缓存到 questionBank，后续调用直接命中
+            setQuestionBank(allQs);
+            const raw = allQs[currentQuestionIndex] ?? allQs[allQs.length - 1] ?? '';
+            nextQ = ensureQuestionMark(raw);
+          } else {
+            // KB 中无匹配量表，使用内置题库
+            nextQ = getQuestionAt(currentQuestionIndex, [], selectedScales);
+          }
+        }
+      } catch {
+        // KB 查询失败：内置题库兜底
+        nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
+      }
+
       // 构建完整的对话历史上下文（最近3轮）
       const recentMessages = messages.slice(-6); // 最近3轮对话（用户+AI各3条）
       const conversationHistory = recentMessages.map(m => ({
@@ -690,20 +815,41 @@ ${kbText || '暂无相关知识库'}`;
         const scales = kb.map(k => {
           try { 
             const json = JSON.parse(k.content || '{}');
-            return { ...json, id: k.id, title: k.title } as any;
+            return { ...json, _id: k.id, _title: k.title, _tags: k.tags || [] } as any;
           } catch { return null }
         }).filter(Boolean);
         
         if (scales.length > 0) {
-          const selected = scales.filter(s => selectedScales.includes(s.scale_id) || selectedScales.some(id => s.title?.includes(id)));
-          const qs = selected.flatMap(s => (s.questions || []).map((q: any) => q.text));
+          // 匹配优先级：scale_id 精确匹配 → tags 包含匹配 → title 包含匹配
+          const selected = scales.filter(s =>
+            selectedScales.includes(s.scale_id) ||
+            selectedScales.some(id => (s._tags as string[]).includes(id)) ||
+            selectedScales.some(id => s._title?.includes(id))
+          );
+          const qs = selected.flatMap(s => (s.questions || [])
+            .slice()
+            .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+            .map((q: any) => q.text));
           if (qs.length > 0) {
             setQuestionBank(qs);
             setTotalQuestions(qs.length);
+            return; // KB 加载成功，直接返回
           }
+        }
+        // KB 匹配失败或为空，使用内置题库兜底
+        const builtinQs = selectedScales.flatMap(id => BUILTIN_SCALE_QUESTIONS[id] ?? []);
+        if (builtinQs.length > 0) {
+          setQuestionBank(builtinQs);
+          setTotalQuestions(builtinQs.length);
         }
       } catch (error) {
         console.error('Failed to load scales from KB:', error);
+        // 加载异常，也使用内置题库兜底
+        const builtinQs = selectedScales.flatMap(id => BUILTIN_SCALE_QUESTIONS[id] ?? []);
+        if (builtinQs.length > 0) {
+          setQuestionBank(builtinQs);
+          setTotalQuestions(builtinQs.length);
+        }
       }
     })();
   }, [selectedScales]);
@@ -765,17 +911,58 @@ ${kbText || '暂无相关知识库'}`;
     setLoading(true);
 
     try {
-      // 构建RAG上下文（简版）
+      // nextQ：AI 在本条回复中要引导的下一题
+      // currentQuestionIndex = 0 时代表"用户刚回应了开场白，AI 需要引出第1题（index 0）"
+      // currentQuestionIndex = N 时代表"用户刚答完第N题，AI 需要引出第N+1题（index N）"
+      // 因此 nextQ 直接取 questionBank[currentQuestionIndex]
+      let nextQ: string;
       let kbText = '';
       try {
         const kb = await getKnowledgeBase('assessment');
+        // 构建 kbText（取前5条摘要）
         kbText = (kb || []).slice(0, 5)
           .map(k => `【${k.title}】\n${(k.content || '').slice(0, 400)}`)
           .join('\n\n');
-      } catch {}
 
-      const nextQ = questionBank[currentQuestionIndex] || '请详细描述一下您最近两周的心情与兴趣变化。';
-      
+        if (questionBank.length > 0) {
+          // 优先使用已缓存的 questionBank
+          nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
+        } else {
+          // questionBank 尚未缓存：从本次 KB 查询结果中提取，并同步缓存
+          const scales = kb
+            .map(k => {
+              try {
+                const json = JSON.parse(k.content || '{}');
+                return { ...json, _title: k.title, _tags: (k.tags || []) as string[] };
+              } catch { return null; }
+            })
+            .filter(Boolean) as any[];
+          const matched = scales.filter(
+            s => selectedScales.includes(s.scale_id) ||
+              selectedScales.some((id: string) => (s._tags as string[]).includes(id)) ||
+              selectedScales.some((id: string) => s._title?.includes(id))
+          );
+          const allQs = matched.flatMap((s: any) =>
+            (s.questions || [])
+              .slice()
+              .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+              .map((q: any) => q.text as string)
+          );
+          if (allQs.length > 0) {
+            // 同步缓存到 questionBank，后续调用直接命中
+            setQuestionBank(allQs);
+            const raw = allQs[currentQuestionIndex] ?? allQs[allQs.length - 1] ?? '';
+            nextQ = ensureQuestionMark(raw);
+          } else {
+            // KB 中无匹配量表，使用内置题库
+            nextQ = getQuestionAt(currentQuestionIndex, [], selectedScales);
+          }
+        }
+      } catch {
+        // KB 查询失败：内置题库兜底
+        nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
+      }
+
       // 构建完整的对话历史上下文（最近3轮）
       const recentMessages = messages.slice(-6); // 最近3轮对话（用户+AI各3条）
       const conversationHistory = recentMessages.map(m => ({
@@ -1029,7 +1216,7 @@ ${kbText || '暂无相关知识库'}`;
               </div>
               <div className="mt-4 flex gap-2">
                 <Badge variant="outline" className="text-[10px] py-0">{scale.total} 题</Badge>
-                <Badge variant="outline" className="text-[10px] py-0">约 5 分钟</Badge>
+                <Badge variant="outline" className="text-[10px] py-0">约 {(scale as any).duration ?? 5} 分钟</Badge>
               </div>
             </motion.div>
           ))}

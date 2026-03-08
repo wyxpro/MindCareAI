@@ -7,7 +7,7 @@ export interface VolcMessage { role: 'user' | 'system' | 'assistant'; content: A
 export async function volcResponses(payload: { model: string; input: VolcMessage[] }) {
   const resp = await ky.post('/innerapi/v1/volc/responses', {
     json: payload,
-    timeout: 30000,
+    timeout: 90000,
     throwHttpErrors: false
   });
 
