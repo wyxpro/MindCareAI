@@ -26,8 +26,9 @@
 - 核心需求 ：解决用户“不敢看医生、看不起医生、看了没后续”和医生“看不准、管不了”的双端痛点。
 
 ### ✨ 核心亮点
-<img width="1388" height="1479" alt="image" src="https://github.com/user-attachments/assets/4b6fc4ed-8ec7-45a0-a6fb-cdfa48fda079" />
-<img width="1374" height="1496" alt="image" src="https://github.com/user-attachments/assets/d1f35aca-aa46-477f-af90-6ec13de9d366" />
+<img width="1369" height="1473" alt="image" src="https://github.com/user-attachments/assets/8d93fe14-b880-4a94-8300-ddeb468cc4ad" />
+<img width="1401" height="1497" alt="image" src="https://github.com/user-attachments/assets/cb6a6a09-0fe3-46e8-8022-47ec7c75eb45" />
+<img width="1263" height="246" alt="image" src="https://github.com/user-attachments/assets/1cdea87c-2b45-4246-86bb-06a8f42d6d48" />
 
 
 - 🤖 **多模态AI评估** - 集成文本、语音、微表情识别的综合心理状态分析
