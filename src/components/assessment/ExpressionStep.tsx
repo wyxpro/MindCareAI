@@ -369,9 +369,9 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
   // 封面界面
   if (!cameraStarted) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-950 via-slate-950 to-cyan-950 flex items-center justify-center z-30 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-slate-950 to-cyan-950 flex items-center justify-center overflow-hidden">
         {/* 背景装饰 */}
-        <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
@@ -380,18 +380,18 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 max-w-2xl mx-auto px-6 text-center"
+          className="relative z-10 w-full max-w-2xl mx-auto px-4 py-4 md:py-10 text-center flex flex-col justify-center min-h-screen"
         >
           {/* 图标 */}
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="mb-8 flex justify-center"
+            className="mb-6 md:mb-8 flex justify-center"
           >
             <div className="relative">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50">
-                <ScanFace className="w-16 h-16 text-white" />
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50">
+                <ScanFace className="w-12 h-12 md:w-16 md:h-16 text-white" />
               </div>
               <motion.div
                 animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
@@ -406,7 +406,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-4xl md:text-5xl font-black text-white mb-4"
+            className="text-2xl md:text-5xl font-black text-white mb-3 md:mb-4"
           >
             AI 表情识别分析
           </motion.h1>
@@ -416,7 +416,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-lg text-white/80 mb-8 leading-relaxed"
+            className="text-sm md:text-lg text-white/80 mb-8 md:mb-8 leading-relaxed px-4"
           >
             通过先进的面部微表情识别技术，分析您的情绪状态与心理健康指标
           </motion.p>
@@ -426,7 +426,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
+            className="grid grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10"
           >
             {[
               { icon: Shield, title: '隐私保护', desc: '本地处理，数据安全' },
@@ -438,11 +438,11 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + index * 0.1 }}
-                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 hover:bg-white/15 transition-all"
+                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl md:rounded-2xl p-3 md:p-5 hover:bg-white/15 transition-all"
               >
-                <feature.icon className="w-8 h-8 text-cyan-400 mb-3 mx-auto" />
-                <h3 className="text-white font-bold mb-1">{feature.title}</h3>
-                <p className="text-white/60 text-sm">{feature.desc}</p>
+                <feature.icon className="w-7 h-7 md:w-8 md:h-8 text-cyan-400 mb-2 md:mb-3 mx-auto" />
+                <h3 className="text-white font-bold text-sm md:text-base mb-1 md:mb-1">{feature.title}</h3>
+                <p className="text-white/60 text-xs md:text-sm leading-tight">{feature.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -455,9 +455,9 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
           >
             <Button
               onClick={() => setCameraStarted(true)}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-12 py-6 rounded-2xl text-lg font-bold shadow-2xl shadow-blue-500/50 hover:shadow-blue-500/70 transition-all hover:scale-105"
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-10 py-5 md:px-12 md:py-6 rounded-2xl md:rounded-2xl text-base md:text-lg font-bold shadow-2xl shadow-blue-500/50 hover:shadow-blue-500/70 transition-all hover:scale-105"
             >
-              <Video className="w-6 h-6 mr-3" />
+              <Video className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3" />
               开始表情识别
             </Button>
           </motion.div>
@@ -467,9 +467,9 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}
-            className="mt-8 flex items-center justify-center gap-2 text-white/50 text-sm"
+            className="mt-6 md:mt-8 flex items-center justify-center gap-2 text-white/50 text-xs md:text-sm"
           >
-            <Info className="w-4 h-4" />
+            <Info className="w-4 h-4 md:w-4 md:h-4" />
             <span>请确保光线充足，面部清晰可见</span>
           </motion.div>
         </motion.div>
