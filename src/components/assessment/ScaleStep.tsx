@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronRight, ClipboardList, Download, Info, Printer, Send, Smile, Stethoscope, History, FileText, Calendar, AlertCircle, Activity } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Check, ChevronRight, ClipboardList, Download, Info, Printer, Send, Smile, Stethoscope, History, FileText, Calendar, AlertCircle, Activity, RotateCcw } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useAssessmentPersistence } from '@/hooks/use-assessment-persistence';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -262,6 +263,12 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [showHistoryReport, setShowHistoryReport] = useState(false);
 
+  // 持久化存储 hook（用 userId prop 保证用户隔离）
+  const { loadSession, saveSession, clearSession, hasUnfinishedSession } = useAssessmentPersistence(userId);
+
+  // 是否显示"恢复上次评估"Banner
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -273,6 +280,29 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   const webSpeechRef = useRef<any>(null);
   const prefixRef = useRef('');
   const finalTranscriptRef = useRef('');
+
+  // ── 持久化：组件挂载时检测未完成会话 ──────────────────────
+  useEffect(() => {
+    if (userId && hasUnfinishedSession()) {
+      setShowResumeBanner(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // ── 持久化：对话过程中实时保存到 localStorage ─────────────
+  useEffect(() => {
+    if (!started || messages.length === 0) return;
+    // 将 Date 对象序列化为 ISO 字符串再存储
+    saveSession({
+      selectedScales,
+      currentQuestionIndex,
+      totalQuestions,
+      messages: messages.map(m => ({
+        ...m,
+        timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+      })),
+    });
+  }, [started, messages, currentQuestionIndex, totalQuestions, selectedScales, saveSession]);
 
   // 获取用户头像
   const getUserAvatar = () => {
@@ -688,6 +718,9 @@ ${kbText || '暂无相关知识库'}`;
       const total = SCALES.filter(s => selectedScales.includes(s.id)).reduce((acc, s) => acc + s.total, 0);
       setTotalQuestions(total);
     }
+    // 清除旧的未完成会话，开始全新评估
+    clearSession();
+    setShowResumeBanner(false);
     setStarted(true);
     setMessages([
       {
@@ -698,6 +731,28 @@ ${kbText || '暂无相关知识库'}`;
       }
     ]);
   };
+
+  /** 从 localStorage 恢复上次未完成的评估 */
+  const handleResumeSession = useCallback(() => {
+    const session = loadSession();
+    if (!session) {
+      setShowResumeBanner(false);
+      return;
+    }
+    setSelectedScales(session.selectedScales);
+    setCurrentQuestionIndex(session.currentQuestionIndex);
+    setTotalQuestions(session.totalQuestions);
+    // 将 ISO 字符串还原为 Date 对象
+    setMessages(
+      session.messages.map(m => ({
+        ...m,
+        timestamp: new Date(m.timestamp),
+      }))
+    );
+    setShowResumeBanner(false);
+    setStarted(true);
+    toast.success('已恢复上次未完成的评估');
+  }, [loadSession]);
 
   const handleSend = async () => {
     if (!inputText.trim() || loading) return;
@@ -870,6 +925,9 @@ ${kbText || '暂无相关知识库'}`;
     setRiskLevel(level);
     setShowReport(true);
 
+    // 评估完成后清除临时存储，避免下次恢复到已完成的会话
+    clearSession();
+
     if (level === 'high' || level === 'medium') {
       setNextButtonDisabled(true);
       setCountdown(10);
@@ -897,6 +955,47 @@ ${kbText || '暂无相关知识库'}`;
             </Button>
           </div>
         </div>
+
+        {/* 未完成评估恢复 Banner */}
+        <AnimatePresence>
+          {showResumeBanner && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-2xl"
+            >
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <RotateCcw className="w-4 h-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">发现未完成的评估</p>
+                <p className="text-xs text-slate-500 mt-0.5">上次评估尚未完成，是否继续？</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  onClick={handleResumeSession}
+                  className="h-8 rounded-xl text-xs px-3 shadow-md shadow-primary/20"
+                >
+                  继续
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    clearSession();
+                    setShowResumeBanner(false);
+                  }}
+                  className="h-8 rounded-xl text-xs px-3 text-slate-400 hover:text-slate-600"
+                >
+                  忽略
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="space-y-4">
           {SCALES.map(scale => (
