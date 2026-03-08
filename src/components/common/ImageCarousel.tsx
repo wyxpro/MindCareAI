@@ -100,7 +100,7 @@ export default function ImageCarousel({
 
   if (images.length === 0) {
     return (
-      <div className={`bg-gray-100 dark:bg-gray-800 rounded-2xl h-64 md:h-72 flex items-center justify-center ${className}`}>
+      <div className={`bg-gray-100 dark:bg-gray-800 rounded-2xl h-48 sm:h-56 md:h-64 lg:h-72 flex items-center justify-center ${className}`}>
         <p className="text-gray-500 dark:text-gray-400">暂无图片</p>
       </div>
     );
@@ -113,7 +113,7 @@ export default function ImageCarousel({
       onMouseLeave={handleMouseLeave}
     >
       {/* 图片容器 */}
-      <div className="relative h-64 md:h-72 overflow-hidden">
+      <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
