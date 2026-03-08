@@ -20,7 +20,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { getProfile, useAuth } from '@/contexts/AuthContext';
 import { getAssessments, getEmotionDiaries, updateProfile } from '@/db/api';
 import { supabase } from '@/db/supabase';
-import type { Profile } from '@/types';
 
 // 预设头像选项
 const PRESET_AVATARS = [
@@ -107,16 +106,23 @@ export default function ProfilePageRedesigned() {
         const m = today.getMonth() - birth.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) calcAge--;
         setAge(calcAge.toString());
+      } else {
+        setAge('');
       }
       // 从bio中加载身高体重
       if (profile.bio) {
         try {
           const bioData = JSON.parse(profile.bio);
-          if (bioData.height) setHeight(bioData.height.toString());
-          if (bioData.weight) setWeight(bioData.weight.toString());
+          setHeight(bioData.height ? bioData.height.toString() : '');
+          setWeight(bioData.weight ? bioData.weight.toString() : '');
         } catch {
           // bio 不是JSON格式，忽略
+          setHeight('');
+          setWeight('');
         }
+      } else {
+        setHeight('');
+        setWeight('');
       }
       // 加载保存的个性化设置
       if (profile.avatar_url) {
@@ -215,102 +221,137 @@ export default function ProfilePageRedesigned() {
     if (!user) return;
     setSaving(true);
     try {
-      // 构建头像URL - 预设头像使用 preset:avatarId 格式，自定义上传使用实际URL
-      let avatarUrlToSave: string | undefined;
-      if (customAvatarUrl) {
-        // 自定义上传的头像
-        avatarUrlToSave = customAvatarUrl;
-      } else if (selectedAvatar) {
-        // 预设头像，使用 preset: 前缀
-        avatarUrlToSave = `preset:${selectedAvatar}`;
+      // ── 构建头像URL ──────────────────────────────────────────────
+      const avatarUrlToSave = customAvatarUrl
+        ? customAvatarUrl
+        : `preset:${selectedAvatar}`;
+
+      // ── 构建背景URL ──────────────────────────────────────────────
+      const backgroundUrlToSave = customBackgroundUrl
+        ? customBackgroundUrl
+        : `preset:${selectedBackground}`;
+
+      // ── 年龄 → birth_date ────────────────────────────────────────
+      let birthDateToSave: string | null = null;
+      if (age && !Number.isNaN(Number(age)) && Number(age) > 0) {
+        const birthYear = new Date().getFullYear() - Number(age);
+        birthDateToSave = `${birthYear}-01-01`;
       }
-      
-      // 构建背景URL - 预设背景使用 preset:bgId 格式，自定义上传使用实际URL
-      let backgroundUrlToSave: string | undefined;
-      if (customBackgroundUrl) {
-        // 自定义上传的背景
-        backgroundUrlToSave = customBackgroundUrl;
-      } else if (selectedBackground) {
-        // 预设背景，使用 preset: 前缀
-        backgroundUrlToSave = `preset:${selectedBackground}`;
-      }
-      
-      // 构建更新数据对象
-      const updates: Partial<Profile> = {};
-      if (fullName) updates.full_name = fullName;
-      if (phone) updates.phone = phone;
-      if (gender) updates.gender = gender;
-      if (wechat) updates.wechat = wechat;
-      if (profileEmail) updates.email = profileEmail;
-      // 将身高体重存入bio字段（JSON格式）
-      if (height || weight) {
-        let bioData: Record<string, unknown> = {};
-        try {
-          if (profile?.bio) bioData = JSON.parse(profile.bio);
-        } catch { /* empty */ }
-        if (height) bioData.height = Number(height);
-        if (weight) bioData.weight = Number(weight);
-        updates.bio = JSON.stringify(bioData);
-      }
-      if (avatarUrlToSave) updates.avatar_url = avatarUrlToSave;
-      if (backgroundUrlToSave) updates.background_url = backgroundUrlToSave;
-      if (selectedBackground) updates.selected_background = selectedBackground;
-      
-      console.log('保存用户资料:', updates);
-      
-      const result = await updateProfile(user.id, updates);
-      console.log('保存结果:', result);
-      
+
+      // ── 身高体重写入 bio（JSON）───────────────────────────────────
+      let bioData: Record<string, unknown> = {};
+      try {
+        if (profile?.bio) bioData = JSON.parse(profile.bio);
+      } catch { /* ignore */ }
+      if (height) { bioData.height = Number(height); } else { delete bioData.height; }
+      if (weight) { bioData.weight = Number(weight); } else { delete bioData.weight; }
+      const bioStr = Object.keys(bioData).length > 0 ? JSON.stringify(bioData) : null;
+
+      // ── 一次性保存所有字段 ────────────────────────────────────────
+      // 注意：必须带上 role，否则 RLS 的 WITH CHECK 校验会失败（视缺失字段为 null）
+      const updates = {
+        full_name: fullName || null,
+        phone: phone || null,
+        gender: gender || 'other',
+        role: profile?.role ?? 'user',
+        avatar_url: avatarUrlToSave,
+        birth_date: birthDateToSave,
+        wechat: wechat || null,
+        email: profileEmail || null,
+        bio: bioStr,
+        background_url: backgroundUrlToSave,
+        selected_background: selectedBackground || null,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await updateProfile(user.id, updates as any);
+
       await refreshProfile();
       setEditDialogOpen(false);
       toast.success('保存成功');
     } catch (error) {
       console.error('保存失败:', error);
-      toast.error('保存成功');
+      toast.error(`保存失败：${error instanceof Error ? error.message : '请重试'}`);
     } finally {
       setSaving(false);
     }
   };
 
+  // 上传图片到 Supabase Storage
+  const uploadImageToStorage = async (file: File, bucket: string, folder: string): Promise<string> => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filePath = `${folder}/${user?.id}_${Date.now()}.${ext}`;
+    
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, { upsert: false, cacheControl: '31536000' });
+    
+    if (error) throw error;
+    
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
   // 处理头像上传
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // 文件大小限制 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('图片大小不能超过 5MB');
+      return;
+    }
+    
     setUploadingImage(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setCustomAvatarUrl(result);
-      // 保持默认头像选择，但自定义上传优先显示
-      setUploadingImage(false);
+    try {
+      const url = await uploadImageToStorage(file, 'diary-images', 'avatars');
+      setCustomAvatarUrl(url);
       toast.success('头像已上传');
-    };
-    reader.onerror = () => {
+    } catch (err) {
+      console.error('头像上传失败:', err);
+      // 上传到 Storage 失败时降级为 base64（用于本地预览）
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setCustomAvatarUrl(result);
+        toast.warning('头像已加载（将在保存时上传）');
+      };
+      reader.readAsDataURL(file);
+    } finally {
       setUploadingImage(false);
-      toast.error('上传失败');
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   // 处理背景上传
-  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // 文件大小限制 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('图片大小不能超过 5MB');
+      return;
+    }
+    
     setUploadingImage(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setCustomBackgroundUrl(result);
-      setUploadingImage(false);
+    try {
+      const url = await uploadImageToStorage(file, 'diary-images', 'backgrounds');
+      setCustomBackgroundUrl(url);
       toast.success('背景已上传');
-    };
-    reader.onerror = () => {
+    } catch (err) {
+      console.error('背景上传失败:', err);
+      // 降级为 base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setCustomBackgroundUrl(result);
+        toast.warning('背景已加载（将在保存时上传）');
+      };
+      reader.readAsDataURL(file);
+    } finally {
       setUploadingImage(false);
-      toast.error('上传失败');
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   // 获取当前背景样式

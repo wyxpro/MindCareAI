@@ -874,7 +874,7 @@ ${kbText || '暂无相关知识库'}`;
     setMessages([
       {
         role: 'assistant',
-        content: ` 👋 Hi,我是灵愈AI心理助手，接下来我们将进行 ${selectedScales.join(', ')} 评估。我会以温暖、共情的方式引导你逐步完成，每一步都会解释目的。我们开始吧？`,
+        content: ` 👋 Hi, 我是灵愈AI心理助手，接下来我们将进行 ${selectedScales.join(', ')} 评估。我会以温暖、共情的方式引导你逐步完成，每一步都会解释目的。我们开始吧？`,
         timestamp: new Date(),
         avatar: DOCTOR_AVATAR
       }
