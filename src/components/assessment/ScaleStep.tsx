@@ -341,6 +341,11 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   const [countdown, setCountdown] = useState(0);
   const [questionBank, setQuestionBank] = useState<string[]>([]);
   
+  // 打字机效果状态
+  const [typingMsgIdx, setTypingMsgIdx] = useState<number | null>(null);
+  const [typingText, setTypingText] = useState('');
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // 历史评估相关状态
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<HistoryAssessment | null>(null);
@@ -364,6 +369,8 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   const webSpeechRef = useRef<any>(null);
   const prefixRef = useRef('');
   const finalTranscriptRef = useRef('');
+  // ── KB 模块级缓存：避免每次发送都发起 Supabase 网络请求 ────
+  const kbCacheRef = useRef<{ text: string; loaded: boolean }>({ text: '', loaded: false });
 
   // ── 持久化：组件挂载时检测未完成会话 ──────────────────────
   useEffect(() => {
@@ -372,6 +379,20 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // ── KB 预加载：组件挂载后立即后台加载，缓存到 ref，发送时直接命中 ──
+  useEffect(() => {
+    if (kbCacheRef.current.loaded) return;
+    getKnowledgeBase('assessment').then(kb => {
+      kbCacheRef.current.text = (kb || []).slice(0, 3)
+        .map(k => `【${k.title}】${(k.content || '').slice(0, 200)}`)
+        .join('\n');
+      kbCacheRef.current.loaded = true;
+    }).catch(() => {
+      kbCacheRef.current.loaded = true; // 失败也标记为已尝试，后续不再重试
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── 持久化：对话过程中实时保存到 localStorage ─────────────
   useEffect(() => {
@@ -387,6 +408,44 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       })),
     });
   }, [started, messages, currentQuestionIndex, totalQuestions, selectedScales, saveSession]);
+
+  // ── 打字机效果驱动：逐字推进显示 ────────────────────────────
+  useEffect(() => {
+    if (typingMsgIdx === null) return;
+    const fullText = messages[typingMsgIdx]?.content ?? '';
+    if (typingText.length >= fullText.length) {
+      // 打字完成，清除打字机状态
+      setTypingMsgIdx(null);
+      setTypingText('');
+      return;
+    }
+
+    // 使用 Intl.Segmenter 按字素簇推进（emoji 不被截断），回退到 codePointAt
+    let step = 1;
+    const remaining = fullText.slice(typingText.length);
+    // 检测当前字符是否是 emoji（U+1F000 以上）或代理对
+    const cp = remaining.codePointAt(0) ?? 0;
+    if (cp > 0xFFFF) step = 2; // surrogate pair (emoji 等)
+
+    // 速度策略：标点/空格 5ms（快速略过），中文 18ms，其他 12ms
+    const ch = remaining[0];
+    let delay: number;
+    if (/[\s，。！？、：；""''（）【】—…]/.test(ch)) {
+      delay = 5;
+    } else if (/[\u4e00-\u9fa5]/.test(ch)) {
+      delay = 18;
+    } else {
+      delay = 12;
+    }
+
+    typingTimerRef.current = setTimeout(() => {
+      setTypingText(fullText.slice(0, typingText.length + step));
+    }, delay);
+    return () => {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typingMsgIdx, typingText, messages]);
 
   // 获取用户头像
   const getUserAvatar = () => {
@@ -488,155 +547,74 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
     setLoading(true);
 
     try {
-      // nextQ：AI 在本条回复中要引导的下一题
-      // currentQuestionIndex = 0 时代表"用户刚回应了开场白，AI 需要引出第1题（index 0）"
-      // currentQuestionIndex = N 时代表"用户刚答完第N题，AI 需要引出第N+1题（index N）"
-      // 因此 nextQ 直接取 questionBank[currentQuestionIndex]
+      // ── nextQ 取题：优先命中已缓存的 questionBank ──────────
       let nextQ: string;
-      let kbText = '';
-      try {
-        const kb = await getKnowledgeBase('assessment');
-        // 构建 kbText（取前5条摘要）
-        kbText = (kb || []).slice(0, 5)
-          .map(k => `【${k.title}】\n${(k.content || '').slice(0, 400)}`)
-          .join('\n\n');
-
-        if (questionBank.length > 0) {
-          // 优先使用已缓存的 questionBank
-          nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
-        } else {
-          // questionBank 尚未缓存：从本次 KB 查询结果中提取，并同步缓存
-          const scales = kb
-            .map(k => {
-              try {
-                const json = JSON.parse(k.content || '{}');
-                return { ...json, _title: k.title, _tags: (k.tags || []) as string[] };
-              } catch { return null; }
-            })
-            .filter(Boolean) as any[];
-          const matched = scales.filter(
-            s => selectedScales.includes(s.scale_id) ||
-              selectedScales.some((id: string) => (s._tags as string[]).includes(id)) ||
-              selectedScales.some((id: string) => s._title?.includes(id))
+      if (questionBank.length > 0) {
+        nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
+      } else {
+        // questionBank 尚未缓存，临时从 KB 同步（仅首次触发）
+        try {
+          const kb = await getKnowledgeBase('assessment');
+          const scales = kb.map(k => {
+            try { return { ...JSON.parse(k.content || '{}'), _title: k.title, _tags: (k.tags || []) as string[] }; }
+            catch { return null; }
+          }).filter(Boolean) as any[];
+          const matched = scales.filter(s =>
+            selectedScales.includes(s.scale_id) ||
+            selectedScales.some((id: string) => (s._tags as string[]).includes(id)) ||
+            selectedScales.some((id: string) => s._title?.includes(id))
           );
           const allQs = matched.flatMap((s: any) =>
-            (s.questions || [])
-              .slice()
-              .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
-              .map((q: any) => q.text as string)
+            (s.questions || []).slice().sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)).map((q: any) => q.text as string)
           );
           if (allQs.length > 0) {
-            // 同步缓存到 questionBank，后续调用直接命中
             setQuestionBank(allQs);
-            const raw = allQs[currentQuestionIndex] ?? allQs[allQs.length - 1] ?? '';
-            nextQ = ensureQuestionMark(raw);
+            nextQ = ensureQuestionMark(allQs[currentQuestionIndex] ?? allQs[allQs.length - 1] ?? '');
           } else {
-            // KB 中无匹配量表，使用内置题库
             nextQ = getQuestionAt(currentQuestionIndex, [], selectedScales);
           }
+        } catch {
+          nextQ = getQuestionAt(currentQuestionIndex, [], selectedScales);
         }
-      } catch {
-        // KB 查询失败：内置题库兜底
-        nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
       }
 
-      // 构建完整的对话历史上下文（最近3轮）
-      const recentMessages = messages.slice(-6); // 最近3轮对话（用户+AI各3条）
-      const conversationHistory = recentMessages.map(m => ({
+      // ── 对话历史：最近2轮（4条）已足够上下文，减少token输入 ──
+      const conversationHistory = messages.slice(-4).map(m => ({
         role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
         content: [{ type: 'input_text' as const, text: m.content }]
       }));
 
-      const systemPrompt = `你是一位温暖、专业的心理咨询师，正在进行${selectedScales.join('、')}抑郁量表对话评估。
+      // ── 精简 systemPrompt：去除冗余示例，保留核心指令 ────────
+      const kbSnippet = kbCacheRef.current.text;
+      const systemPrompt = `你是温暖专业的心理咨询师，正在进行${selectedScales.join('、')}量表评估。
 
-【重要】你必须生成一个完整的回复，包含两个部分：
-
-第一部分 - 共情回应（30-50字）：
-针对用户刚才的回答，生成具体的、个性化的共情反馈。
-- 在共情回应中适当加入1-2个情绪表情符号（如💔💖💦😘🥰😴💪🌤️等），增加亲和力
-- 负面情绪语境用💔💦😳，积极鼓励语境用💖💪🌤️，关怀支持语境用🥰😘，疲惫困倦语境用😴
-- 如果用户提到具体时间/频率（如"一周2-3天"），你需要在回复中提到这个具体信息
-- 如果用户表达负面情绪，你要表达理解和支持
-- 如果用户表达正面状态，你要给予肯定和鼓励
-- 避免使用"好的"、"我理解了"、"我知道了"、"我能感受到"等空泛表达
-- 必须让用户感到你真正在倾听和理解他们的具体情况
-
-第二部分 - 引导下一题：
-用"下面我们继续："或"接下来："自然过渡到下一题："${nextQ}"
-
-【正确示例】
-用户："偶尔会有，一周2-3天吧"
-✓ 正确："一周有2-3天出现这种情况 🌤️，说明你的状态整体还算稳定，这是个好的信号。下面我们继续：${nextQ}"
-✗ 错误："好的，我理解了。下面我们继续：${nextQ}"
-
-用户："经常失眠，每天都要很久才能睡着"
-✓ 正确："每天都受到睡眠困扰确实很辛苦 😴，长期的失眠会影响白天的状态，你不是一个人在面对这些。下面我们继续：${nextQ}"
-✗ 错误："我能感受到你的状态。下面我们继续：${nextQ}"
-
-【知识库参考】
-${kbText || '暂无相关知识库'}`;
+回复要求（严格遵守）：
+1. 共情回应（20-40字）：针对用户具体回答，个性化反馈，加1-2个情绪emoji（💔💖😴💪🌤️🥰😘💦😳）
+2. 自然过渡到下一题：用"下面我们继续："或"接下来："引出 "${nextQ}"
+3. 禁止使用"好的/我理解了/我知道了/我能感受到"等空泛词
+4. 若用户提到具体时间/频率，必须在回复中体现${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
       const aiResponse = await volcResponses({
         model: 'doubao-seed-1-8-251228',
         input: [
           { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
           ...conversationHistory,
-          {
-            role: 'user' as const,
-            content: [
-              { type: 'input_text' as const, text: response }
-            ]
-          }
+          { role: 'user' as const, content: [{ type: 'input_text' as const, text: response }] }
         ]
       });
 
       let aiContent = aiResponse?.text || '';
-      
-      // 如果AI回复为空、过短或包含禁用词，重新生成个性化回复
-      const isFallbackNeeded = !aiContent 
-        || aiContent.length < 20 
-        || /好的|我理解了|我知道了|我能感受到/.test(aiContent);
-      
+
+      // ── 禁用词检测 & Fallback ────────────────────────────────
+      const isFallbackNeeded = !aiContent
+        || aiContent.length < 20
+        || /^(好的|我理解了|我知道了|我能感受到)/.test(aiContent);
+
       if (isFallbackNeeded) {
-        // 使用简化prompt强制AI生成个性化回复
-        const fallbackPrompt = `你是心理咨询师。用户刚回答："${response}"
-
-请用30-50字给出具体的、个性化的共情回应，然后说"下面我们继续："。
-
-要求：
-1. 必须针对用户回答的具体内容进行回应
-2. 禁止使用"好的"、"我理解了"、"我能感受到"等空泛词汇
-3. 如果用户提到具体细节（时间/频率/程度），必须在回复中体现
-4. 体现专业的心理咨询师的共情能力
-5. 在共情回应中加入1个情绪表情符号（如💔💖💦😘🥰😴😂😋🤪😳💪🌤️）`;
-
-        try {
-          const fallbackResponse = await volcResponses({
-            model: 'doubao-seed-1-8-251228',
-            input: [
-              { 
-                role: 'system', 
-                content: [{ type: 'input_text', text: '你是专业的心理咨询师，擅长共情式沟通。' }] 
-              },
-              {
-                role: 'user' as const,
-                content: [{ type: 'input_text' as const, text: fallbackPrompt }]
-              }
-            ]
-          });
-          
-          if (fallbackResponse?.text && fallbackResponse.text.length >= 20) {
-            aiContent = `${fallbackResponse.text} ${nextQ}`;
-          } else {
-            // 最后的保底：根据回答内容智能匹配
-            aiContent = generateSmartFallback(response, nextQ);
-          }
-        } catch (error) {
-          console.error('Fallback AI generation failed:', error);
-          aiContent = generateSmartFallback(response, nextQ);
-        }
+        // Fallback：直接用 generateSmartFallback，不再发起第二次 AI 调用（避免双倍延迟）
+        aiContent = generateSmartFallback(response, nextQ);
       }
-      
+
       // 模拟问题进度增加
       if (currentQuestionIndex < totalQuestions) {
         setCurrentQuestionIndex(prev => prev + 1);
@@ -648,7 +626,13 @@ ${kbText || '暂无相关知识库'}`;
         timestamp: new Date(),
         avatar: DOCTOR_AVATAR 
       };
-      setMessages(prev => [...prev, aiMsg]);
+      setMessages(prev => {
+        const newMessages = [...prev, aiMsg];
+        // 触发打字机效果：新消息在末尾
+        setTypingMsgIdx(newMessages.length - 1);
+        setTypingText('');
+        return newMessages;
+      });
 
       // 情感与安全检测
       const distress = /(崩溃|绝望|无助|很痛|难受|不想活|自杀|死亡)/.test(response);
@@ -710,7 +694,7 @@ ${kbText || '暂无相关知识库'}`;
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, typingText]);
 
   useEffect(() => {
     return () => {
@@ -871,14 +855,15 @@ ${kbText || '暂无相关知识库'}`;
     clearSession();
     setShowResumeBanner(false);
     setStarted(true);
-    setMessages([
-      {
-        role: 'assistant',
-        content: ` 👋 Hi, 我是灵愈AI心理助手，接下来我们将进行 ${selectedScales.join(', ')} 评估。我会以温暖、共情的方式引导你逐步完成，每一步都会解释目的。我们开始吧？`,
-        timestamp: new Date(),
-        avatar: DOCTOR_AVATAR
-      }
-    ]);
+    const greetingMsg: Message = {
+      role: 'assistant',
+      content: ` 👋 Hi, 我是灵愈AI心理助手，接下来我们将进行 ${selectedScales.join(', ')} 评估。我会以温暖、共情的方式引导你逐步完成，每一步都会解释目的。我们开始吧？`,
+      timestamp: new Date(),
+      avatar: DOCTOR_AVATAR
+    };
+    setMessages([greetingMsg]);
+    setTypingMsgIdx(0);
+    setTypingText('');
   };
 
   /** 从 localStorage 恢复上次未完成的评估 */
@@ -914,162 +899,87 @@ ${kbText || '暂无相关知识库'}`;
     setLoading(true);
 
     try {
-      // nextQ：AI 在本条回复中要引导的下一题
-      // currentQuestionIndex = 0 时代表"用户刚回应了开场白，AI 需要引出第1题（index 0）"
-      // currentQuestionIndex = N 时代表"用户刚答完第N题，AI 需要引出第N+1题（index N）"
-      // 因此 nextQ 直接取 questionBank[currentQuestionIndex]
+      // ── nextQ 取题：优先命中已缓存的 questionBank ──────────
       let nextQ: string;
-      let kbText = '';
-      try {
-        const kb = await getKnowledgeBase('assessment');
-        // 构建 kbText（取前5条摘要）
-        kbText = (kb || []).slice(0, 5)
-          .map(k => `【${k.title}】\n${(k.content || '').slice(0, 400)}`)
-          .join('\n\n');
-
-        if (questionBank.length > 0) {
-          // 优先使用已缓存的 questionBank
-          nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
-        } else {
-          // questionBank 尚未缓存：从本次 KB 查询结果中提取，并同步缓存
-          const scales = kb
-            .map(k => {
-              try {
-                const json = JSON.parse(k.content || '{}');
-                return { ...json, _title: k.title, _tags: (k.tags || []) as string[] };
-              } catch { return null; }
-            })
-            .filter(Boolean) as any[];
-          const matched = scales.filter(
-            s => selectedScales.includes(s.scale_id) ||
-              selectedScales.some((id: string) => (s._tags as string[]).includes(id)) ||
-              selectedScales.some((id: string) => s._title?.includes(id))
+      if (questionBank.length > 0) {
+        nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
+      } else {
+        // questionBank 尚未缓存，临时从 KB 同步（仅首次触发）
+        try {
+          const kb = await getKnowledgeBase('assessment');
+          const scales = kb.map(k => {
+            try { return { ...JSON.parse(k.content || '{}'), _title: k.title, _tags: (k.tags || []) as string[] }; }
+            catch { return null; }
+          }).filter(Boolean) as any[];
+          const matched = scales.filter(s =>
+            selectedScales.includes(s.scale_id) ||
+            selectedScales.some((id: string) => (s._tags as string[]).includes(id)) ||
+            selectedScales.some((id: string) => s._title?.includes(id))
           );
           const allQs = matched.flatMap((s: any) =>
-            (s.questions || [])
-              .slice()
-              .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
-              .map((q: any) => q.text as string)
+            (s.questions || []).slice().sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)).map((q: any) => q.text as string)
           );
           if (allQs.length > 0) {
-            // 同步缓存到 questionBank，后续调用直接命中
             setQuestionBank(allQs);
-            const raw = allQs[currentQuestionIndex] ?? allQs[allQs.length - 1] ?? '';
-            nextQ = ensureQuestionMark(raw);
+            nextQ = ensureQuestionMark(allQs[currentQuestionIndex] ?? allQs[allQs.length - 1] ?? '');
           } else {
-            // KB 中无匹配量表，使用内置题库
             nextQ = getQuestionAt(currentQuestionIndex, [], selectedScales);
           }
+        } catch {
+          nextQ = getQuestionAt(currentQuestionIndex, [], selectedScales);
         }
-      } catch {
-        // KB 查询失败：内置题库兜底
-        nextQ = getQuestionAt(currentQuestionIndex, questionBank, selectedScales);
       }
 
-      // 构建完整的对话历史上下文（最近3轮）
-      const recentMessages = messages.slice(-6); // 最近3轮对话（用户+AI各3条）
-      const conversationHistory = recentMessages.map(m => ({
+      // ── 对话历史：最近2轮（4条）已足够上下文，减少token输入 ──
+      const conversationHistory = messages.slice(-4).map(m => ({
         role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
         content: [{ type: 'input_text' as const, text: m.content }]
       }));
 
-      const systemPrompt = `你是一位温暖、专业的心理咨询师，正在进行${selectedScales.join('、')}抑郁量表对话评估。
+      // ── 精简 systemPrompt：去除冗余示例，保留核心指令 ────────
+      const kbSnippet = kbCacheRef.current.text;
+      const systemPrompt = `你是温暖专业的心理咨询师，正在进行${selectedScales.join('、')}量表评估。
 
-【重要】你必须生成一个完整的回复，包含两个部分：
-
-第一部分 - 共情回应（30-50字）：
-针对用户刚才的回答，生成具体的、个性化的共情反馈。
-- 在共情回应中适当加入1-2个情绪表情符号（如💔💖💦😘🥰😴💪🌤️等），增加亲和力
-- 负面情绪语境用💔💦😳，积极鼓励语境用💖💪🌤️，关怀支持语境用🥰😘，疲惫困倦语境用😴
-- 如果用户提到具体时间/频率（如"一周2-3天"），你需要在回复中提到这个具体信息
-- 如果用户表达负面情绪，你要表达理解和支持
-- 如果用户表达正面状态，你要给予肯定和鼓励
-- 避免使用"好的"、"我理解了"、"我知道了"、"我能感受到"等空泛表达
-- 必须让用户感到你真正在倾听和理解他们的具体情况
-
-第二部分 - 引导下一题：
-用"下面我们继续："或"接下来："自然过渡到下一题："${nextQ}"
-
-【正确示例】
-用户："偶尔会有，一周2-3天吧"
-✓ 正确："一周有2-3天出现这种情况 🌤️，说明你的状态整体还算稳定，这是个好的信号。下面我们继续：${nextQ}"
-✗ 错误："好的，我理解了。下面我们继续：${nextQ}"
-
-用户："经常失眠，每天都要很久才能睡着"
-✓ 正确："每天都受到睡眠困扰确实很辛苦 😴，长期的失眠会影响白天的状态，你不是一个人在面对这些。下面我们继续：${nextQ}"
-✗ 错误："我能感受到你的状态。下面我们继续：${nextQ}"
-
-【知识库参考】
-${kbText || '暂无相关知识库'}`;
+回复要求（严格遵守）：
+1. 共情回应（20-40字）：针对用户具体回答，个性化反馈，加1-2个情绪emoji（💔💖😴💪🌤️🥰😘💦😳）
+2. 自然过渡到下一题：用"下面我们继续："或"接下来："引出 "${nextQ}"
+3. 禁止使用"好的/我理解了/我知道了/我能感受到"等空泛词
+4. 若用户提到具体时间/频率，必须在回复中体现${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
       const response = await volcResponses({
         model: 'doubao-seed-1-8-251228',
         input: [
           { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
           ...conversationHistory,
-          {
-            role: 'user' as const,
-            content: [
-              { type: 'input_text' as const, text: inputText }
-            ]
-          }
+          { role: 'user' as const, content: [{ type: 'input_text' as const, text: inputText }] }
         ]
       });
 
       let aiContent = response?.text || '';
-      
-      // 如果AI回复为空、过短或包含禁用词，重新生成个性化回复
-      const isFallbackNeeded = !aiContent 
-        || aiContent.length < 20 
-        || /好的|我理解了|我知道了|我能感受到/.test(aiContent);
-      
+
+      // ── 禁用词检测 & Fallback ────────────────────────────────
+      const isFallbackNeeded = !aiContent
+        || aiContent.length < 20
+        || /^(好的|我理解了|我知道了|我能感受到)/.test(aiContent);
+
       if (isFallbackNeeded) {
-        // 使用简化prompt强制AI生成个性化回复
-        const fallbackPrompt = `你是心理咨询师。用户刚回答："${inputText}"
-
-请用30-50字给出具体的、个性化的共情回应，然后说"下面我们继续："。
-
-要求：
-1. 必须针对用户回答的具体内容进行回应
-2. 禁止使用"好的"、"我理解了"、"我能感受到"等空泛词汇
-3. 如果用户提到具体细节（时间/频率/程度），必须在回复中体现
-4. 体现专业的心理咨询师的共情能力
-5. 在共情回应中加入1个温暖的表情符号（如💔💖💦😘🥰😴😂😋🤪😳💪🌤️）`;
-
-        try {
-          const fallbackResponse = await volcResponses({
-            model: 'doubao-seed-1-8-251228',
-            input: [
-              { 
-                role: 'system', 
-                content: [{ type: 'input_text', text: '你是专业的心理咨询师，擅长共情式沟通。' }] 
-              },
-              {
-                role: 'user' as const,
-                content: [{ type: 'input_text' as const, text: fallbackPrompt }]
-              }
-            ]
-          });
-          
-          if (fallbackResponse?.text && fallbackResponse.text.length >= 20) {
-            aiContent = `${fallbackResponse.text} ${nextQ}`;
-          } else {
-            // 最后的保底：根据回答内容智能匹配
-            aiContent = generateSmartFallback(inputText, nextQ);
-          }
-        } catch (error) {
-          console.error('Fallback AI generation failed:', error);
-          aiContent = generateSmartFallback(inputText, nextQ);
-        }
+        // Fallback：直接用 generateSmartFallback，不再发起第二次 AI 调用（避免双倍延迟）
+        aiContent = generateSmartFallback(inputText, nextQ);
       }
-      
+
       // 模拟问题进度增加
       if (currentQuestionIndex < totalQuestions) {
         setCurrentQuestionIndex(prev => prev + 1);
       }
 
       const aiMsg: Message = { role: 'assistant', content: aiContent, timestamp: new Date(), avatar: DOCTOR_AVATAR };
-      setMessages(prev => [...prev, aiMsg]);
+      setMessages(prev => {
+        const newMessages = [...prev, aiMsg];
+        // 触发打字机效果：新消息在末尾
+        setTypingMsgIdx(newMessages.length - 1);
+        setTypingText('');
+        return newMessages;
+      });
 
       // 情感与安全检测
       const text = inputText;
@@ -1577,7 +1487,9 @@ ${kbText || '暂无相关知识库'}`;
                       ? 'bg-primary text-white shadow-lg shadow-primary/10 rounded-tr-none' 
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm border border-slate-100 dark:border-slate-800 rounded-tl-none'}
                   `}>
-                    {msg.content}
+                    {msg.role === 'assistant' && typingMsgIdx === i
+                      ? <>{typingText}<span className="inline-block w-0.5 h-4 ml-0.5 bg-slate-400 animate-pulse align-middle" /></>
+                      : msg.content}
                   </div>
                 </div>
 
@@ -1592,8 +1504,15 @@ ${kbText || '暂无相关知识库'}`;
                 )}
               </motion.div>
             ))}
-            {loading && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+            {/* loading 三点动画：仅在等待 API 且打字机尚未启动时显示 */}
+            {loading && typingMsgIdx === null && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex justify-start gap-2">
+                <Avatar className="w-9 h-9 shrink-0 border-2 border-slate-100 dark:border-slate-800 overflow-hidden">
+                  <AvatarImage src={DOCTOR_AVATAR} className="object-cover w-full h-full" alt="医生头像" />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-xs">
+                    <Stethoscope className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl rounded-tl-none shadow-sm border border-slate-100 dark:border-slate-800">
                   <div className="flex gap-1">
                     <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
@@ -1643,13 +1562,16 @@ ${kbText || '暂无相关知识库'}`;
             {QUICK_RESPONSES.map((response) => (
               <motion.button
                 key={response}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: loading || typingMsgIdx !== null ? 1 : 1.05 }}
+                whileTap={{ scale: loading || typingMsgIdx !== null ? 1 : 0.95 }}
                 onClick={() => handleQuickResponse(response)}
+                disabled={loading || typingMsgIdx !== null}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all
-                  ${inputText === response 
-                    ? 'bg-primary text-white shadow-md' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}
+                  ${loading || typingMsgIdx !== null
+                    ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400'
+                    : inputText === response 
+                      ? 'bg-primary text-white shadow-md' 
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}
                 `}
               >
                 {response}
@@ -1663,14 +1585,15 @@ ${kbText || '暂无相关知识库'}`;
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder="请在此输入您的回答..."
-              readOnly={false}
-              className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 ring-primary transition-all outline-none"
+              placeholder={typingMsgIdx !== null ? 'AI 正在回复中…' : '请在此输入您的回答...'}
+              readOnly={loading || typingMsgIdx !== null}
+              className={`flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 ring-primary transition-all outline-none ${loading || typingMsgIdx !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <Button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
               size="icon"
               variant="outline"
+              disabled={loading || typingMsgIdx !== null}
               className={`rounded-2xl w-12 h-12 shadow-sm ${showEmojiPicker ? 'border-primary text-primary bg-primary/10' : ''}`}
               aria-pressed={showEmojiPicker}
               aria-label="选择表情"
@@ -1679,7 +1602,7 @@ ${kbText || '暂无相关知识库'}`;
             </Button>
             <Button 
               onClick={handleSend}
-              disabled={!inputText.trim() || loading}
+              disabled={!inputText.trim() || loading || typingMsgIdx !== null}
               size="icon" 
               className="rounded-2xl w-12 h-12 shadow-lg shadow-primary/20"
             >

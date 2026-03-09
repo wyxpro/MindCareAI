@@ -557,7 +557,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
           )}
 
           {/* 微表情信号指示器 */}
-          <div className="absolute bottom-52 md:bottom-40 left-0 right-0 px-6">
+          <div className="absolute bottom-52 md:bottom-36 left-0 right-0 px-6">
             <div className="max-w-md mx-auto">
               <div className="bg-slate-950/55 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-3">
                 <div className="flex items-center justify-between mb-2">
@@ -622,7 +622,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       </div>
 
       {/* 底部控制 */}
-      <div className="absolute bottom-24 left-0 right-0 px-8 flex items-center justify-center gap-6 z-50">
+      <div className="absolute bottom-24 md:bottom-8 left-0 right-0 px-8 flex items-center justify-center gap-6 z-50">
         <Button 
           variant="ghost" 
           size="icon" 
