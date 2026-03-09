@@ -62,9 +62,13 @@ export async function modelScopeChat(payload: { model: string; messages: ModelSc
   }
 }
 
-export async function modelScopeVisionChat(payload: { model: string; text: string; image_url: string }) {
-  const maxRetries = 2;
+export async function modelScopeVisionChat(
+  payload: { model: string; text: string; image_url: string },
+  options?: { timeout?: number; signal?: AbortSignal }
+) {
+  const maxRetries = 1; // 减少重试次数以加快失败响应
   let lastError: any = null;
+  const timeout = options?.timeout || 90000;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -81,16 +85,17 @@ export async function modelScopeVisionChat(payload: { model: string; text: strin
         ],
         stream: false,
         temperature: 0,
-        max_tokens: 256,
+        max_tokens: 200, // 减少token以加快响应
       };
       
       const res = await ky.post('/innerapi/v1/modelscope/chat/completions', {
         json: body,
-        timeout: 90000, // 增加到90秒
+        timeout: timeout,
         throwHttpErrors: false,
         retry: {
           limit: 0, // 我们自己控制重试
-        }
+        },
+        signal: options?.signal,
       });
       
       const ct = res.headers.get('content-type') || '';
@@ -107,11 +112,15 @@ export async function modelScopeVisionChat(payload: { model: string; text: strin
       
     } catch (err: any) {
       lastError = err;
+      // 如果是用户取消的请求，直接抛出不再重试
+      if (err.name === 'AbortError' || err.message?.includes('abort')) {
+        throw err;
+      }
       console.warn(`Vision chat attempt ${attempt + 1} failed:`, err.message);
       
       // 如果不是最后一次尝试，等待后重试
       if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1))); // 减少等待时间
         continue;
       }
     }

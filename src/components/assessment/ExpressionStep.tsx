@@ -208,60 +208,123 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     }, 1000);
   };
 
+  // 带超时的Promise包装器
+  const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number, errorMsg: string): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) => 
+        setTimeout(() => reject(new Error(errorMsg)), timeoutMs)
+      )
+    ]);
+  };
+
+  // 压缩图片到指定大小以下
+  const compressImage = async (video: HTMLVideoElement, maxSizeKB: number = 100): Promise<string> => {
+    const canvas = document.createElement('canvas');
+    // 进一步降低图片尺寸以加快传输
+    const maxWidth = 480;
+    const maxHeight = 360;
+    let width = video.videoWidth;
+    let height = video.videoHeight;
+    
+    if (width > maxWidth || height > maxHeight) {
+      const ratio = Math.min(maxWidth / width, maxHeight / height);
+      width = Math.floor(width * ratio);
+      height = Math.floor(height * ratio);
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    
+    ctx.drawImage(video, 0, 0, width, height);
+    
+    // 尝试不同的质量级别，直到图片大小符合要求
+    let quality = 0.6;
+    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+    
+    // 估算base64大小 (base64比原数据大约33%)
+    const base64SizeKB = Math.ceil((dataUrl.length * 3) / 4 / 1024);
+    
+    if (base64SizeKB > maxSizeKB && quality > 0.3) {
+      quality = Math.max(0.3, quality * (maxSizeKB / base64SizeKB));
+      dataUrl = canvas.toDataURL('image/jpeg', quality);
+    }
+    
+    console.log(`📸 Image compressed: ${width}x${height}, quality: ${quality.toFixed(2)}, ~${Math.ceil((dataUrl.length * 3) / 4 / 1024)}KB`);
+    return dataUrl;
+  };
+
   const analyzeExpression = async () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (analysisRef.current) clearInterval(analysisRef.current);
     setIsCapturing(false);
     setShowProgress(true);
     setAnalysisProgress(0);
-    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-    progressTimerRef.current = setInterval(() => {
-      setAnalysisProgress((p) => Math.min(90, p + 3));
-    }, 150);
     
-    toast.info('正在捕获面部快照并上传...');
+    // 更平滑的进度动画
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    let progress = 0;
+    progressTimerRef.current = setInterval(() => {
+      progress += 2;
+      // 前50%快速填充，后40%缓慢增长，最后10%留给完成
+      if (progress <= 50) {
+        setAnalysisProgress(progress);
+      } else if (progress <= 90) {
+        setAnalysisProgress(50 + (progress - 50) * 0.4);
+      }
+    }, 100);
+    
+    const startTime = Date.now();
+    const abortController = new AbortController();
+    
+    toast.info('正在捕获面部快照...');
 
     try {
-      const prompt = `仅返回JSON，不要解释。字段：
-      emotion_radar{neutral,happy,sad,angry,surprised,fearful,disgusted,contempt,pain} 概率(四位小数)，
-      depression_risk_score(0-100)，
-      analysis_report(不超过60字)，
-      micro_features{brow_furrow,mouth_droop,eye_contact}。
-      输入摘要：10秒采集中，眉心皱纹频率0.8次/秒，嘴角下垂占比45%，眨眼12次/分；情绪分布：悲伤35%，中性40%，焦虑15%，其他10%。`;
+      // 优化后的提示词，更简洁
+      const prompt = `分析面部图像，返回JSON格式：
+{
+  "emotion_radar": {"neutral":0.4,"happy":0.1,"sad":0.3,"angry":0.05,"surprised":0.05,"fearful":0.05,"disgusted":0.02,"contempt":0.02,"pain":0.01},
+  "depression_risk_score": 65,
+  "analysis_report": "面部特征分析摘要，30字以内",
+  "micro_features": {
+    "brow_furrow": "眉心状态描述，15字以内",
+    "mouth_droop": "嘴角状态描述，15字以内", 
+    "eye_contact": "眼神状态描述，15字以内"
+  }
+}`;
 
       const video = videoRef.current;
       let dataUrl = '';
       if (video && video.videoWidth && video.videoHeight) {
-        const canvas = document.createElement('canvas');
-        // 限制图片尺寸，降低数据量
-        const maxWidth = 800;
-        const maxHeight = 600;
-        let width = video.videoWidth;
-        let height = video.videoHeight;
-        
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width = width * ratio;
-          height = height * ratio;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, width, height);
-          // 降低质量到0.7，减少数据量
-          dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        }
+        dataUrl = await compressImage(video, 80); // 压缩到80KB以下
       }
 
-      const aiRes = await modelScopeVisionChat({
-        model: 'Qwen/Qwen3.5-397B-A17B',
-        text: prompt,
-        image_url: dataUrl || 'data:image/png;base64,'
-      });
+      if (!dataUrl) {
+        throw new Error('无法捕获图像');
+      }
+
+      toast.info('AI分析中，请稍候...');
+
+      // 10秒超时控制 - 使用轻量级模型以加快响应
+      const aiRes = await withTimeout(
+        modelScopeVisionChat(
+          {
+            model: 'Qwen/Qwen2-VL-7B-Instruct', // 使用更快的轻量级视觉模型
+            text: prompt,
+            image_url: dataUrl
+          },
+          { timeout: 8000, signal: abortController.signal } // 8秒API超时
+        ),
+        9500, // 总超时9.5秒
+        '分析超时，正在使用本地算法...'
+      );
       
-      toast.info('AI正在分析微表情特征...');
+      const elapsed = Date.now() - startTime;
+      console.log(`✅ Analysis completed in ${elapsed}ms`);
+      
+      toast.info('正在生成报告...');
 
       let analysisData;
       const fallbackData = {
@@ -291,6 +354,8 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
           analysisData = {
             ...fallbackData,
             ...(hasValidEmotionRadar && { emotion_radar: analysisData.emotion_radar }),
+            // 保留AI返回的micro_features（即使部分有效），只有完全缺失时才使用fallback
+            ...(analysisData?.micro_features && { micro_features: analysisData.micro_features }),
             ...(analysisData?.depression_risk_score && { depression_risk_score: analysisData.depression_risk_score }),
             ...(analysisData?.analysis_report && { analysis_report: analysisData.analysis_report }),
           };
@@ -315,25 +380,66 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     } catch (error) {
       console.error('Expression analysis failed:', error);
       
+      // 取消可能还在进行的请求
+      abortController.abort();
+      
+      const elapsed = Date.now() - startTime;
+      console.log(`⚠️ Analysis failed after ${elapsed}ms`);
+      
       // 根据错误类型提供更友好的提示
       const errorMsg = error instanceof Error ? error.message : String(error);
-      if (errorMsg.includes('timed out') || errorMsg.includes('timeout')) {
-        toast.error('AI分析服务响应超时，使用本地算法生成报告');
+      const isTimeout = errorMsg.includes('timed out') || errorMsg.includes('timeout') || errorMsg.includes('超时');
+      
+      if (isTimeout) {
+        toast.warning('AI分析响应较慢，已启用快速本地算法');
       } else if (errorMsg.includes('MODELSCOPE_API_KEY')) {
         toast.error('AI服务配置错误，使用本地算法生成报告');
       } else {
         toast.error('分析服务暂时不可用，已生成本地预估报告');
       }
       
-      // Use fallback data on error
+      // Use fallback data on error - 基于采集到的微表情信号生成更个性化的fallback
+      const detectedBrow = microSignals.brow;
+      const detectedMouth = microSignals.mouthDown;
+      const detectedBlink = microSignals.blink;
+      
+      // 根据检测到的信号动态生成fallback描述
+      const getBrowDesc = () => {
+        if (detectedBrow > 0.5) return "眉心明显皱缩，显示紧张或忧虑情绪";
+        if (detectedBrow > 0.3) return "眉心轻微皱起，略有紧张迹象";
+        return "眉心舒展自然，前额肌肉放松";
+      };
+      
+      const getMouthDesc = () => {
+        if (detectedMouth > 0.5) return "嘴角明显下垂，缺乏愉悦表情";
+        if (detectedMouth > 0.3) return "嘴角轻微下垂，表情略显平淡";
+        return "嘴角保持自然状态，表情平和";
+      };
+      
+      const getEyeDesc = () => {
+        if (detectedBlink > 0.6) return "眨眼频率较快，眼神略显不安";
+        if (detectedBlink < 0.2) return "眨眼频率较低，眼神较为凝滞";
+        return "眼神平稳自然，眨眼频率正常";
+      };
+      
       const errorFallbackData = {
-          emotion_radar: { neutral: 0.3, happy: 0.05, sad: 0.4, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.01, pain: 0.02 },
-          depression_risk_score: 72,
-          analysis_report: "面部特征显示显著的悲伤情绪主导，伴随眉心舒展度低与嘴角下垂，符合典型抑郁心境的面部表征。建议结合量表与语音结果综合评估。",
+          emotion_radar: { 
+            neutral: Math.max(0.2, 1 - detectedBrow - detectedMouth), 
+            happy: 0.05, 
+            sad: Math.min(0.5, detectedMouth * 0.8 + 0.1), 
+            angry: Math.min(0.3, detectedBrow * 0.6), 
+            surprised: 0.05, 
+            fearful: Math.min(0.3, detectedBrow * 0.4 + detectedBlink * 0.3), 
+            disgusted: 0.02, 
+            contempt: 0.01, 
+            pain: Math.min(0.2, detectedBrow * 0.3) 
+          },
+          depression_risk_score: Math.round(50 + detectedBrow * 30 + detectedMouth * 20),
+          analysis_report: `检测到眉心活动${(detectedBrow*100).toFixed(0)}%、嘴角状态${(detectedMouth*100).toFixed(0)}%。基于本地算法生成的预估分析报告。`,
           micro_features: { 
-            brow_furrow: "眉心频繁皱缩，显示持续的心理压力", 
-            mouth_droop: "嘴角自然状态下垂，缺乏愉悦微表情", 
-            eye_contact: "眼神游离，眨眼频率迟滞" 
+            brow_furrow: getBrowDesc(), 
+            mouth_droop: getMouthDesc(), 
+            eye_contact: getEyeDesc() 
           }
       };
       console.log('🔍 Error Fallback Data:', errorFallbackData);
@@ -344,7 +450,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       setTimeout(() => {
         setShowProgress(false);
         setShowReport(true);
-      }, 400);
+      }, 300);
     }
   };
 
