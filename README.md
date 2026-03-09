@@ -22,12 +22,13 @@
 
 - 上线地址：https://k.playe.top/
 - 产品名称：灵愈AI - 基于多模态AI的数字医生抑郁检测与疗愈助手
-- 产品定位：一款面向普通用户与心理医生的跨端Web产品（Web/APP/Windows），系统通过整合智能手环生理数据、多模态AI情绪识别（文本、语音、面部表情）、主动式AI对话评估、个性化疗愈方案，为用户提供一站式的心理健康管理服务，打造“低门槛，高精准，人性化，无压力“的心理抑郁检测与疗愈平台。
+- 产品定位：一款面向普通用户与心理医生的多端产品（PC/Web/APP/IOS/Windows），系统通过整合智能手环生理数据、多模态AI情绪识别（文本、语音、面部表情）、主动式AI对话评估、个性化疗愈方案，为用户提供一站式的心理健康管理服务，打造“低门槛，高精准，人性化，无压力“的心理抑郁检测与疗愈平台。
 - 核心需求 ：解决用户“不敢看医生、看不起医生、看了没后续”和医生“看不准、管不了”的双端痛点。
 
 ### ✨ 核心亮点
-<img width="1388" height="1479" alt="image" src="https://github.com/user-attachments/assets/4b6fc4ed-8ec7-45a0-a6fb-cdfa48fda079" />
-<img width="1374" height="1496" alt="image" src="https://github.com/user-attachments/assets/d1f35aca-aa46-477f-af90-6ec13de9d366" />
+<img width="1369" height="1473" alt="image" src="https://github.com/user-attachments/assets/8d93fe14-b880-4a94-8300-ddeb468cc4ad" />
+<img width="1401" height="1497" alt="image" src="https://github.com/user-attachments/assets/cb6a6a09-0fe3-46e8-8022-47ec7c75eb45" />
+<img width="1263" height="246" alt="image" src="https://github.com/user-attachments/assets/1cdea87c-2b45-4246-86bb-06a8f42d6d48" />
 
 
 - 🤖 **多模态AI评估** - 集成文本、语音、微表情识别的综合心理状态分析
