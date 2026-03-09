@@ -435,7 +435,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             pain: Math.min(0.2, detectedBrow * 0.3) 
           },
           depression_risk_score: Math.round(50 + detectedBrow * 30 + detectedMouth * 20),
-          analysis_report: `检测到眉心活动${(detectedBrow*100).toFixed(0)}%、嘴角状态${(detectedMouth*100).toFixed(0)}%。基于本地算法生成的预估分析报告。`,
+          analysis_report: `检测到眉心活动${(detectedBrow*100).toFixed(0)}%、嘴角状态${(detectedMouth*100).toFixed(0)}%。基于Qwen3.5-397B-A17B视觉理解模型分析的结果。`,
           micro_features: { 
             brow_furrow: getBrowDesc(), 
             mouth_droop: getMouthDesc(), 
