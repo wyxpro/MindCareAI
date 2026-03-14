@@ -1,4 +1,4 @@
-import { Heart, Loader2, Stethoscope, User } from 'lucide-react';
+import { Loader2, Stethoscope, User } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -129,8 +129,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-2">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Heart className="w-8 h-8 text-primary" />
+            <div className="w-20 h-20 flex items-center justify-center overflow-hidden">
+              <img src="/favicon.png" alt="灵愈AI" className="w-full h-full object-contain" />
             </div>
           </div>
           <CardTitle className="text-2xl">灵愈AI数字医生</CardTitle>

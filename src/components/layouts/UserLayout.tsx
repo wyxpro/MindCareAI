@@ -40,9 +40,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
             onClick={handleLogoClick}
             className="p-6 border-b cursor-pointer group"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                <Heart className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                <img src="/favicon.png" alt="灵愈AI" className="w-full h-full object-contain" />
               </div>
               <div>
                 <span className="text-xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">

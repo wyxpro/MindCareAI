@@ -267,20 +267,55 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
   // 使用 useMemo 缓存雷达图数据，确保只在 reportData 变化时重新计算
   const radarData = React.useMemo(() => {
     if (!reportData?.emotion_vector) return [];
-    
-    // 直接使用原始情绪值，不进行过度放大，保持数据的相对差异
-    // 情绪值已经是归一化的 (0-1 范围)
+
     const ev = reportData.emotion_vector;
-    return [
-      { subject: '平静', A: Math.max(0.05, ev.calm), fullMark: 1 },
-      { subject: '高兴', A: Math.max(0.05, ev.happy), fullMark: 1 },
-      { subject: '悲伤', A: Math.max(0.05, ev.sad), fullMark: 1 },
-      { subject: '愤怒', A: Math.max(0.05, ev.angry), fullMark: 1 },
-      { subject: '惊讶', A: Math.max(0.05, ev.surprised), fullMark: 1 },
-      { subject: '恐惧', A: Math.max(0.05, ev.fearful), fullMark: 1 },
-      { subject: '厌恶', A: Math.max(0.05, ev.disgusted), fullMark: 1 },
-      { subject: '中性', A: Math.max(0.05, ev.neutral), fullMark: 1 },
+
+    // 8维情绪雷达图数据 - 限制主导情绪为一个，抑制抑郁情绪显示
+    const values = [
+      { key: 'calm', label: '平静', isDepression: false },
+      { key: 'happy', label: '高兴', isDepression: false },
+      { key: 'sad', label: '悲伤', isDepression: true },
+      { key: 'angry', label: '愤怒', isDepression: false },
+      { key: 'surprised', label: '惊讶', isDepression: false },
+      { key: 'fearful', label: '恐惧', isDepression: true },
+      { key: 'disgusted', label: '厌恶', isDepression: false },
+      { key: 'neutral', label: '中性', isDepression: false },
     ];
+
+    // 获取原始值并应用抑郁情绪抑制系数
+    const processedValues = values.map(item => {
+      const rawValue = (ev as any)[item.key] || 0;
+      // 抑郁相关情绪（悲伤、恐惧）应用抑制系数 0.7，避免过度显示
+      const dampenedValue = item.isDepression ? rawValue * 0.7 : rawValue;
+      return { ...item, value: dampenedValue, rawValue };
+    });
+
+    // 找出处理后的最大值（主导情绪）
+    const maxProcessedValue = Math.max(...processedValues.map(v => v.value));
+    const minProcessedValue = Math.min(...processedValues.map(v => v.value));
+
+    // 映射函数：只有主导情绪显示到最外框，其他按比例显示
+    const mapToRadius = (v: number, isMax: boolean) => {
+      if (maxProcessedValue === minProcessedValue) {
+        return 0.5;
+      }
+      // 归一化
+      const normalized = (v - minProcessedValue) / (maxProcessedValue - minProcessedValue);
+      // 主导情绪映射到 1.0，其他映射到 0.2-0.7 范围
+      if (isMax) {
+        return 1.0;
+      }
+      return 0.2 + normalized * 0.5;
+    };
+
+    // 找出主导情绪索引
+    const maxIndex = processedValues.findIndex(v => v.value === maxProcessedValue);
+
+    return processedValues.map((item, index) => ({
+      subject: item.label,
+      A: mapToRadius(item.value, index === maxIndex),
+      fullMark: 1,
+    }));
   }, [reportData]);
 
   return (
@@ -483,7 +518,7 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                    <Activity className="w-3.5 h-3.5 text-[#7A3EF4]" /> 8维情绪雷达
                  </h3>
                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="55%" outerRadius="72%" data={radarData}>
+                    <RadarChart cx="50%" cy="55%" outerRadius="85%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 500 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />
@@ -491,9 +526,9 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
                         name="情绪概率"
                         dataKey="A"
                         stroke="#7A3EF4"
-                        strokeWidth={2}
+                        strokeWidth={3}
                         fill="url(#radarGradient)"
-                        fillOpacity={0.5}
+                        fillOpacity={0.6}
                       />
                       <defs>
                         <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
