@@ -55,8 +55,8 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
     // 根据主导情绪生成不同的微表情描述
     const descriptions: Record<string, Record<string, string>> = {
       sad: {
-        brow_furrow: '眉心轻微皱起，呈现悲伤情绪特征，眉头内侧上扬形成典型的悲伤表情',
-        mouth_droop: '嘴角明显下垂，面部肌肉松弛，缺乏愉悦感的自然流露',
+        brow_furrow: '眉心轻微皱起，眉头内侧上扬形成典型的悲伤表情',
+        mouth_droop: '嘴角明显下垂，面部肌肉松弛，缺乏愉悦感流露',
         eye_contact: '眼神略显黯淡，目光偶尔向下，眨眼频率较平时略低'
       },
       happy: {
@@ -70,7 +70,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         eye_contact: '眼神锐利直视，目光集中且带有攻击性，眨眼减少'
       },
       fearful: {
-        brow_furrow: '眉心上扬并紧锁，前额出现横向皱纹，呈现恐惧时的惊讶特征',
+        brow_furrow: '眉心上扬并紧锁，前额出现横向皱纹，呈现出惊讶特征',
         mouth_droop: '嘴角向后拉伸，嘴巴可能微张，面部肌肉紧张僵硬',
         eye_contact: '眼神飘忽不定，瞳孔放大，频繁环顾四周显示不安'
       },
@@ -80,7 +80,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         eye_contact: '眼神瞬间聚焦，目光直视前方，眨眼暂停后恢复正常'
       },
       neutral: {
-        brow_furrow: '眉心舒展平整，前额肌肉完全放松，无明显表情纹路',
+        brow_furrow: '眉心舒展平整，前额肌肉放松，无明显表情纹路',
         mouth_droop: '嘴角保持自然水平状态，口周肌肉放松，呈现平静面容',
         eye_contact: '眼神平稳自然，目光适度接触，眨眼频率处于正常范围'
       },
@@ -733,11 +733,49 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             <div className="absolute bottom-3 right-3 w-10 h-10 border-b-2 border-r-2 border-primary/60" />
 
             {isCapturing && (
-              <motion.div
-                animate={{ top: ['6%', '92%', '6%'] }}
-                transition={{ duration: 3.0, repeat: Infinity, ease: 'linear' }}
-                className="absolute left-6 right-6 h-px bg-primary/35 shadow-[0_0_16px_rgba(59,130,246,0.55)]"
-              />
+              <>
+                {/* 扫描线主体 - 带渐变发光效果 */}
+                <motion.div
+                  animate={{ top: ['8%', '88%', '8%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute left-4 right-4 h-[2px] z-20"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.9) 20%, rgba(139,92,246,0.9) 50%, rgba(59,130,246,0.9) 80%, transparent 100%)',
+                    boxShadow: '0 0 8px rgba(59,130,246,0.8), 0 0 20px rgba(59,130,246,0.5), 0 0 30px rgba(139,92,246,0.3)',
+                  }}
+                />
+                {/* 扫描线顶部光晕 */}
+                <motion.div
+                  animate={{ top: ['8%', '88%', '8%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute left-4 right-4 h-8 -mt-4 z-10 opacity-40"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(59,130,246,0.3) 0%, transparent 100%)',
+                  }}
+                />
+                {/* 扫描区域渐变遮罩 */}
+                <motion.div
+                  animate={{ top: ['8%', '88%', '8%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute left-4 right-4 h-24 -mt-12 z-0 opacity-20"
+                  style={{
+                    background: 'linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.15) 30%, rgba(139,92,246,0.1) 50%, rgba(59,130,246,0.15) 70%, transparent 100%)',
+                  }}
+                />
+                {/* 扫描点装饰 */}
+                <motion.div
+                  animate={{ top: ['8%', '88%', '8%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute left-2 w-1.5 h-1.5 rounded-full bg-blue-400 z-20"
+                  style={{ boxShadow: '0 0 6px rgba(59,130,246,1)' }}
+                />
+                <motion.div
+                  animate={{ top: ['8%', '88%', '8%'] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute right-2 w-1.5 h-1.5 rounded-full bg-blue-400 z-20"
+                  style={{ boxShadow: '0 0 6px rgba(59,130,246,1)' }}
+                />
+              </>
             )}
           </div>
 
@@ -858,46 +896,46 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
       {/* 专业级报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="w-[92vw] max-w-2xl max-h-[80vh] p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>表情识别完成报告</DialogTitle>
             <DialogDescription>微表情特征与抑郁风险关联分析</DialogDescription>
           </DialogHeader>
-          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-3 text-white flex justify-between items-start shrink-0">
+          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-4 text-white flex justify-between items-start shrink-0">
              <div className="flex gap-3 items-center">
-               <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                 <ScanFace className="w-4 h-4" />
+               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                 <ScanFace className="w-5 h-5" />
                </div>
                <div>
-                 <h2 className="text-base font-bold">表情识别完成</h2>
-                 <p className="text-white/80 text-[10px]">微表情特征与抑郁风险关联分析</p>
+                 <h2 className="text-lg font-bold">表情识别完成</h2>
+                 <p className="text-white/80 text-xs">微表情特征与抑郁风险关联分析</p>
                </div>
              </div>
           </div>
 
-          <div className="p-3 space-y-3 overflow-y-auto" id="expression-report-card" style={{ maxHeight: 'calc(80vh - 60px)' }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="p-4 space-y-4 overflow-y-auto" id="expression-report-card" style={{ maxHeight: 'calc(85vh - 70px)' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {/* 左侧：微表情特征 */}
-               <div className="space-y-2">
-                 <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs">
-                   <Shield className="w-3.5 h-3.5 text-[#7A3EF4]" /> 微表情表征图
+               <div className="space-y-3">
+                 <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm">
+                   <Shield className="w-4 h-4 text-[#7A3EF4]" /> 微表情表征图
                  </h3>
-                 <div className="space-y-2">
-                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                      <p className="text-[9px] text-slate-400 uppercase font-bold">眉心皱纹 (Brow Furrow)</p>
-                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mt-0.5 leading-tight">
+                 <div className="space-y-3">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold">眉心皱纹 (Brow Furrow)</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1 leading-snug">
                         {getMicroFeatureText('brow_furrow')}
                       </p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                      <p className="text-[9px] text-slate-400 uppercase font-bold">嘴角形态 (Mouth Droop)</p>
-                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mt-0.5 leading-tight">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold">嘴角形态 (Mouth Droop)</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1 leading-snug">
                         {getMicroFeatureText('mouth_droop')}
                       </p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                      <p className="text-[9px] text-slate-400 uppercase font-bold">眼神接触 (Eye Contact)</p>
-                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mt-0.5 leading-tight">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold">眼神接触 (Eye Contact)</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1 leading-snug">
                         {getMicroFeatureText('eye_contact')}
                       </p>
                     </div>
@@ -905,14 +943,14 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                </div>
 
                {/* 右侧：9维情绪雷达 */}
-               <div className="h-40 relative bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-1.5">
-                 <h3 className="absolute top-2 left-2 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs z-10">
-                   <Activity className="w-3.5 h-3.5 text-[#7A3EF4]" /> 9维情绪雷达
+               <div className="h-52 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
+                 <h3 className="absolute top-3 left-3 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm z-10">
+                   <Activity className="w-4 h-4 text-[#7A3EF4]" /> 9维情绪雷达
                  </h3>
                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="58%" outerRadius="60%" data={radarData}>
+                    <RadarChart cx="50%" cy="55%" outerRadius="65%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9 }} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />
                       <Radar
                         name="情绪概率"
@@ -922,7 +960,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                         fillOpacity={0.4}
                       />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '6px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         itemStyle={{ color: '#7A3EF4', fontWeight: 'bold' }}
                         formatter={(value: number) => value.toFixed(4)}
                       />
@@ -932,11 +970,11 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             </div>
 
             {/* 分析建议 */}
-            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-3 rounded-lg text-xs border border-indigo-100 dark:border-indigo-900/50 flex gap-2">
-               <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-               <div className="space-y-0.5">
-                 <p className="font-bold text-indigo-900 dark:text-indigo-200 text-xs">AI 综合分析</p>
-                 <p className="text-indigo-700 dark:text-indigo-300 leading-snug text-[11px]">
+            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl text-sm border border-indigo-100 dark:border-indigo-900/50 flex gap-3">
+               <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+               <div className="space-y-1">
+                 <p className="font-bold text-indigo-900 dark:text-indigo-200 text-sm">AI 综合分析</p>
+                 <p className="text-indigo-700 dark:text-indigo-300 leading-relaxed text-xs">
                    {reportData?.analysis_report}
                  </p>
                </div>
