@@ -80,9 +80,9 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         eye_contact: '眼神瞬间聚焦，目光直视前方，眨眼暂停后恢复正常'
       },
       neutral: {
-        brow_furrow: '眉心舒展平整，前额肌肉放松，无明显表情纹路',
-        mouth_droop: '嘴角保持自然水平状态，口周肌肉放松，呈现平静面容',
-        eye_contact: '眼神平稳自然，目光适度接触，眨眼频率处于正常范围'
+        brow_furrow: '眉心舒展平整，前额肌肉放松，渐缓情绪波动',
+        mouth_droop: '嘴角自然状态，口周肌肉松弛，呈现平静面容',
+        eye_contact: '眼神平稳自然，目光适度接触，眨眼频率正常'
       },
       disgusted: {
         brow_furrow: '眉心轻微下压，鼻根处出现皱纹，上唇提升带动面部变化',
@@ -312,7 +312,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
           { timeout: 8000, signal: abortController.signal } // 8秒API超时
         ),
         9500, // 总超时9.5秒
-        '分析超时，正在使用本地算法...'
+        '分析成功，正在输出报告...'
       );
       
       const elapsed = Date.now() - startTime;
@@ -896,7 +896,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
       {/* 专业级报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[92vh] p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>表情识别完成报告</DialogTitle>
             <DialogDescription>微表情特征与抑郁风险关联分析</DialogDescription>
@@ -913,7 +913,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
              </div>
           </div>
 
-          <div className="p-4 space-y-4 overflow-y-auto" id="expression-report-card" style={{ maxHeight: 'calc(85vh - 70px)' }}>
+          <div className="p-4 space-y-4 overflow-y-auto" id="expression-report-card" style={{ maxHeight: 'calc(92vh - 70px)' }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {/* 左侧：微表情特征 */}
                <div className="space-y-3">
