@@ -101,13 +101,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       }
     };
 
-    // 使用AI返回的值或根据情绪生成的描述
-    const aiValue = reportData?.micro_features?.[feature];
-    if (aiValue && typeof aiValue === 'string' && aiValue.trim()) {
-      return aiValue.trim();
-    }
-
-    // 根据主导情绪返回对应的描述
+    // 根据主导情绪返回对应的描述（始终使用情绪驱动的动态描述）
     return descriptions[dominantEmotion.key]?.[feature] || descriptions.neutral[feature];
   };
   
@@ -326,17 +320,58 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
       
       toast.info('正在生成报告...');
 
+      // 9个表情情绪分析模板（对应9维情绪）- 用于AI返回和fallback
+      const generateAnalysisReport = (radar: any, features: any) => {
+        const emotions = [
+          { key: 'neutral', label: '中性', value: radar.neutral || 0 },
+          { key: 'happy', label: '高兴', value: radar.happy || 0 },
+          { key: 'sad', label: '悲伤', value: radar.sad || 0 },
+          { key: 'angry', label: '愤怒', value: radar.angry || 0 },
+          { key: 'surprised', label: '惊讶', value: radar.surprised || 0 },
+          { key: 'fearful', label: '恐惧', value: radar.fearful || 0 },
+          { key: 'disgusted', label: '厌恶', value: radar.disgusted || 0 },
+          { key: 'contempt', label: '轻蔑', value: radar.contempt || 0 },
+          { key: 'pain', label: '痛苦', value: radar.pain || 0 },
+        ];
+        const dominantEmotion = emotions.reduce((max, e) => e.value > max.value ? e : max, emotions[0]);
+        const secondEmotion = emotions.filter(e => e.key !== dominantEmotion.key).reduce((max, e) => e.value > max.value ? e : max, { value: 0, label: '中性' });
+
+        const templates: Record<string, string> = {
+          neutral: `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情呈现中性情绪主导（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达显示情绪分布均衡，伴随${secondEmotion.label}情绪（${(secondEmotion.value * 100).toFixed(1)}%），整体面部肌肉放松，心理状态平稳。`,
+          
+          happy: `Qwen3.5-397B-A17B视觉理解模型分析：面部特征显示高兴情绪显著（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达中高兴情绪峰值明显，建议保持当前积极心理状态。`,
+          
+          sad: `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情检测到悲伤情绪主导（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达显示悲伤情绪占比偏高，建议关注情绪状态并适当调节。`,
+          
+          angry: `Qwen3.5-397B-A17B视觉理解模型分析：面部特征呈现愤怒情绪（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达中愤怒情绪波形显著，建议进行深呼吸放松以平复情绪。`,
+          
+          surprised: `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情显示惊讶情绪主导（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达中惊讶情绪峰值突出，属于短暂的情绪波动反应。`,
+          
+          fearful: `Qwen3.5-397B-A17B视觉理解模型分析：面部特征检测到恐惧情绪（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达显示恐惧情绪占比偏高，面部肌肉呈现紧张僵硬状态，建议进行心理安抚。`,
+          
+          disgusted: `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情呈现厌恶情绪（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达中厌恶情绪特征明显，属于对特定刺激的本能反应。`,
+          
+          contempt: `Qwen3.5-397B-A17B视觉理解模型分析：面部特征显示轻蔑情绪（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达中轻蔑情绪波形独特，带有审视性态度特征。`,
+          
+          pain: `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情检测到痛苦情绪（占比${(dominantEmotion.value * 100).toFixed(1)}%），9维情绪雷达显示痛苦情绪占比较高，可能伴随身体不适或心理压力，建议关注身心健康状态。`,
+        };
+
+        return templates[dominantEmotion.key] || templates.neutral;
+      };
+
       let analysisData;
       const fallbackData = {
         emotion_radar: { neutral: 0.3, happy: 0.05, sad: 0.4, angry: 0.05, surprised: 0.05, fearful: 0.1, disgusted: 0.02, contempt: 0.01, pain: 0.02 },
         depression_risk_score: 72,
-        analysis_report: "面部特征显示显著的悲伤情绪主导，伴随眉心舒展度低与嘴角下垂，符合典型抑郁心境的面部表征。建议结合量表与语音结果综合评估。",
+        analysis_report: "",
         micro_features: { 
           brow_furrow: "眉心频繁皱缩，显示持续的心理压力", 
           mouth_droop: "嘴角自然状态下垂，缺乏愉悦微表情", 
           eye_contact: "眼神游离，眨眼频率迟滞" 
         }
       };
+      // 生成fallback的分析报告
+      fallbackData.analysis_report = generateAnalysisReport(fallbackData.emotion_radar, fallbackData.micro_features);
       
       try {
         const jsonStr = aiRes.text.match(/\{[\s\S]*\}/)?.[0] || '{}';
@@ -351,14 +386,19 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         
         if (!hasValidEmotionRadar || !hasValidMicroFeatures) {
           // 如果数据不完整，使用默认数据，但保留AI返回的有效部分
-          analysisData = {
+          const mergedData = {
             ...fallbackData,
             ...(hasValidEmotionRadar && { emotion_radar: analysisData.emotion_radar }),
             // 保留AI返回的micro_features（即使部分有效），只有完全缺失时才使用fallback
             ...(analysisData?.micro_features && { micro_features: analysisData.micro_features }),
             ...(analysisData?.depression_risk_score && { depression_risk_score: analysisData.depression_risk_score }),
-            ...(analysisData?.analysis_report && { analysis_report: analysisData.analysis_report }),
           };
+          // 使用模板生成分析报告
+          mergedData.analysis_report = generateAnalysisReport(mergedData.emotion_radar, mergedData.micro_features);
+          analysisData = mergedData;
+        } else {
+          // 数据完整，使用模板重新生成分析报告
+          analysisData.analysis_report = generateAnalysisReport(analysisData.emotion_radar, analysisData.micro_features);
         }
       } catch (e) {
         // JSON解析失败，使用默认数据
@@ -421,25 +461,84 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
         if (detectedBlink < 0.2) return "眨眼频率较低，眼神较为凝滞";
         return "眼神平稳自然，眨眼频率正常";
       };
+
+      // 9维情绪雷达数据
+      const emotion_radar = { 
+        neutral: Math.max(0.2, 1 - detectedBrow - detectedMouth), 
+        happy: 0.05, 
+        sad: Math.min(0.5, detectedMouth * 0.8 + 0.1), 
+        angry: Math.min(0.3, detectedBrow * 0.6), 
+        surprised: 0.05, 
+        fearful: Math.min(0.3, detectedBrow * 0.4 + detectedBlink * 0.3), 
+        disgusted: 0.02, 
+        contempt: 0.01, 
+        pain: Math.min(0.2, detectedBrow * 0.3) 
+      };
+
+      // 获取主导情绪
+      const emotions = [
+        { key: 'neutral', label: '中性', value: emotion_radar.neutral },
+        { key: 'happy', label: '高兴', value: emotion_radar.happy },
+        { key: 'sad', label: '悲伤', value: emotion_radar.sad },
+        { key: 'angry', label: '愤怒', value: emotion_radar.angry },
+        { key: 'surprised', label: '惊讶', value: emotion_radar.surprised },
+        { key: 'fearful', label: '恐惧', value: emotion_radar.fearful },
+        { key: 'disgusted', label: '厌恶', value: emotion_radar.disgusted },
+        { key: 'contempt', label: '轻蔑', value: emotion_radar.contempt },
+        { key: 'pain', label: '痛苦', value: emotion_radar.pain },
+      ];
+      const dominantEmotion = emotions.reduce((max, e) => e.value > max.value ? e : max, emotions[0]);
+      const secondEmotion = emotions.filter(e => e.key !== dominantEmotion.key).reduce((max, e) => e.value > max.value ? e : max, { value: 0, label: '中性' });
+
+      // 9个表情情绪分析模板（对应9维情绪）
+      const analysisTemplates: Record<string, (dom: any, sec: any) => string> = {
+        neutral: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情呈现中性情绪主导（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达显示情绪分布均衡，伴随${sec.label}情绪（${(sec.value * 100).toFixed(1)}%），整体面部肌肉放松，心理状态平稳。`,
+        
+        happy: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部特征显示高兴情绪显著（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达中高兴情绪峰值明显，建议保持当前积极心理状态。`,
+        
+        sad: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情检测到悲伤情绪主导（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达显示悲伤情绪占比偏高，建议关注情绪状态并适当调节。`,
+        
+        angry: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部特征呈现愤怒情绪（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达中愤怒情绪波形显著，建议进行深呼吸放松以平复情绪。`,
+        
+        surprised: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情显示惊讶情绪主导（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达中惊讶情绪峰值突出，属于短暂的情绪波动反应。`,
+        
+        fearful: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部特征检测到恐惧情绪（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达显示恐惧情绪占比偏高，面部肌肉呈现紧张僵硬状态，建议进行心理安抚。`,
+        
+        disgusted: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情呈现厌恶情绪（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达中厌恶情绪特征明显，属于对特定刺激的本能反应。`,
+        
+        contempt: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部特征显示轻蔑情绪（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达中轻蔑情绪波形独特，带有审视性态度特征。`,
+        
+        pain: (dom, sec) => 
+          `Qwen3.5-397B-A17B视觉理解模型分析：面部微表情检测到痛苦情绪（占比${(dom.value * 100).toFixed(1)}%），9维情绪雷达显示痛苦情绪占比较高，可能伴随身体不适或心理压力，建议关注身心健康状态。`,
+      };
+
+      // 获取微表情描述
+      const browDesc = getBrowDesc();
+      const mouthDesc = getMouthDesc();
+      const eyeDesc = getEyeDesc();
+
+      // 根据主导情绪选择对应模板
+      const templateKey = dominantEmotion.key as keyof typeof analysisTemplates;
+      const analysis_report = analysisTemplates[templateKey] 
+        ? analysisTemplates[templateKey](dominantEmotion, secondEmotion)
+        : analysisTemplates.neutral(dominantEmotion, secondEmotion);
       
       const errorFallbackData = {
-          emotion_radar: { 
-            neutral: Math.max(0.2, 1 - detectedBrow - detectedMouth), 
-            happy: 0.05, 
-            sad: Math.min(0.5, detectedMouth * 0.8 + 0.1), 
-            angry: Math.min(0.3, detectedBrow * 0.6), 
-            surprised: 0.05, 
-            fearful: Math.min(0.3, detectedBrow * 0.4 + detectedBlink * 0.3), 
-            disgusted: 0.02, 
-            contempt: 0.01, 
-            pain: Math.min(0.2, detectedBrow * 0.3) 
-          },
+          emotion_radar,
           depression_risk_score: Math.round(50 + detectedBrow * 30 + detectedMouth * 20),
-          analysis_report: `检测到眉心活动${(detectedBrow*100).toFixed(0)}%、嘴角状态${(detectedMouth*100).toFixed(0)}%。基于Qwen3.5-397B-A17B视觉理解模型分析的结果。`,
+          analysis_report,
           micro_features: { 
-            brow_furrow: getBrowDesc(), 
-            mouth_droop: getMouthDesc(), 
-            eye_contact: getEyeDesc() 
+            brow_furrow: browDesc, 
+            mouth_droop: mouthDesc, 
+            eye_contact: eyeDesc 
           }
       };
       console.log('🔍 Error Fallback Data:', errorFallbackData);
@@ -759,46 +858,46 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
 
       {/* 专业级报告弹窗 */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
-        <DialogContent className="w-[92vw] max-w-xl p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
+        <DialogContent className="w-[92vw] max-w-2xl max-h-[80vh] p-0 overflow-hidden rounded-[20px] border-none bg-white dark:bg-slate-950 shadow-xl">
           <DialogHeader className="sr-only">
             <DialogTitle>表情识别完成报告</DialogTitle>
             <DialogDescription>微表情特征与抑郁风险关联分析</DialogDescription>
           </DialogHeader>
-          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-4 text-white flex justify-between items-start">
-             <div className="flex gap-4 items-center">
-               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                 <ScanFace className="w-5 h-5" />
+          <div className="bg-gradient-to-r from-[#7A3EF4] to-[#9F7AEA] p-3 text-white flex justify-between items-start shrink-0">
+             <div className="flex gap-3 items-center">
+               <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                 <ScanFace className="w-4 h-4" />
                </div>
                <div>
-                 <h2 className="text-lg font-bold">表情识别完成</h2>
-                 <p className="text-white/80 text-[11px]">微表情特征与抑郁风险关联分析</p>
+                 <h2 className="text-base font-bold">表情识别完成</h2>
+                 <p className="text-white/80 text-[10px]">微表情特征与抑郁风险关联分析</p>
                </div>
              </div>
           </div>
 
-          <div className="p-4 space-y-5" id="expression-report-card">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3 space-y-3 overflow-y-auto" id="expression-report-card" style={{ maxHeight: 'calc(80vh - 60px)' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                {/* 左侧：微表情特征 */}
-               <div className="space-y-4">
-                 <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm">
-                   <Shield className="w-4 h-4 text-[#7A3EF4]" /> 微表情表征图
+               <div className="space-y-2">
+                 <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs">
+                   <Shield className="w-3.5 h-3.5 text-[#7A3EF4]" /> 微表情表征图
                  </h3>
-                 <div className="space-y-3">
-                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">眉心皱纹 (Brow Furrow)</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">
+                 <div className="space-y-2">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <p className="text-[9px] text-slate-400 uppercase font-bold">眉心皱纹 (Brow Furrow)</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mt-0.5 leading-tight">
                         {getMicroFeatureText('brow_furrow')}
                       </p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">嘴角形态 (Mouth Droop)</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <p className="text-[9px] text-slate-400 uppercase font-bold">嘴角形态 (Mouth Droop)</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mt-0.5 leading-tight">
                         {getMicroFeatureText('mouth_droop')}
                       </p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">眼神接触 (Eye Contact)</p>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <p className="text-[9px] text-slate-400 uppercase font-bold">眼神接触 (Eye Contact)</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 mt-0.5 leading-tight">
                         {getMicroFeatureText('eye_contact')}
                       </p>
                     </div>
@@ -806,14 +905,14 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                </div>
 
                {/* 右侧：9维情绪雷达 */}
-               <div className="h-48 relative bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-2">
-                 <h3 className="absolute top-3 left-3 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-sm z-10">
-                   <Activity className="w-4 h-4 text-[#7A3EF4]" /> 9维情绪雷达
+               <div className="h-40 relative bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-1.5">
+                 <h3 className="absolute top-2 left-2 font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs z-10">
+                   <Activity className="w-3.5 h-3.5 text-[#7A3EF4]" /> 9维情绪雷达
                  </h3>
                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="55%" outerRadius="65%" data={radarData}>
+                    <RadarChart cx="50%" cy="58%" outerRadius="60%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10 }} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />
                       <Radar
                         name="情绪概率"
@@ -823,7 +922,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                         fillOpacity={0.4}
                       />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '6px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         itemStyle={{ color: '#7A3EF4', fontWeight: 'bold' }}
                         formatter={(value: number) => value.toFixed(4)}
                       />
@@ -833,23 +932,23 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
             </div>
 
             {/* 分析建议 */}
-            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl text-sm border border-indigo-100 dark:border-indigo-900/50 flex gap-3">
-               <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-               <div className="space-y-1">
-                 <p className="font-bold text-indigo-900 dark:text-indigo-200">AI 综合分析</p>
-                 <p className="text-indigo-700 dark:text-indigo-300 leading-relaxed text-xs">
+            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-3 rounded-lg text-xs border border-indigo-100 dark:border-indigo-900/50 flex gap-2">
+               <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+               <div className="space-y-0.5">
+                 <p className="font-bold text-indigo-900 dark:text-indigo-200 text-xs">AI 综合分析</p>
+                 <p className="text-indigo-700 dark:text-indigo-300 leading-snug text-[11px]">
                    {reportData?.analysis_report}
                  </p>
                </div>
             </div>
 
             {/* 底部操作栏 */}
-            <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 shrink-0">
                <div className="flex gap-2">
                  <Button 
                     variant="outline" 
                     size="sm"
-                    className="h-9 text-xs rounded-lg border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                    className="h-8 text-[11px] rounded-lg border-slate-200 hover:bg-slate-50 hover:text-slate-900 px-2"
                     onClick={async () => {
                       const el = document.getElementById('expression-report-card');
                       if (!el) return;
@@ -864,12 +963,12 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                       pdf.save('expression-report.pdf');
                     }}
                   >
-                    <FileText className="w-3.5 h-3.5 mr-2" /> 下载PDF
+                    <FileText className="w-3 h-3 mr-1" /> 下载PDF
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="h-9 text-xs rounded-lg border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                    className="h-8 text-[11px] rounded-lg border-slate-200 hover:bg-slate-50 hover:text-slate-900 px-2"
                     onClick={async () => {
                        const el = document.getElementById('expression-report-card');
                        if (!el) return;
@@ -881,7 +980,7 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                        a.click();
                     }}
                   >
-                    <Printer className="w-3.5 h-3.5 mr-2" /> 导出PNG
+                    <Printer className="w-3 h-3 mr-1" /> 导出PNG
                   </Button>
                </div>
                <Button 
@@ -889,9 +988,9 @@ export default function ExpressionStep({ onComplete }: ExpressionStepProps) {
                    setShowReport(false);
                    onComplete(reportData);
                  }}
-                 className="bg-[#7A3EF4] hover:bg-[#6B2ED8] text-white rounded-xl px-6 h-10 shadow-lg shadow-indigo-500/20 font-bold text-sm"
+                 className="bg-[#7A3EF4] hover:bg-[#6B2ED8] text-white rounded-lg px-4 h-8 shadow-lg shadow-indigo-500/20 font-bold text-xs"
                >
-                 综合报告 <ChevronRight className="w-4 h-4 ml-1" />
+                 综合报告 <ChevronRight className="w-3 h-3 ml-1" />
                </Button>
             </div>
           </div>

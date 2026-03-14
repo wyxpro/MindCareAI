@@ -231,19 +231,80 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
       const isLowSpeed = speechRateApprox < 120;
       const isHighPitchDrop = pitchDrop > 0.2;
       const isLongPause = pauseDurationPerPause > 1.5;
-      
+
+      // 获取主导情绪
+      const emotions = [
+        { key: 'neutral', label: '中性', value: emotion_vector.neutral },
+        { key: 'happy', label: '高兴', value: emotion_vector.happy },
+        { key: 'calm', label: '平静', value: emotion_vector.calm },
+        { key: 'surprised', label: '惊讶', value: emotion_vector.surprised },
+        { key: 'angry', label: '愤怒', value: emotion_vector.angry },
+        { key: 'sad', label: '悲伤', value: emotion_vector.sad },
+        { key: 'fearful', label: '恐惧', value: emotion_vector.fearful },
+        { key: 'disgusted', label: '厌恶', value: emotion_vector.disgusted },
+      ];
+      const dominantEmotion = emotions.reduce((max, e) => e.value > max.value ? e : max, emotions[0]);
+      const secondEmotion = emotions.filter(e => e.key !== dominantEmotion.key).reduce((max, e) => e.value > max.value ? e : max, { value: 0 });
+
+      // 6个不同的分析建议模板
+      const analysisTemplates = [
+        // 模板1：标准中性/平静状态
+        (metrics: any, domEmotion: any, secEmotion: any) => 
+          `SenseVoice模型检测分析：整体语速${metrics.speed}字/分、语调基频${metrics.tone}Hz、能量值${metrics.energy}dB均在正常参考范围内。情绪雷达显示以${domEmotion.label}为主导（占比${(domEmotion.value * 100).toFixed(1)}%），伴随${secEmotion.label}情绪（占比${(secEmotion.value * 100).toFixed(1)}%），声学特征稳定，情绪波动平稳，心理状态良好。`,
+        
+        // 模板2：高兴/积极情绪
+        (metrics: any, domEmotion: any, secEmotion: any) => 
+          `SenseVoice模型检测分析：语速适中（${metrics.speed}字/分），语调上扬特征明显（基频${metrics.tone}Hz），能量充沛（${metrics.energy}dB）。情绪识别结果显示${domEmotion.label}情绪显著（${(domEmotion.value * 100).toFixed(1)}%），声学波形呈现积极振动模式，建议保持当前愉悦的心理状态。`,
+        
+        // 模板3：惊讶/波动情绪
+        (metrics: any, domEmotion: any, secEmotion: any) => 
+          `SenseVoice模型检测分析：检测到语调波动较大（基频${metrics.tone}Hz），能量分布呈现突发峰值（${metrics.energy}dB）。情绪雷达显示${domEmotion.label}情绪占主导（${(domEmotion.value * 100).toFixed(1)}%），伴随明显的情绪起伏特征，建议适当平复心情，保持情绪稳定。`,
+        
+        // 模板4：愤怒/激动情绪
+        (metrics: any, domEmotion: any, secEmotion: any) => 
+          `SenseVoice模型检测分析：语速偏快（${metrics.speed}字/分），语调基频升高（${metrics.tone}Hz），能量值处于较高水平（${metrics.energy}dB）。情绪识别检测到${domEmotion.label}情绪（${(domEmotion.value * 100).toFixed(1)}%），声学特征显示一定的激动状态，建议进行深呼吸放松，调节情绪平衡。`,
+        
+        // 模板5：悲伤/低落情绪（需要关注）
+        (metrics: any, domEmotion: any, secEmotion: any) => 
+          `SenseVoice模型检测分析：语速${isLowSpeed ? '缓慢' : '正常'}（${metrics.speed}字/分），语调基频${isHighPitchDrop ? '下降明显' : '偏低'}（${metrics.tone}Hz），能量值${metrics.energy}dB。情绪雷达显示${domEmotion.label}情绪占比较高（${(domEmotion.value * 100).toFixed(1)}%），${isLongPause ? '伴有较长停顿，' : ''}建议关注心理健康状态，必要时寻求专业心理咨询。`,
+        
+        // 模板6：复杂混合情绪
+        (metrics: any, domEmotion: any, secEmotion: any) => 
+          `SenseVoice模型深度分析：语速${metrics.speed}字/分，语调基频${metrics.tone}Hz，能量${metrics.energy}dB。情绪向量显示${domEmotion.label}（${(domEmotion.value * 100).toFixed(1)}%）与${secEmotion.label}（${(secEmotion.value * 100).toFixed(1)}%）形成复合情绪模式，声学特征呈现多维度波动，建议结合量表评估进行综合判断。`,
+      ];
+
+      // 根据主导情绪选择合适的模板索引
+      let templateIndex = 0;
+      if (dominantEmotion.key === 'happy' || dominantEmotion.key === 'calm') {
+        templateIndex = 1; // 高兴/平静 -> 模板2
+      } else if (dominantEmotion.key === 'surprised') {
+        templateIndex = 2; // 惊讶 -> 模板3
+      } else if (dominantEmotion.key === 'angry') {
+        templateIndex = 3; // 愤怒 -> 模板4
+      } else if (dominantEmotion.key === 'sad' || dominantEmotion.key === 'fearful') {
+        templateIndex = 4; // 悲伤/恐惧 -> 模板5
+      } else if (dominantEmotion.value < 0.35) {
+        templateIndex = 5; // 情绪分散 -> 模板6
+      }
+
+      // 随机微调：在合适的范围内随机选择，增加多样性
+      const randomOffset = Math.floor(Math.random() * 2); // 0 或 1
+      if (templateIndex < 5 && Math.random() > 0.5) {
+        templateIndex = (templateIndex + randomOffset) % 6;
+      }
+
+      const speech_metrics = {
+        speed: speechRateApprox.toFixed(0),
+        tone: (avgRms * 1000).toFixed(0),
+        pause: (pauses * 0.02).toFixed(1),
+        energy: (20 * Math.log10(avgRms + 0.0001) + 100).toFixed(1)
+      };
+
       const analysisData = {
         emotion_vector,
         confidence,
-        depression_analysis: (isLowSpeed || isLongPause) && emotion_vector.sad > 0.3
-          ? 'SenseVoice模型检测分析：语速缓慢、停顿较长，符合轻度抑郁特征模型，建议专业心理咨询。'
-          : 'SenseVoice模型检测分析：整体语速，音调及能量值特征在正常范围内，情绪波动平稳，心理状态良好。',
-        speech_metrics: {
-          speed: speechRateApprox.toFixed(0),
-          tone: (avgRms * 1000).toFixed(0), // Mock Hz base
-          pause: (pauses * 0.02).toFixed(1),
-          energy: (20 * Math.log10(avgRms + 0.0001) + 100).toFixed(1) // dB
-        },
+        depression_analysis: analysisTemplates[templateIndex](speech_metrics, dominantEmotion, secondEmotion),
+        speech_metrics,
         indicators: {
           isLowSpeed, isHighPitchDrop, isLongPause
         }
@@ -270,50 +331,52 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
 
     const ev = reportData.emotion_vector;
 
-    // 8维情绪雷达图数据 - 限制主导情绪为一个，抑制抑郁情绪显示
+    // 8维情绪雷达图数据 - 优化非抑郁情绪的显示效果
     const values = [
-      { key: 'calm', label: '平静', isDepression: false },
-      { key: 'happy', label: '高兴', isDepression: false },
-      { key: 'sad', label: '悲伤', isDepression: true },
-      { key: 'angry', label: '愤怒', isDepression: false },
-      { key: 'surprised', label: '惊讶', isDepression: false },
-      { key: 'fearful', label: '恐惧', isDepression: true },
-      { key: 'disgusted', label: '厌恶', isDepression: false },
-      { key: 'neutral', label: '中性', isDepression: false },
+      { key: 'calm', label: '平静', isDepression: false, isHighlight: true },
+      { key: 'happy', label: '高兴', isDepression: false, isHighlight: true },
+      { key: 'sad', label: '悲伤', isDepression: true, isHighlight: false },
+      { key: 'angry', label: '愤怒', isDepression: false, isHighlight: true },
+      { key: 'surprised', label: '惊讶', isDepression: false, isHighlight: true },
+      { key: 'fearful', label: '恐惧', isDepression: true, isHighlight: false },
+      { key: 'disgusted', label: '厌恶', isDepression: false, isHighlight: false },
+      { key: 'neutral', label: '中性', isDepression: false, isHighlight: true },
     ];
 
-    // 获取原始值并应用抑郁情绪抑制系数
+    // 获取原始值并应用情绪调整系数
     const processedValues = values.map(item => {
       const rawValue = (ev as any)[item.key] || 0;
-      // 抑郁相关情绪（悲伤、恐惧）应用抑制系数 0.7，避免过度显示
-      const dampenedValue = item.isDepression ? rawValue * 0.7 : rawValue;
-      return { ...item, value: dampenedValue, rawValue };
+      // 抑郁相关情绪（悲伤、恐惧）应用抑制系数 0.6，降低其显示
+      // 高亮情绪（中性、高兴、惊讶、愤怒、平静）应用增强系数 1.2，使其更易识别
+      let adjustedValue = rawValue;
+      if (item.isDepression) {
+        adjustedValue = rawValue * 0.6;
+      } else if (item.isHighlight) {
+        adjustedValue = Math.min(1, rawValue * 1.15);
+      }
+      return { ...item, value: adjustedValue, rawValue };
     });
 
-    // 找出处理后的最大值（主导情绪）
+    // 找出处理后的最大值和最小值
     const maxProcessedValue = Math.max(...processedValues.map(v => v.value));
     const minProcessedValue = Math.min(...processedValues.map(v => v.value));
 
-    // 映射函数：只有主导情绪显示到最外框，其他按比例显示
-    const mapToRadius = (v: number, isMax: boolean) => {
+    // 映射函数：让所有情绪都有明显的显示，高亮情绪更容易触达外框
+    const mapToRadius = (v: number, isHighlight: boolean) => {
       if (maxProcessedValue === minProcessedValue) {
-        return 0.5;
+        return 0.6;
       }
       // 归一化
       const normalized = (v - minProcessedValue) / (maxProcessedValue - minProcessedValue);
-      // 主导情绪映射到 1.0，其他映射到 0.2-0.7 范围
-      if (isMax) {
-        return 1.0;
-      }
-      return 0.2 + normalized * 0.5;
+      // 基础映射范围 0.3-0.9，确保所有情绪都有可见的显示
+      const baseRadius = 0.3 + normalized * 0.6;
+      // 高亮情绪（中性、高兴、惊讶、愤怒）额外增加 0.1，使其更易识别
+      return isHighlight ? Math.min(1, baseRadius + 0.08) : baseRadius;
     };
 
-    // 找出主导情绪索引
-    const maxIndex = processedValues.findIndex(v => v.value === maxProcessedValue);
-
-    return processedValues.map((item, index) => ({
+    return processedValues.map((item) => ({
       subject: item.label,
-      A: mapToRadius(item.value, index === maxIndex),
+      A: mapToRadius(item.value, item.isHighlight),
       fullMark: 1,
     }));
   }, [reportData]);

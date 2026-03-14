@@ -547,13 +547,41 @@
 
       /* 炫彩渐变文字 - 与桌面端导航栏完全一致 */
       .gradient-text {
-        background: linear-gradient(to right, #9333ea 0%, #db2777 50%, #e11d48 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
+        background: linear-gradient(to right, #9333ea 0%, #db2777 50%, #e11d48 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
         display: inline-block;
         line-height: 1.2;
+        font-size: 1.125rem;
+        font-weight: 700;
+      }
+
+      /* 用户功能 - 青蓝渐变 */
+      .gradient-text-user {
+        background: linear-gradient(to right, #0ea5e9 0%, #3b82f6 50%, #6366f1 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block;
+        line-height: 1.2;
+        font-size: 1.875rem;
+        font-weight: 700;
+      }
+
+      /* 医生功能 - 青绿渐变 */
+      .gradient-text-doctor {
+        background: linear-gradient(to right, #06b6d4 0%, #10b981 50%, #84cc16 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        color: transparent !important;
+        display: inline-block;
+        line-height: 1.2;
+        font-size: 1.875rem;
+        font-weight: 700;
       }
 
       /* Logo容器样式 - 防止闪屏 */
@@ -565,12 +593,21 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        background-color: transparent;
       }
 
       .logo-container img {
         width: 100%;
         height: 100%;
         object-fit: contain;
+        display: block;
+      }
+
+      /* Logo与文字容器 - 确保间距稳定 */
+      .logo-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
       @keyframes textShimmer {
@@ -1253,16 +1290,16 @@
         class="glass-nav fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         id="navbar"
       >
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 py-2">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
+            <div class="logo-brand">
               <div class="logo-container">
                 <img src="/favicon.png" alt="灵愈AI" />
               </div>
-              <span class="text-xl font-bold gradient-text">灵愈AI</span>
+              <span class="gradient-text">灵愈AI</span>
             </div>
 
-            <div class="hidden md:flex items-center space-x-8">
+            <div class="hidden md:flex items-center space-x-6">
               <a
                 href="#features"
                 class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
@@ -1285,15 +1322,16 @@
               >
             </div>
 
-            <div class="flex items-center space-x-4">
+            <!-- 桌面端按钮组 -->
+            <div class="hidden md:flex items-center space-x-4">
               <a
                 href="/#/login"
-                class="hidden md:block text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
                 >登录</a
               >
               <a
                 href="/#/"
-                class="hidden md:inline-flex btn-primary text-white px-6 py-2 rounded-full font-semibold shadow-lg"
+                class="btn-primary text-white px-6 py-2 rounded-full font-semibold shadow-lg"
                 >立即体验</a
               >
               <!-- GitHub按钮 -->
@@ -1310,26 +1348,41 @@
               </a>
             </div>
 
-            <!-- 移动端菜单按钮 -->
-            <button class="md:hidden text-gray-700" id="mobileMenuBtn">
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <!-- 移动端按钮组 -->
+            <div class="flex md:hidden items-center space-x-0">
+              <!-- GitHub按钮 -->
+              <a
+                href="https://github.com/wyxpro/MindCareAI/tree/main"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="github-btn p-2 hover:bg-gray-100 rounded-lg transition-all duration-300"
+                title="查看GitHub源码"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                ></path>
-              </svg>
-            </button>
+                <svg class="w-6 h-6 text-gray-800 hover:text-black transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </a>
+              <!-- 移动端菜单按钮 -->
+              <button class="text-gray-700" id="mobileMenuBtn">
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  ></path>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- 移动端菜单 -->
-          <div class="hidden md:hidden mt-4 pb-4" id="mobileMenu">
+          <div class="hidden md:hidden mt-4 pb-4 w-full border-t border-gray-200/50 pt-4" id="mobileMenu">
             <a
               href="#features"
               class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
@@ -1744,7 +1797,7 @@
             <!-- 用户侧功能 -->
             <div data-aos="fade-right" data-aos-delay="100">
               <div class="glass-card rounded-3xl p-8">
-                <h3 class="text-3xl font-bold mb-6 gradient-text">用户功能</h3>
+                <h3 class="text-3xl font-bold mb-6 gradient-text-user">用户功能</h3>
                 <div class="space-y-6">
                   <div class="flex items-start space-x-4">
                     <div
@@ -1882,7 +1935,7 @@
             <!-- 医生侧功能 -->
             <div data-aos="fade-left" data-aos-delay="200">
               <div class="glass-card rounded-3xl p-8">
-                <h3 class="text-3xl font-bold mb-6 gradient-text">医生功能</h3>
+                <h3 class="text-3xl font-bold mb-6 gradient-text-doctor">医生功能</h3>
                 <div class="space-y-6">
                   <div class="flex items-start space-x-4">
                     <div
