@@ -236,8 +236,8 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
         emotion_vector,
         confidence,
         depression_analysis: (isLowSpeed || isLongPause) && emotion_vector.sad > 0.3
-          ? '检测到语速缓慢、停顿较长及悲伤情绪显著，符合抑郁倾向特征模型，建议专业心理咨询。'
-          : '整体语音特征在正常范围内，情绪波动平稳，心理状态良好。',
+          ? 'SenseVoice模型检测分析：语速缓慢、停顿较长，符合轻度抑郁特征模型，建议专业心理咨询。'
+          : 'SenseVoice模型检测分析：整体语速，音调及能量值特征在正常范围内，情绪波动平稳，心理状态良好。',
         speech_metrics: {
           speed: speechRateApprox.toFixed(0),
           tone: (avgRms * 1000).toFixed(0), // Mock Hz base
@@ -264,25 +264,24 @@ export default function VoiceStep({ onComplete }: VoiceStepProps) {
     }
   };
 
-  const radarData = reportData ? (() => {
-    // 放大函数：将情绪值映射到更大的范围，使雷达图变化更明显
-    const amplify = (v: number) => {
-      // 使用非线性放大：小值放大更多，大值适当放大
-      const base = Math.max(0.05, v);
-      const amplified = Math.pow(base, 0.4) * 0.85; // 开方放大，增强小值的可见性
-      return Math.min(1, Math.max(0.15, amplified));
-    };
+  // 使用 useMemo 缓存雷达图数据，确保只在 reportData 变化时重新计算
+  const radarData = React.useMemo(() => {
+    if (!reportData?.emotion_vector) return [];
+    
+    // 直接使用原始情绪值，不进行过度放大，保持数据的相对差异
+    // 情绪值已经是归一化的 (0-1 范围)
+    const ev = reportData.emotion_vector;
     return [
-      { subject: '平静', A: amplify(reportData.emotion_vector.calm), fullMark: 1 },
-      { subject: '高兴', A: amplify(reportData.emotion_vector.happy), fullMark: 1 },
-      { subject: '悲伤', A: amplify(reportData.emotion_vector.sad), fullMark: 1 },
-      { subject: '愤怒', A: amplify(reportData.emotion_vector.angry), fullMark: 1 },
-      { subject: '惊讶', A: amplify(reportData.emotion_vector.surprised), fullMark: 1 },
-      { subject: '恐惧', A: amplify(reportData.emotion_vector.fearful), fullMark: 1 },
-      { subject: '厌恶', A: amplify(reportData.emotion_vector.disgusted), fullMark: 1 },
-      { subject: '中性', A: amplify(reportData.emotion_vector.neutral), fullMark: 1 },
+      { subject: '平静', A: Math.max(0.05, ev.calm), fullMark: 1 },
+      { subject: '高兴', A: Math.max(0.05, ev.happy), fullMark: 1 },
+      { subject: '悲伤', A: Math.max(0.05, ev.sad), fullMark: 1 },
+      { subject: '愤怒', A: Math.max(0.05, ev.angry), fullMark: 1 },
+      { subject: '惊讶', A: Math.max(0.05, ev.surprised), fullMark: 1 },
+      { subject: '恐惧', A: Math.max(0.05, ev.fearful), fullMark: 1 },
+      { subject: '厌恶', A: Math.max(0.05, ev.disgusted), fullMark: 1 },
+      { subject: '中性', A: Math.max(0.05, ev.neutral), fullMark: 1 },
     ];
-  })() : [];
+  }, [reportData]);
 
   return (
     <div className="pt-4 px-4 max-w-md mx-auto space-y-4 pb-6">
