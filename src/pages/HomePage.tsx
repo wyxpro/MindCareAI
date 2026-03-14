@@ -112,11 +112,11 @@ export default function HomePage() {
 
   // 快捷功能 - 圆形图标
   const quickActions = [
-    { title: 'AI对话', icon: MessageCircle, color: 'bg-violet-100 text-violet-600', link: '/healing' },
-    { title: '睡眠', icon: Moon, color: 'bg-indigo-100 text-indigo-600', link: '/healing' },
-    { title: '呼吸', icon: Wind, color: 'bg-sky-100 text-sky-600', link: '/healing' },
-    { title: '音乐', icon: Music, color: 'bg-rose-100 text-rose-600', link: '/healing' },
-    { title: '更多', icon: Palette, color: 'bg-amber-100 text-amber-600', link: '/healing' },
+    { title: 'AI对话', icon: MessageCircle, color: 'bg-violet-100 text-violet-600', link: '/assessment', state: {} },
+    { title: '睡眠', icon: Moon, color: 'bg-indigo-100 text-indigo-600', link: '/healing', state: { activeTab: 'meditation', activeCategory: 'sleep' } },
+    { title: '放松', icon: Wind, color: 'bg-sky-100 text-sky-600', link: '/healing', state: { activeTab: 'meditation', activeCategory: 'relax' } },
+    { title: '音乐', icon: Music, color: 'bg-rose-100 text-rose-600', link: '/healing', state: { activeTab: 'meditation' } },
+    { title: '更多', icon: Palette, color: 'bg-amber-100 text-amber-600', link: '/healing', state: {} },
   ];
 
   // 精选内容 - 对应冥想库的音乐
@@ -342,13 +342,6 @@ export default function HomePage() {
                   className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg shadow-slate-200/50 cursor-pointer flex-shrink-0 w-[140px] md:w-[180px] lg:w-auto"
                 >
                   <div className={`h-24 md:h-32 ${item.bgColor} flex items-center justify-center text-4xl md:text-5xl relative`}>
-                    {item.tag && (
-                      <div className="absolute top-2 right-2">
-                        <Badge className="bg-white/80 text-slate-700 text-[10px] border-none">
-                          {item.tag}
-                        </Badge>
-                      </div>
-                    )}
                     {item.image}
                   </div>
                   <div className="p-3 md:p-4">
@@ -378,7 +371,7 @@ export default function HomePage() {
                 transition={{ delay: 0.5 + index * 0.05 }}
                 whileHover={{ scale: 1.1, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(action.link)}
+                onClick={() => navigate(action.link, { state: action.state })}
                 className="flex flex-col items-center gap-2 md:gap-3"
               >
                 <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg`}>

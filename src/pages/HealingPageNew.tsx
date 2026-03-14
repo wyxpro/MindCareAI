@@ -70,31 +70,31 @@ const rawMusicFiles: Array<{
     fileName: '焦虑缓解呼吸法.mp3',
     category: 'relax',
     description: '通过深呼吸练习，平复焦虑情绪，找回内心平静',
-    coverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=400&fit=crop&q=80'
+    coverImage: 'https://api.dicebear.com/7.x/notionists/svg?seed=anxiety-relief&backgroundColor=b6e3f4'
   },
   {
     fileName: '睡前放松引导.mp3',
     category: 'sleep',
     description: '温柔的引导语音，帮助身心放松，自然进入梦乡',
-    coverImage: 'https://images.unsplash.com/photo-1515894203077-9cd36032142f?w=400&h=400&fit=crop&q=80'
+    coverImage: 'https://api.dicebear.com/7.x/notionists/svg?seed=sleep-guide&backgroundColor=c0aede'
   },
   {
     fileName: '身体扫描冥想.mp3',
     category: 'relax',
     description: '逐步扫描全身感受，释放紧张与压力',
-    coverImage: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop&q=80'
+    coverImage: 'https://api.dicebear.com/7.x/notionists/svg?seed=body-scan&backgroundColor=d1d4f9'
   },
   {
     fileName: '专注力训练.mp3',
     category: 'focus',
     description: '训练大脑专注力，提升工作与学习效率',
-    coverImage: 'https://images.unsplash.com/photo-1528319725582-ddc096101511?w=400&h=400&fit=crop&q=80'
+    coverImage: 'https://api.dicebear.com/7.x/notionists/svg?seed=focus-training&backgroundColor=ffd5dc'
   },
   {
     fileName: '抑郁症康复之路.mp3',
     category: 'focus',
     description: '科学引导，帮助走出低谷，重建积极心态',
-    coverImage: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=400&h=400&fit=crop&q=80'
+    coverImage: 'https://api.dicebear.com/7.x/notionists/svg?seed=recovery-path&backgroundColor=ffdfbf'
   },
 ];
 
@@ -116,8 +116,8 @@ const meditationTracks = rawMusicFiles
       description,
       coverImage,
     };
-  })
-  .sort((a, b) => a.fileName.localeCompare(b.fileName, 'zh-Hans-CN'));
+  });
+  // 注意：不要对数组进行排序，以保持与 HomePage.tsx 中 trackIndex 的对应关系
 
 export default function HealingPageNew() {
   const { user } = useAuth();
@@ -174,21 +174,29 @@ export default function HealingPageNew() {
 
   // 处理从其他页面传入的 tab 状态和音乐索引
   useEffect(() => {
-    const state = location.state as { activeTab?: string; trackIndex?: number } | null;
+    const state = location.state as { activeTab?: string; trackIndex?: number; activeCategory?: string } | null;
+    let shouldClearState = false;
+
     if (state?.activeTab) {
       setActiveTab(state.activeTab);
+      shouldClearState = true;
+    }
+    if (state?.activeCategory) {
+      setActiveCategory(state.activeCategory);
+      shouldClearState = true;
     }
     if (state?.trackIndex !== undefined && meditationTracks.length > 0) {
       setTrackIndex(state.trackIndex);
       // 自动播放
       wantPlayRef.current = true;
+      shouldClearState = true;
     }
-    // 清除 state 避免刷新后仍生效
-    if (state) {
+    // 清除 state 避免刷新后仍生效，但只在有有效数据时执行一次
+    if (shouldClearState) {
       navigate(location.pathname, { replace: true, state: {} });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state, location.pathname]);
+  }, []);
 
   useEffect(() => {
     if (user) {
