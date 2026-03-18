@@ -595,7 +595,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 4. 若用户提到具体时间/频率，必须在回复中体现${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
       const aiResponse = await volcResponses({
-        model: 'doubao-seed-1-8-251228',
+        model: 'doubao-seed-2-0-mini-260215',
         input: [
           { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
           ...conversationHistory,
@@ -947,7 +947,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 4. 若用户提到具体时间/频率，必须在回复中体现${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
       const response = await volcResponses({
-        model: 'doubao-seed-1-8-251228',
+        model: 'doubao-seed-2-0-mini-260215',
         input: [
           { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
           ...conversationHistory,
