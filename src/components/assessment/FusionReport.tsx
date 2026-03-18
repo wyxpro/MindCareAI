@@ -1167,25 +1167,22 @@ export default function FusionReport({
            {/* Report Navigation Buttons */}
            <div className="grid grid-cols-3 gap-2 mt-6 mb-6 px-1">
               <Button 
-                variant="outline" 
                 size="sm" 
-                className="text-xs font-bold h-9 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all whitespace-normal leading-tight px-1"
+                className="text-xs font-bold h-9 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-md shadow-blue-500/25 transition-all whitespace-normal leading-tight px-1"
                 onClick={() => setActiveReport('scale')}
               >
                 量表评估报告
               </Button>
               <Button 
-                variant="outline" 
                 size="sm" 
-                className="text-xs font-bold h-9 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all whitespace-normal leading-tight px-1"
+                className="text-xs font-bold h-9 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white border-0 shadow-md shadow-violet-500/25 transition-all whitespace-normal leading-tight px-1"
                 onClick={() => setActiveReport('voice')}
               >
                 语音情绪报告
               </Button>
               <Button 
-                variant="outline" 
                 size="sm" 
-                className="text-xs font-bold h-9 border-slate-200 hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-200 transition-all whitespace-normal leading-tight px-1"
+                className="text-xs font-bold h-9 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white border-0 shadow-md shadow-cyan-500/25 transition-all whitespace-normal leading-tight px-1"
                 onClick={() => setActiveReport('expression')}
               >
                 表情识别报告
