@@ -59,8 +59,17 @@ export const generateRealtimeMockData = (userId: string): Partial<WearableData> 
   };
 };
 
-// 模拟华为手环设备列表
-export const mockHuaweiDevices: SmartBandDevice[] = [
+// 固定的华为手环10设备
+const huaweiBand10: SmartBandDevice = {
+  id: 'huawei-band-10-fixed',
+  name: '华为手环 10',
+  manufacturer: 'Huawei',
+  model: 'Band 10',
+  rssi: -68,
+};
+
+// 其他可随机显示的华为设备池
+const randomHuaweiDevicesPool: SmartBandDevice[] = [
   {
     id: 'huawei-band-9-001',
     name: '华为手环 9',
@@ -82,7 +91,56 @@ export const mockHuaweiDevices: SmartBandDevice[] = [
     model: 'Band 8',
     rssi: -80,
   },
+  {
+    id: 'huawei-watch-4-004',
+    name: '华为 Watch 4',
+    manufacturer: 'Huawei',
+    model: 'Watch 4',
+    rssi: -70,
+  },
+  {
+    id: 'huawei-band-7-005',
+    name: '华为手环 7',
+    manufacturer: 'Huawei',
+    model: 'Band 7',
+    rssi: -85,
+  },
+  {
+    id: 'huawei-watch-gt4-006',
+    name: '华为 Watch GT 4',
+    manufacturer: 'Huawei',
+    model: 'Watch GT 4',
+    rssi: -68,
+  },
+  {
+    id: 'huawei-band-6-007',
+    name: '华为手环 6',
+    manufacturer: 'Huawei',
+    model: 'Band 6',
+    rssi: -88,
+  },
+  {
+    id: 'huawei-watch-fit2-008',
+    name: '华为 Watch Fit 2',
+    manufacturer: 'Huawei',
+    model: 'Watch Fit 2',
+    rssi: -75,
+  },
 ];
+
+// 生成随机设备列表（始终包含华为手环10）
+export const generateMockDeviceList = (): SmartBandDevice[] => {
+  // 随机选择2-4个其他设备
+  const numRandomDevices = Math.floor(Math.random() * 3) + 2; // 2-4个
+  const shuffled = [...randomHuaweiDevicesPool].sort(() => Math.random() - 0.5);
+  const selectedDevices = shuffled.slice(0, numRandomDevices);
+  
+  // 始终将华为手环10放在第一位，后面跟随机设备
+  return [huaweiBand10, ...selectedDevices];
+};
+
+// 为了向后兼容，保留原有的静态设备列表
+export const mockHuaweiDevices: SmartBandDevice[] = generateMockDeviceList();
 
 // 生成历史趋势数据（用于图表）
 export const generateTrendData = (

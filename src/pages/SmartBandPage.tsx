@@ -121,13 +121,21 @@ export default function SmartBandPage() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-slate-950 pb-24">
-      {/* 顶部 Header */}
+      {/* 顶部 Header - 使用智能手环背景图片 */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-teal-400 via-cyan-500 to-blue-500 px-5 pt-8 pb-6"
+        className="relative px-5 pt-8 pb-6 overflow-hidden"
+        style={{
+          backgroundImage: 'url(dist/sh.png), linear-gradient(to bottom right, #0d9488, #06b6d4, #3b82f6)',
+          backgroundSize: 'contain, 100% 100%',
+          backgroundPosition: 'center bottom, center',
+          backgroundRepeat: 'no-repeat, no-repeat',
+        }}
       >
-        <div className="max-w-md mx-auto">
+        {/* 遮罩层确保文字可读性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
+        <div className="relative z-10 max-w-md mx-auto">
           {/* 导航栏 */}
           <div className="flex items-center justify-between mb-6">
             <Button
@@ -190,19 +198,19 @@ export default function SmartBandPage() {
                   <div className="grid grid-cols-4 gap-2">
                     <div className="text-center">
                       <p className="text-white/60 text-xs">心率</p>
-                      <p className="text-white font-bold">{realtimeData.heart_rate || '--'}</p>
+                      <p className="text-white text-lg font-medium">{realtimeData.heart_rate || '--'}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-white/60 text-xs">血氧</p>
-                      <p className="text-white font-bold">{realtimeData.blood_oxygen || '--'}%</p>
+                      <p className="text-white text-lg font-medium">{realtimeData.blood_oxygen || '--'}%</p>
                     </div>
                     <div className="text-center">
                       <p className="text-white/60 text-xs">压力</p>
-                      <p className="text-white font-bold">{realtimeData.stress_level || '--'}</p>
+                      <p className="text-white text-lg font-medium">{realtimeData.stress_level || '--'}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-white/60 text-xs">体温</p>
-                      <p className="text-white font-bold">{realtimeData.temperature || '--'}°</p>
+                      <p className="text-white text-lg font-medium">{realtimeData.temperature || '--'}°C</p>
                     </div>
                   </div>
                 </motion.div>
@@ -290,9 +298,9 @@ export default function SmartBandPage() {
                         </div>
                         <span className="text-sm text-slate-600 font-medium">平均心率</span>
                       </div>
-                      <p className="text-3xl font-bold text-slate-800 tracking-tight">
+                      <p className="text-3xl font-semibold text-slate-800 tracking-tight">
                         {wearableData[0].heart_rate || '79'}
-                        <span className="text-sm font-medium text-slate-400 ml-1">bpm</span>
+                        <span className="text-base font-normal text-slate-400/80 ml-1">bpm</span>
                       </p>
                     </motion.div>
 
@@ -311,9 +319,9 @@ export default function SmartBandPage() {
                         </div>
                         <span className="text-sm text-slate-600 font-medium">平均血氧</span>
                       </div>
-                      <p className="text-3xl font-bold text-slate-800 tracking-tight">
+                      <p className="text-3xl font-semibold text-slate-800 tracking-tight">
                         {wearableData[0].blood_oxygen || '96'}
-                        <span className="text-sm font-medium text-slate-400 ml-1">%</span>
+                        <span className="text-base font-normal text-slate-400/80 ml-1">%</span>
                       </p>
                     </motion.div>
 
@@ -332,10 +340,10 @@ export default function SmartBandPage() {
                         </div>
                         <span className="text-sm text-slate-600 font-medium">总步数</span>
                       </div>
-                      <p className="text-3xl font-bold text-slate-800 tracking-tight">
+                      <p className="text-3xl font-semibold text-slate-800 tracking-tight">
                         {wearableData[0].steps 
                           ? (wearableData[0].steps > 10000 
-                            ? `${(wearableData[0].steps / 10000).toFixed(1)}万` 
+                            ? <>{(wearableData[0].steps / 10000).toFixed(1)}<span className="text-lg font-normal text-slate-400/80 ml-0.5">万</span></>
                             : wearableData[0].steps)
                           : '3827'}
                       </p>
@@ -356,9 +364,9 @@ export default function SmartBandPage() {
                         </div>
                         <span className="text-sm text-slate-600 font-medium">平均睡眠</span>
                       </div>
-                      <p className="text-3xl font-bold text-slate-800 tracking-tight">
+                      <p className="text-3xl font-semibold text-slate-800 tracking-tight">
                         {wearableData[0].sleep_hours || '7.94'}
-                        <span className="text-sm font-medium text-slate-400 ml-1">小时</span>
+                        <span className="text-base font-normal text-slate-400/80 ml-1">h</span>
                       </p>
                     </motion.div>
 
@@ -377,7 +385,7 @@ export default function SmartBandPage() {
                         </div>
                         <span className="text-sm text-slate-600 font-medium">平均压力</span>
                       </div>
-                      <p className="text-3xl font-bold text-slate-800 tracking-tight">
+                      <p className="text-3xl font-semibold text-slate-800 tracking-tight">
                         {wearableData[0].stress_level || '32'}
                       </p>
                     </motion.div>
@@ -397,9 +405,9 @@ export default function SmartBandPage() {
                         </div>
                         <span className="text-sm text-slate-600 font-medium">平均体温</span>
                       </div>
-                      <p className="text-3xl font-bold text-slate-800 tracking-tight">
+                      <p className="text-3xl font-semibold text-slate-800 tracking-tight">
                         {wearableData[0].temperature || '36.6'}
-                        <span className="text-sm font-medium text-slate-400 ml-1">°C</span>
+                        <span className="text-base font-normal text-slate-400/80 ml-1">°C</span>
                       </p>
                     </motion.div>
                   </div>

@@ -110,6 +110,31 @@
         animation: particleFloat 20s ease-in-out infinite;
       }
 
+      /* 左下角固定背景图片样式 - 仅在电脑端显示 */
+      .fixed-bottom-left-bg {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 0;
+        pointer-events: none;
+        display: none;
+      }
+
+      .fixed-bottom-left-bg img {
+        width: 250px;
+        height: auto;
+        max-width: 40vw;
+        opacity: 0.8;
+        display: block;
+      }
+
+      /* 电脑端显示（大于768px） */
+      @media (min-width: 769px) {
+        .fixed-bottom-left-bg {
+          display: block;
+        }
+      }
+
       /* 流光效果 */
       .hero-gradient::after {
         content: "";
@@ -3503,6 +3528,12 @@
       </script>
     </div>
     <div id="root"></div>
+    
+    <!-- 左下角固定背景图片 -->
+    <div class="fixed-bottom-left-bg">
+      <img src="dist/bg.png" alt="背景装饰" />
+    </div>
+    
     <script type="module" src="/src/main.tsx"></script>
     <script>
       (function () {

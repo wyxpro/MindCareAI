@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { BandConnectionStatus, SmartBandDevice, WearableData } from '@/types';
-import { mockHuaweiDevices, generateRealtimeMockData } from '@/utils/mockSmartBandData';
+import { generateMockDeviceList, generateRealtimeMockData } from '@/utils/mockSmartBandData';
 import { upsertWearableData } from '@/db/api';
 
 interface UseSmartBandOptions {
@@ -84,8 +84,10 @@ export function useSmartBand({ userId, useMockData = true }: UseSmartBandOptions
       if (useMockData) {
         // 模拟扫描延迟
         await new Promise(resolve => setTimeout(resolve, 1500));
-        setAvailableDevices(mockHuaweiDevices);
-        toast.success(`发现 ${mockHuaweiDevices.length} 个设备`);
+        // 生成包含固定华为手环10和随机其他设备的列表
+        const deviceList = generateMockDeviceList();
+        setAvailableDevices(deviceList);
+        toast.success(`发现 ${deviceList.length} 个设备`);
       } else {
         // 真实蓝牙扫描
         if (!navigator.bluetooth) {
