@@ -43,7 +43,7 @@ interface ScaleStepProps {
 
 type ScaleJson = { type: 'scale'; scale_id: string; name: string; description?: string; questions: { text: string }[] }
 const SCALES = [
-  { id: 'PHQ-9', name: '患者健康问卷', total: 9, description: '用于筛查抑郁症状及其严重程度', duration: 5 },
+  { id: 'PHQ-9', name: '健康问卷', total: 9, description: '用于筛查抑郁症状及其严重程度', duration: 5 },
   { id: 'HAMD-17', name: '汉密尔顿抑郁量表', total: 17, description: '临床评估抑郁状态的标准量表', duration: 8 },
   { id: 'SDS-20', name: '自评抑郁量表', total: 20, description: '直观反映抑郁的主观感受', duration: 10 },
 ];

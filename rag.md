@@ -64,9 +64,9 @@ MindCareAI 的 RAG（Retrieval-Augmented Generation，检索增强生成）系�
 
 ```typescript
 interface RAGRequest {
-  query: string;                    // 用户输入的查询文本
-  conversation_history?: any[];     // 对话历史记录
-  assessment_type?: string;         // 评估类型，默认为 'PHQ-9'
+  query: string; // 用户输入的查询文本
+  conversation_history?: any[]; // 对话历史记录
+  assessment_type?: string; // 评估类型，默认为 'PHQ-9'
 }
 ```
 
@@ -90,23 +90,25 @@ interface RAGRequest {
 ```typescript
 // 从知识库检索相关内容（支持所有分类：assessment, therapy, research）
 const { data: knowledgeItems, error: kbError } = await supabase
-  .from('knowledge_base')
-  .select('*')
-  .eq('is_active', true)
-  .or(`category.eq.assessment,category.eq.therapy,category.eq.research,tags.cs.{${assessment_type}}`)
+  .from("knowledge_base")
+  .select("*")
+  .eq("is_active", true)
+  .or(
+    `category.eq.assessment,category.eq.therapy,category.eq.research,tags.cs.{${assessment_type}}`
+  )
   .limit(5);
 ```
 
 **检索逻辑说明**:
 
-| 条件 | 说明 |
-|------|------|
-| `is_active = true` | 只检索激活状态的知识项 |
-| `category.eq.assessment` | 评估量表类知识 |
-| `category.eq.therapy` | 治疗方法类知识 |
-| `category.eq.research` | 研究资料类知识 |
+| 条件                           | 说明                             |
+| ------------------------------ | -------------------------------- |
+| `is_active = true`             | 只检索激活状态的知识项           |
+| `category.eq.assessment`       | 评估量表类知识                   |
+| `category.eq.therapy`          | 治疗方法类知识                   |
+| `category.eq.research`         | 研究资料类知识                   |
 | `tags.cs.{${assessment_type}}` | 标签包含当前评估类型（如 PHQ-9） |
-| `limit(5)` | 最多返回 5 条知识项 |
+| `limit(5)`                     | 最多返回 5 条知识项              |
 
 #### 步骤 2: 文档内容解析
 
@@ -114,27 +116,29 @@ const { data: knowledgeItems, error: kbError } = await supabase
 const enrichedItems = await Promise.all(
   (knowledgeItems || []).map(async (item) => {
     // 如果是文档类型且有文件URL，尝试下载并解析
-    if (item.content_type === 'document' && item.file_url) {
+    if (item.content_type === "document" && item.file_url) {
       try {
         const { data: fileData, error: downloadError } = await supabase.storage
-          .from('knowledge-documents')
+          .from("knowledge-documents")
           .download(item.file_url);
-        
+
         if (fileData && !downloadError) {
           const arrayBuffer = await fileData.arrayBuffer();
           // 尝试将文档内容解码为文本
-          const text = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
+          const text = new TextDecoder("utf-8", { fatal: false }).decode(
+            arrayBuffer
+          );
           // 过滤掉二进制字符，保留可读文本
-          const cleanText = text.replace(/[^\x20-\x7E\u4E00-\u9FA5\n\r]/g, '');
-          
+          const cleanText = text.replace(/[^\x20-\x7E\u4E00-\u9FA5\n\r]/g, "");
+
           // 使用解析后的内容替换原content字段（限制长度为3000字符）
-          return { 
-            ...item, 
-            content: cleanText.slice(0, 3000) || item.content 
+          return {
+            ...item,
+            content: cleanText.slice(0, 3000) || item.content,
           };
         }
       } catch (err) {
-        console.error('文档解析失败:', err);
+        console.error("文档解析失败:", err);
       }
     }
     return item;
@@ -152,9 +156,12 @@ const enrichedItems = await Promise.all(
 #### 步骤 3: 构建 RAG 上下文
 
 ```typescript
-const knowledgeContext = enrichedItems.length > 0
-  ? enrichedItems.map(item => `【${item.title}】\n${item.content}`).join('\n\n')
-  : '暂无相关知识库内容';
+const knowledgeContext =
+  enrichedItems.length > 0
+    ? enrichedItems
+        .map((item) => `【${item.title}】\n${item.content}`)
+        .join("\n\n")
+    : "暂无相关知识库内容";
 ```
 
 上下文格式示例：
@@ -187,13 +194,14 @@ ${knowledgeContext}
 【当前对话轮次】${conversation_history.length / 2}
 
 【下一步行动】
-${conversation_history.length === 0 
-  ? '开场:温和地介绍评估目的,询问用户最近的整体感受'
-  : conversation_history.length < 6
-  ? '探索期:根据用户回答,选择1-2个核心维度深入询问'
-  : conversation_history.length < 12
-  ? '深入期:关注用户提到的困扰,探索具体表现和影响'
-  : '总结期:整合信息,给予初步反馈,询问是否还有补充'
+${
+  conversation_history.length === 0
+    ? "开场:温和地介绍评估目的,询问用户最近的整体感受"
+    : conversation_history.length < 6
+    ? "探索期:根据用户回答,选择1-2个核心维度深入询问"
+    : conversation_history.length < 12
+    ? "深入期:关注用户提到的困扰,探索具体表现和影响"
+    : "总结期:整合信息,给予初步反馈,询问是否还有补充"
 }
 
 请以温暖、专业的方式继续对话,每次回复控制在80字以内。`;
@@ -203,18 +211,18 @@ ${conversation_history.length === 0
 
 ```typescript
 const response = await fetch(
-  'https://app-97zabxvzebcx-api-zYkZz8qovQ1L-gateway.appmiaoda.com/v2/chat/completions',
+  "https://app-97zabxvzebcx-api-zYkZz8qovQ1L-gateway.appmiaoda.com/v2/chat/completions",
   {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'X-Gateway-Authorization': `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "X-Gateway-Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: "system", content: systemPrompt },
         ...conversation_history,
-        { role: 'user', content: query },
+        { role: "user", content: query },
       ],
     }),
   }
@@ -232,11 +240,11 @@ const response = await fetch(
 ```typescript
 // RAG检索 - 主动式对话
 export const ragRetrieval = async (
-  query: string, 
-  conversationHistory: ChatMessage[], 
-  assessmentType: string = 'PHQ-9'
+  query: string,
+  conversationHistory: ChatMessage[],
+  assessmentType: string = "PHQ-9"
 ) => {
-  const { data, error } = await supabase.functions.invoke('rag-retrieval', {
+  const { data, error } = await supabase.functions.invoke("rag-retrieval", {
     body: {
       query,
       conversation_history: conversationHistory,
@@ -256,24 +264,29 @@ export const ragRetrieval = async (
 // KB 预加载：组件挂载后立即后台加载，缓存到 ref
 useEffect(() => {
   if (kbCacheRef.current.loaded) return;
-  getKnowledgeBase('assessment').then(kb => {
-    kbCacheRef.current.text = (kb || []).slice(0, 3)
-      .map(k => `【${k.title}】${(k.content || '').slice(0, 200)}`)
-      .join('\n');
-    kbCacheRef.current.loaded = true;
-  }).catch(() => {
-    kbCacheRef.current.loaded = true;
-  });
+  getKnowledgeBase("assessment")
+    .then((kb) => {
+      kbCacheRef.current.text = (kb || [])
+        .slice(0, 3)
+        .map((k) => `【${k.title}】${(k.content || "").slice(0, 200)}`)
+        .join("\n");
+      kbCacheRef.current.loaded = true;
+    })
+    .catch(() => {
+      kbCacheRef.current.loaded = true;
+    });
 }, []);
 
 // 构建 systemPrompt 时注入知识库片段
 const kbSnippet = kbCacheRef.current.text;
-const systemPrompt = `你是温暖专业的心理咨询师，正在进行${selectedScales.join('、')}量表评估。
+const systemPrompt = `你是温暖专业的心理咨询师，正在进行${selectedScales.join(
+  "、"
+)}量表评估。
 
 回复要求（严格遵守）：
 1. 共情回应（20-40字）：针对用户具体回答，个性化反馈，加1-2个情绪emoji
 2. 自然过渡到下一题...
-${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
+${kbSnippet ? `\n\n参考：${kbSnippet}` : ""}`;
 ```
 
 **注意**：当前 `ScaleStep.tsx` 使用的是直接调用 `volcResponses` 的方式，而非通过 `ragRetrieval` Edge Function。Edge Function 主要用于其他评估场景。
@@ -286,12 +299,12 @@ ${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
 `assessment_type` 参数用于指定当前进行的评估类型，影响知识库检索和对话策略：
 
-| 评估类型 | 说明 | 应用场景 |
-|---------|------|---------|
-| `PHQ-9` | 患者健康问卷 | 抑郁症筛查 |
-| `HAMD-17` | 汉密尔顿抑郁量表 | 临床抑郁评估 |
-| `SDS-20` | 自评抑郁量表 | 主观抑郁感受评估 |
-| `multimodal` | 多模态评估 | 综合评估 |
+| 评估类型     | 说明             | 应用场景         |
+| ------------ | ---------------- | ---------------- |
+| `PHQ-9`      | 健康问卷         | 抑郁症筛查       |
+| `HAMD-17`    | 汉密尔顿抑郁量表 | 临床抑郁评估     |
+| `SDS-20`     | 自评抑郁量表     | 主观抑郁感受评估 |
+| `multimodal` | 多模态评估       | 综合评估         |
 
 ### 4.2 在检索中的作用
 
@@ -310,6 +323,7 @@ ${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 ```
 
 AI 模型根据评估类型调整：
+
 - 提问的专业术语
 - 评估维度侧重
 - 风险判断标准
@@ -334,7 +348,7 @@ interface ChatMessage {
 RAG 系统根据对话历史长度动态调整策略：
 
 ```typescript
-${conversation_history.length === 0 
+${conversation_history.length === 0
   ? '开场:温和地介绍评估目的,询问用户最近的整体感受'
   : conversation_history.length < 6
   ? '探索期:根据用户回答,选择1-2个核心维度深入询问'
@@ -344,12 +358,12 @@ ${conversation_history.length === 0
 }
 ```
 
-| 对话轮次 | 阶段 | 策略 |
-|---------|------|------|
-| 0 | 开场 | 介绍评估目的，询问整体感受 |
-| 1-3 | 探索期 | 选择 1-2 个核心维度深入 |
-| 4-6 | 深入期 | 关注困扰，探索具体表现 |
-| 7+ | 总结期 | 整合信息，给予初步反馈 |
+| 对话轮次 | 阶段   | 策略                       |
+| -------- | ------ | -------------------------- |
+| 0        | 开场   | 介绍评估目的，询问整体感受 |
+| 1-3      | 探索期 | 选择 1-2 个核心维度深入    |
+| 4-6      | 深入期 | 关注困扰，探索具体表现     |
+| 7+       | 总结期 | 整合信息，给予初步反馈     |
 
 ### 5.3 历史记录传递
 
@@ -369,12 +383,13 @@ messages: [
 
 ```typescript
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
   // ...
@@ -404,11 +419,11 @@ headers: {
 
 **环境变量要求**:
 
-| 变量名 | 用途 |
-|--------|------|
-| `SUPABASE_URL` | Supabase 项目 URL |
+| 变量名                      | 用途                           |
+| --------------------------- | ------------------------------ |
+| `SUPABASE_URL`              | Supabase 项目 URL              |
 | `SUPABASE_SERVICE_ROLE_KEY` | 服务角色密钥（用于数据库操作） |
-| `INTEGRATIONS_API_KEY` | AI 网关 API 密钥 |
+| `INTEGRATIONS_API_KEY`      | AI 网关 API 密钥               |
 
 ### 6.3 错误处理
 
@@ -416,12 +431,12 @@ headers: {
 try {
   // ... 主要逻辑
 } catch (error) {
-  console.error('rag-retrieval错误:', error);
+  console.error("rag-retrieval错误:", error);
   return new Response(
-    JSON.stringify({ error: error.message || '服务器错误' }),
+    JSON.stringify({ error: error.message || "服务器错误" }),
     {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
   );
 }
@@ -444,7 +459,7 @@ CREATE TABLE public.knowledge_base (
   created_by UUID REFERENCES profiles(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   -- 文档支持字段
   content_type TEXT DEFAULT 'text', -- 'text' | 'document'
   file_url TEXT,                    -- Storage 文件路径
@@ -471,9 +486,9 @@ CREATE POLICY "医生可以查看知识库" ON knowledge_base
 
 -- 管理员可以管理知识库
 CREATE POLICY "管理员可以管理知识库" ON knowledge_base
-  FOR ALL TO authenticated 
+  FOR ALL TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM user_roles 
+    SELECT 1 FROM user_roles
     WHERE user_id = auth.uid() AND role = 'admin'
   ));
 ```

@@ -37,7 +37,7 @@ export default function AssessmentScaleManager() {
   const [editing, setEditing] = useState<KnowledgeBase | null>(null)
 
   const [scaleId, setScaleId] = useState('PHQ-9')
-  const [name, setName] = useState('患者健康问卷')
+  const [name, setName] = useState('健康问卷')
   const [description, setDescription] = useState('用于筛查抑郁症状及其严重程度')
   const [questions, setQuestions] = useState<ScaleQuestion[]>([])
   const [newQuestion, setNewQuestion] = useState('')
@@ -56,7 +56,7 @@ export default function AssessmentScaleManager() {
   const openNew = () => {
     setEditing(null)
     setScaleId('PHQ-9')
-    setName('患者健康问卷')
+    setName('健康问卷')
     setDescription('用于筛查抑郁症状及其严重程度')
     setQuestions([])
     setNewQuestion('')
