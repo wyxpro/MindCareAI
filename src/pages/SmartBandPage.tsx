@@ -127,7 +127,7 @@ export default function SmartBandPage() {
         animate={{ opacity: 1, y: 0 }}
         className="relative px-5 pt-8 pb-6 overflow-hidden"
         style={{
-          backgroundImage: 'url(dist/sh.png), linear-gradient(to bottom right, #0d9488, #06b6d4, #3b82f6)',
+          backgroundImage: 'url(/sh.png), linear-gradient(to bottom right, #0d9488, #06b6d4, #3b82f6)',
           backgroundSize: 'contain, 100% 100%',
           backgroundPosition: 'center bottom, center',
           backgroundRepeat: 'no-repeat, no-repeat',
