@@ -125,13 +125,7 @@ export default function SmartBandPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative px-5 pt-8 pb-6 overflow-hidden"
-        style={{
-          backgroundImage: 'url(/sh.png), linear-gradient(to bottom right, #0d9488, #06b6d4, #3b82f6)',
-          backgroundSize: 'contain, 100% 100%',
-          backgroundPosition: 'center bottom, center',
-          backgroundRepeat: 'no-repeat, no-repeat',
-        }}
+        className="relative px-5 pt-8 pb-6 overflow-hidden smartband-header-bg"
       >
         {/* 遮罩层确保文字可读性 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
