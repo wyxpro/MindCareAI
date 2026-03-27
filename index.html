@@ -3557,10 +3557,13 @@
       (function () {
         const landing = document.getElementById("landing");
         const root = document.getElementById("root");
+        const doctorBg = document.querySelector(".fixed-bottom-left-bg");
         const syncView = () => {
           const isApp = !!location.hash && location.hash.startsWith("#/");
           if (landing) landing.style.display = isApp ? "none" : "";
           if (root) root.style.display = isApp ? "" : "none";
+          // 只在官网宣传页显示医生图片，进入应用后隐藏
+          if (doctorBg) doctorBg.style.display = isApp ? "none" : "";
         };
         window.addEventListener("hashchange", syncView);
         syncView();

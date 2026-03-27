@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { getKnowledgeBase } from '@/db/api';
-import { volcResponses } from '@/db/volc';
+import { modelScopeChatCompletion, formatAIResponse } from '@/db/modelscope';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -151,8 +151,8 @@ const EMOJI_LIST = [
   '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄'
 ];
 
-// 医生默认头像 - 使用本地图片
-const DOCTOR_AVATAR = '/srcs/img/doctor.png';
+// 医生默认头像
+const DOCTOR_AVATAR = 'https://www.keaitupian.cn/cjpic/frombd/1/253/56496682/3498759028.jpg';
 
 // 模拟历史评估数据 - 包含完整的题目和对话
 const MOCK_HISTORY_ASSESSMENTS: HistoryAssessment[] = [
@@ -581,7 +581,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       // ── 对话历史：最近2轮（4条）已足够上下文，减少token输入 ──
       const conversationHistory = messages.slice(-4).map(m => ({
         role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
-        content: [{ type: 'input_text' as const, text: m.content }]
+        content: m.content
       }));
 
       // ── 精简 systemPrompt：去除冗余示例，保留核心指令 ────────
@@ -594,16 +594,15 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 3. 禁止使用"好的/我理解了/我知道了/我能感受到"等空泛词
 4. 若用户提到具体时间/频率，必须在回复中体现${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
-      const aiResponse = await volcResponses({
-        model: 'doubao-seed-2-0-mini-260215',
-        input: [
-          { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
+      const aiResponse = await modelScopeChatCompletion({
+        messages: [
+          { role: 'system', content: systemPrompt },
           ...conversationHistory,
-          { role: 'user' as const, content: [{ type: 'input_text' as const, text: response }] }
+          { role: 'user' as const, content: response }
         ]
       });
 
-      let aiContent = aiResponse?.text || '';
+      let aiContent = formatAIResponse(aiResponse?.text || '');
 
       // ── 禁用词检测 & Fallback ────────────────────────────────
       const isFallbackNeeded = !aiContent
@@ -612,7 +611,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
       if (isFallbackNeeded) {
         // Fallback：直接用 generateSmartFallback，不再发起第二次 AI 调用（避免双倍延迟）
-        aiContent = generateSmartFallback(response, nextQ);
+        aiContent = formatAIResponse(generateSmartFallback(response, nextQ));
       }
 
       // 模拟问题进度增加
@@ -933,7 +932,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
       // ── 对话历史：最近2轮（4条）已足够上下文，减少token输入 ──
       const conversationHistory = messages.slice(-4).map(m => ({
         role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
-        content: [{ type: 'input_text' as const, text: m.content }]
+        content: m.content
       }));
 
       // ── 精简 systemPrompt：去除冗余示例，保留核心指令 ────────
@@ -946,16 +945,15 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 3. 禁止使用"好的/我理解了/我知道了/我能感受到"等空泛词
 4. 若用户提到具体时间/频率，必须在回复中体现${kbSnippet ? `\n\n参考：${kbSnippet}` : ''}`;
 
-      const response = await volcResponses({
-        model: 'doubao-seed-2-0-mini-260215',
-        input: [
-          { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
+      const aiResponse = await modelScopeChatCompletion({
+        messages: [
+          { role: 'system', content: systemPrompt },
           ...conversationHistory,
-          { role: 'user' as const, content: [{ type: 'input_text' as const, text: inputText }] }
+          { role: 'user' as const, content: inputText }
         ]
       });
 
-      let aiContent = response?.text || '';
+      let aiContent = formatAIResponse(aiResponse?.text || '');
 
       // ── 禁用词检测 & Fallback ────────────────────────────────
       const isFallbackNeeded = !aiContent
@@ -964,7 +962,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
       if (isFallbackNeeded) {
         // Fallback：直接用 generateSmartFallback，不再发起第二次 AI 调用（避免双倍延迟）
-        aiContent = generateSmartFallback(inputText, nextQ);
+        aiContent = formatAIResponse(generateSmartFallback(inputText, nextQ));
       }
 
       // 模拟问题进度增加
