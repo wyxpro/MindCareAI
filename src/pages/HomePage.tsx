@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Sparkles, Heart, MessageCircle, 
   Wind, Moon, ChevronRight,
-  Users, Flower2, Music, Palette
+  Users, Flower2, Music, Palette, PenLine
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -284,7 +284,7 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        {/* 树洞社区卡片 - 放在精选内容标题下方 */}
+        {/* 房树人测验卡片 - 放在精选内容标题下方 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -294,30 +294,27 @@ export default function HomePage() {
           <motion.div
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            onClick={() => navigate('/healing', { state: { activeTab: 'community' } })}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 p-5 md:p-6 shadow-xl shadow-blue-200 cursor-pointer"
+            onClick={() => navigate('/healing', { state: { activeTab: 'htp' } })}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 p-5 md:p-6 shadow-xl shadow-indigo-200 cursor-pointer"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-1000" />
             
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                  <span className="text-white font-bold md:text-lg">树洞社区</span>
+                  <PenLine className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  <span className="text-white font-bold md:text-lg">房树人测验</span>
                 </div>
                 <p className="text-white/80 text-sm md:text-base">
-                  与 2,000+ 伙伴分享心情
+                  通过绘画投射揭示你的潜意识
                 </p>
               </div>
               <div className="flex -space-x-2">
-                {['🧘', '🌸', '🌿'].map((emoji, i) => (
+                {['🏠', '🌲', '👤'].map((emoji, i) => (
                   <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center text-lg md:text-xl border-2 border-white/50">
                     {emoji}
                   </div>
                 ))}
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-xs md:text-sm font-bold text-white border-2 border-white/50">
-                  +99
-                </div>
               </div>
             </div>
           </motion.div>
