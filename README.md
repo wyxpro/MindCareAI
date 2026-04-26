@@ -222,6 +222,7 @@ MindCareAI/
 ---
 
 ## ⚡ 核心功能模块
+<img width="1043" height="390" alt="image" src="https://github.com/user-attachments/assets/e5c5b946-fae2-4503-bbdd-ca6272b3002e" />
 
 ### 🏠 首页模块 (HomePage)
 - **智能问候系统** - 根据时间和天气显示个性化问候
