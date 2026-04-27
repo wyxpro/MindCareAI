@@ -17,6 +17,7 @@ import RecordPageNew from './pages/RecordPageNew';
 import SmartBandPage from './pages/SmartBandPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import VoiceTest from './components/test/VoiceTest';
+import HTPEvaluationPage from './pages/HTPEvaluationPage';
 
 interface RouteConfig {
   name: string;
@@ -41,6 +42,12 @@ const routes: RouteConfig[] = [
     name: 'AI评估',
     path: '/assessment',
     element: <EnhancedAssessmentPage />,
+  },
+  {
+    name: '房树人评估',
+    path: '/assessment/htp',
+    element: <HTPEvaluationPage />,
+    visible: false,
   },
   {
     name: '疗愈',

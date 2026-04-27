@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronRight, ClipboardList, Download, Info, Printer, Send, Smile, Stethoscope, History, FileText, Calendar, AlertCircle, Activity, RotateCcw } from 'lucide-react';
+import { Check, ChevronRight, ClipboardList, Download, Info, Printer, Send, Smile, Stethoscope, History, FileText, Calendar, AlertCircle, Activity, RotateCcw, Brain } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { useAssessmentPersistence } from '@/hooks/use-assessment-persistence';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -325,6 +326,7 @@ const MOCK_HISTORY_ASSESSMENTS: HistoryAssessment[] = [
 
 export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [selectedScales, setSelectedScales] = useState<string[]>(['PHQ-9']);
   const [started, setStarted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1141,6 +1143,14 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
           className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
         >
           开始评估 <ChevronRight className="w-5 h-5 ml-2" />
+        </Button>
+
+        <Button 
+          onClick={() => navigate('/assessment/htp')}
+          variant="outline"
+          className="w-full h-14 rounded-2xl text-lg font-bold border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 transition-all bg-white"
+        >
+          房树人(HTP)评估 <Brain className="w-5 h-5 ml-2" />
         </Button>
 
         {/* 历史评估列表弹窗 */}

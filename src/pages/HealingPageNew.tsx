@@ -1,5 +1,5 @@
 import { 
-  Bookmark, Moon,
+  Bookmark, Moon, Gamepad2,
   Music, Pause, PenLine, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2,
   Sparkles, Cloud, Zap, Trophy, Target, Clock, TrendingUp, Star, Flame
 } from 'lucide-react';
@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import HTPTab from '@/components/healing/HTPTab';
+import GameTab from '@/components/healing/GameTab';
 import DiaryTab from '@/components/healing/DiaryTab';
 import KnowledgeTab from '@/components/healing/KnowledgeTab';
 import { Badge } from '@/components/ui/badge';
@@ -471,7 +471,7 @@ export default function HealingPageNew() {
         >
           {[
             { id: 'meditation', label: '冥想', icon: Music, colors: 'from-indigo-500 via-purple-500 to-pink-500' },
-            { id: 'htp', label: '房树人', icon: PenLine, colors: 'from-blue-500 via-cyan-500 to-teal-500' },
+            { id: 'game', label: '游戏', icon: Gamepad2, colors: 'from-blue-500 via-cyan-500 to-teal-500' },
             { id: 'knowledge', label: '知识', icon: Bookmark, colors: 'from-emerald-500 via-teal-500 to-cyan-500' },
             { id: 'diary', label: '日记', icon: PenLine, colors: 'from-rose-500 via-pink-500 to-fuchsia-500' },
           ].map((tab) => (
@@ -1005,17 +1005,17 @@ export default function HealingPageNew() {
         )}
         </AnimatePresence>
 
-        {/* 房树人Tab内容 */}
+        {/* 游戏Tab内容 */}
         <AnimatePresence mode="wait">
-          {activeTab === 'htp' && (
+          {activeTab === 'game' && (
             <motion.div
-              key="htp"
+              key="game"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <HTPTab />
+              <GameTab />
             </motion.div>
           )}
         </AnimatePresence>

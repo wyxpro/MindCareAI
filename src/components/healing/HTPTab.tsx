@@ -1,8 +1,8 @@
 import { 
-  Palette, Pen, RotateCcw, Sparkles, Trash2, LineChart, 
+  Palette, Pen, Sparkles, Trash2, LineChart, 
   User, Home, Trees, TrendingUp, HeartPulse, ClipboardList, 
-  Eraser, Pencil, Brush, CheckCircle2, Undo2, BookOpen, Target, X, ChevronRight, Activity, Share2, Save,
-  History, Clock, Calendar, ChevronDown, Puzzle, Eye, AlertCircle, Search
+  Eraser, Pencil, Brush, Undo2, BookOpen, Target, X, Activity, Save,
+  History, Clock, Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -54,6 +54,7 @@ export default function HTPTab() {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [analysisResult, setAnalysisResult] = useState<AnalysisDimension[] | null>(null);
+  const [analysisSummary, setAnalysisSummary] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
   const [canvasImage, setCanvasImage] = useState<string | null>(null); // State for captured image
@@ -159,13 +160,97 @@ export default function HTPTab() {
     }
 
     await new Promise(r => setTimeout(r, 1800));
-    setAnalysisResult([
-      { name: '内在动力', score: 88, label: '旺盛', description: '线条富有弹力。', icon: HeartPulse, color: 'text-rose-500 bg-rose-50' },
-      { name: '自我防御', score: 76, label: '稳固', description: '构图边界均衡。', icon: Home, color: 'text-indigo-500 bg-indigo-50' },
-      { name: '生长潜能', score: 92, label: '极佳', description: '画面充满活力。', icon: Trees, color: 'text-emerald-500 bg-emerald-50' },
-      { name: '思维秩序', score: 84, label: '严谨', description: '元素逻辑性强。', icon: LineChart, color: 'text-amber-500 bg-amber-50' },
-    ]);
-    setTotalScore(85); setIsAnalyzing(false); setActiveSubTab('evaluate');
+
+    // Randomized logic based on score ranges
+    const getRandomScore = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    const dimsData = [
+      { 
+        name: '内在动力', 
+        icon: HeartPulse, 
+        color: 'text-rose-500 bg-rose-50',
+        levels: [
+          { min: 86, label: '旺盛', desc: '线条富有弹力，展现出极强的心理能量。' },
+          { min: 75, label: '稳定', desc: '笔触稳健，显示出均衡的行动意愿。' },
+          { min: 0, label: '审慎', desc: '线条内敛，潜意识中持有较强的自我克制。' }
+        ]
+      },
+      { 
+        name: '自我防御', 
+        icon: Home, 
+        color: 'text-indigo-500 bg-indigo-50',
+        levels: [
+          { min: 86, label: '严密', desc: '构图高度结构化，体现了极强的心理边界感。' },
+          { min: 75, label: '稳固', desc: '构图边界均衡，具备良好的自我调节能力。' },
+          { min: 0, label: '开放', desc: '笔触自然延展，展现出较强的人际信赖与包容。' }
+        ]
+      },
+      { 
+        name: '生长潜能', 
+        icon: Trees, 
+        color: 'text-emerald-500 bg-emerald-50',
+        levels: [
+          { min: 86, label: '极佳', desc: '画面充满活力，生命力向外舒展。' },
+          { min: 75, label: '活跃', desc: '细节丰富且有层次，具备持续进取的姿态。' },
+          { min: 0, label: '蓄积', desc: '结构紧凑，正处于能量储备与整合阶段。' }
+        ]
+      },
+      { 
+        name: '思维秩序', 
+        icon: LineChart, 
+        color: 'text-amber-500 bg-amber-50',
+        levels: [
+          { min: 86, label: '精准', desc: '元素逻辑性极强，思维清晰且目标明确。' },
+          { min: 75, label: '严谨', desc: '布局合理，展现出优秀的规划与执行能力。' },
+          { min: 0, label: '灵活', desc: '构图不拘一格，思维跳跃且富有创造力。' }
+        ]
+      },
+    ];
+
+    const generatedDims = dimsData.map(d => {
+      const score = getRandomScore(65, 98);
+      const level = d.levels.find(l => score >= l.min) || d.levels[d.levels.length - 1];
+      return {
+        name: d.name,
+        score,
+        label: level.label,
+        description: level.desc,
+        icon: d.icon,
+        color: d.color
+      };
+    });
+
+    const calculatedTotalScore = Math.round(generatedDims.reduce((acc, d) => acc + d.score, 0) / generatedDims.length);
+    
+    const summaryPool = {
+      high: [
+        "您的画面构图宏大且细节精致，展现出极高的自我整合度。内心充满了积极向上的能量，在压力面前能泰然处之，具有卓越的领导潜质与决断力。",
+        "画面展现了极强的创造力与生命能量。您的内在动力旺盛，对于未来有着清晰的规划与期待，展现出一种蓬勃向上的生命姿态与自信魅力。"
+      ],
+      mid: [
+        "您的画面结构展现出了很强的内心秩序感。线条运用平衡，代表您在当前环境中具有出色的压力应对与自我管理能力，是一个值得信赖的坚定者。",
+        "笔触稳健且富有节奏感，反映出您目前心理状态非常稳定。您在处理人际关系时能够保持恰当的距离感与同理心，展现出成熟的人格特质。"
+      ],
+      low: [
+        "您的作品笔触柔和，展现出一种温和内敛的性格特质。在处理复杂问题时，您更倾向于稳扎稳打，这种谨慎的态度为您提供了稳固的安全屏障。",
+        "画面布局细腻，流露出敏锐的感知力。您可能正处于一个情感细腻、需要更多安全支撑的阶段，这种对自己内心的关注将助您更好地探索自我。"
+      ]
+    };
+
+    let summary = "";
+    if (calculatedTotalScore >= 88) {
+      summary = summaryPool.high[Math.floor(Math.random() * summaryPool.high.length)];
+    } else if (calculatedTotalScore >= 80) {
+      summary = summaryPool.mid[Math.floor(Math.random() * summaryPool.mid.length)];
+    } else {
+      summary = summaryPool.low[Math.floor(Math.random() * summaryPool.low.length)];
+    }
+
+    setAnalysisResult(generatedDims);
+    setTotalScore(calculatedTotalScore);
+    setAnalysisSummary(summary);
+    setIsAnalyzing(false); 
+    setActiveSubTab('evaluate');
   };
 
   const handleSaveToHistory = () => {
@@ -175,7 +260,7 @@ export default function HTPTab() {
       timestamp: Date.now(),
       score: totalScore,
       dims: analysisResult,
-      summary: "您的画面结构展现出了极强的内心秩序感。线条运用克制且精准，代表您在当前环境中具有出色的压力应对与自我管理能力。",
+      summary: analysisSummary,
       image: canvasImage || undefined
     };
     setHistory(prev => [newItem, ...prev]);
@@ -323,7 +408,7 @@ export default function HTPTab() {
                              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Clinical Insight</span>
                           </div>
                           <p className="text-[12px] text-slate-700 font-medium leading-relaxed">
-                             您的画面结构展现出了极强的内心秩序感。线条运用克制且精准，代表您在当前环境中具有出色的压力应对与自我管理能力。
+                             {analysisSummary}
                           </p>
                        </div>
 
@@ -409,9 +494,10 @@ export default function HTPTab() {
                             </div>
                             <div className="grid grid-cols-4 gap-2 mb-3">
                                {item.dims.map((d, i) => (
-                                  <div key={i} className="flex flex-col items-center p-2 rounded-xl bg-slate-50">
+                                  <div key={i} className="flex flex-col items-center p-2 rounded-xl bg-slate-50 border border-slate-100/50">
                                      <div className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">{d.name}</div>
                                      <div className="text-[10px] font-black text-slate-800 leading-none">{d.score}</div>
+                                     <div className="text-[7px] font-bold text-slate-400 mt-1">{d.label}</div>
                                   </div>
                                ))}
                             </div>
