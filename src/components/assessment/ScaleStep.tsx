@@ -105,6 +105,15 @@ const BUILTIN_SCALE_QUESTIONS: Record<string, string[]> = {
   ],
 };
 
+// 预设头像选项 (与 ProfilePageRedesigned 保持一致)
+const PRESET_AVATARS = [
+  { id: 'avatar1', emoji: '🧘', bg: 'bg-gradient-to-br from-rose-400 to-orange-300' },
+  { id: 'avatar2', emoji: '🌸', bg: 'bg-gradient-to-br from-pink-400 to-rose-300' },
+  { id: 'avatar3', emoji: '🌿', bg: 'bg-gradient-to-br from-emerald-400 to-teal-300' },
+  { id: 'avatar4', emoji: '☀️', bg: 'bg-gradient-to-br from-amber-400 to-yellow-300' },
+  { id: 'avatar5', emoji: '🌊', bg: 'bg-gradient-to-br from-blue-400 to-cyan-300' },
+];
+
 /** 确保字符串末尾有中文问号（模块级可复用） */
 function ensureQuestionMark(question: string): string {
   const trimmed = question.trim();
@@ -449,16 +458,17 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typingMsgIdx, typingText, messages]);
 
-  // 获取用户头像
-  const getUserAvatar = () => {
+  // 获取用户头像信息
+  const getUserAvatarInfo = () => {
     if (profile?.avatar_url) {
-      // 处理预设头像格式
       if (profile.avatar_url.startsWith('preset:')) {
-        return undefined; // 使用fallback显示emoji
+        const presetId = profile.avatar_url.replace('preset:', '');
+        const preset = PRESET_AVATARS.find(a => a.id === presetId);
+        if (preset) return { type: 'preset', emoji: preset.emoji, bg: preset.bg };
       }
-      return profile.avatar_url;
+      return { type: 'image', url: profile.avatar_url };
     }
-    return undefined;
+    return { type: 'fallback' };
   };
 
   // 获取用户显示名称的首字母
@@ -1148,9 +1158,9 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
         <Button 
           onClick={() => navigate('/assessment/htp')}
           variant="outline"
-          className="w-full h-14 rounded-2xl text-lg font-bold border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 transition-all bg-white"
+          className="w-full h-14 rounded-2xl text-lg font-bold border-2 border-rose-100 text-rose-500 hover:bg-rose-50 transition-all bg-white"
         >
-          房树人(HTP)评估 <Brain className="w-5 h-5 ml-2" />
+          房树人(HTP)评估
         </Button>
 
         {/* 历史评估列表弹窗 */}
@@ -1286,10 +1296,20 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
 
                         {msg.role === 'user' && (
                           <Avatar className="w-9 h-9 shrink-0 border-2 border-primary/20">
-                            <AvatarImage src={getUserAvatar()} />
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-bold">
-                              {getUserInitial()}
-                            </AvatarFallback>
+                            {(() => {
+                              const avatarInfo = getUserAvatarInfo();
+                              if (avatarInfo.type === 'image') {
+                                return <AvatarImage src={avatarInfo.url} className="object-cover" />;
+                              } else if (avatarInfo.type === 'preset') {
+                                return <AvatarFallback className={`${avatarInfo.bg} text-lg`}>
+                                  {avatarInfo.emoji}
+                                </AvatarFallback>;
+                              } else {
+                                return <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-bold">
+                                  {getUserInitial()}
+                                </AvatarFallback>;
+                              }
+                            })()}
                           </Avatar>
                         )}
                       </motion.div>
@@ -1504,10 +1524,20 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
                 {/* 用户消息右侧头像 */}
                 {msg.role === 'user' && (
                   <Avatar className="w-9 h-9 shrink-0 border-2 border-primary/20">
-                    <AvatarImage src={getUserAvatar()} />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-bold">
-                      {getUserInitial()}
-                    </AvatarFallback>
+                    {(() => {
+                      const avatarInfo = getUserAvatarInfo();
+                      if (avatarInfo.type === 'image') {
+                        return <AvatarImage src={avatarInfo.url} className="object-cover" />;
+                      } else if (avatarInfo.type === 'preset') {
+                        return <AvatarFallback className={`${avatarInfo.bg} text-lg`}>
+                          {avatarInfo.emoji}
+                        </AvatarFallback>;
+                      } else {
+                        return <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-bold">
+                          {getUserInitial()}
+                        </AvatarFallback>;
+                      }
+                    })()}
                   </Avatar>
                 )}
               </motion.div>

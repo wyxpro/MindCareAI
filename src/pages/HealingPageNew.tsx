@@ -472,8 +472,8 @@ export default function HealingPageNew() {
           {[
             { id: 'meditation', label: '冥想', icon: Music, colors: 'from-indigo-500 via-purple-500 to-pink-500' },
             { id: 'game', label: '游戏', icon: Gamepad2, colors: 'from-blue-500 via-cyan-500 to-teal-500' },
-            { id: 'knowledge', label: '知识', icon: Bookmark, colors: 'from-emerald-500 via-teal-500 to-cyan-500' },
             { id: 'diary', label: '日记', icon: PenLine, colors: 'from-rose-500 via-pink-500 to-fuchsia-500' },
+            { id: 'knowledge', label: '知识', icon: Bookmark, colors: 'from-emerald-500 via-teal-500 to-cyan-500' },
           ].map((tab) => (
             <motion.div key={tab.id} variants={itemVariants}>
               <Button
