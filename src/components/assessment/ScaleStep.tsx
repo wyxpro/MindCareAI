@@ -45,8 +45,8 @@ interface ScaleStepProps {
 type ScaleJson = { type: 'scale'; scale_id: string; name: string; description?: string; questions: { text: string }[] }
 const SCALES = [
   { id: 'PHQ-9', name: '健康问卷', total: 9, description: '用于筛查抑郁症状及其严重程度', duration: 5 },
-  { id: 'HAMD-17', name: '汉密尔顿抑郁量表', total: 17, description: '临床评估抑郁状态的标准量表', duration: 8 },
-  { id: 'SDS-20', name: '自评抑郁量表', total: 20, description: '直观反映抑郁的主观感受', duration: 10 },
+  { id: 'HAMD-17', name: '汉密尔顿量表', total: 17, description: '临床评估抑郁状态的标准量表', duration: 8 },
+  { id: 'SDS-20', name: '自评量表', total: 20, description: '直观反映抑郁的主观感受', duration: 10 },
 ];
 
 // 内置标准量表题目（与医生端知识库保持一致），确保网络不可用时也能正常运作
@@ -244,7 +244,7 @@ const MOCK_HISTORY_ASSESSMENTS: HistoryAssessment[] = [
     score: 6,
     summary: '心理状态稳定，情绪管理良好，继续保持当前的生活节奏。',
     messages: [
-      { role: 'assistant', content: '你好！我们今天将进行 SDS-20 自评抑郁量表评估。这个量表能帮助你更直观地了解自己的情绪状态。', timestamp: new Date(2024, 1, 5, 16, 45), avatar: DOCTOR_AVATAR },
+      { role: 'assistant', content: '你好！我们今天将进行 SDS-20 自评量表评估。这个量表能帮助你更直观地了解自己的情绪状态。', timestamp: new Date(2024, 1, 5, 16, 45), avatar: DOCTOR_AVATAR },
       { role: 'user', content: '好的，开始吧', timestamp: new Date(2024, 1, 5, 16, 46) },
       { role: 'assistant', content: '【SDS-20 第1题】我感到情绪沮丧，郁闷', timestamp: new Date(2024, 1, 5, 16, 46), avatar: DOCTOR_AVATAR },
       { role: 'user', content: '很少有这种感觉', timestamp: new Date(2024, 1, 5, 16, 47) },
@@ -542,7 +542,7 @@ export default function ScaleStep({ onComplete, userId }: ScaleStepProps) {
   };
 
   // 常见回答选项
-  const QUICK_RESPONSES = ['是的', '不是', '有时候', '不确定', '经常', '很少'];
+  const QUICK_RESPONSES = ['是的', '不是', '有时候', '经常', '很少'];
 
   // 处理快捷回答点击 - 直接发送
   const handleQuickResponse = async (response: string) => {
