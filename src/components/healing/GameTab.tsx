@@ -24,11 +24,49 @@ export default function GameTab() {
   };
 
   return (
-    <div className="relative -mx-4 mt-1 h-[calc(100vh-160px)] bg-gradient-to-br from-[#f8f9ff] via-[#f0f2ff] to-[#fdfaff] overflow-hidden rounded-t-[32px] rounded-b-[40px] flex flex-col shadow-[0_-4px_24px_rgba(0,0,0,0.05)] border-t border-white/50">
-      {/* Immersive Light Background Gradients & "Stars" */}
-      <div className="absolute top-0 inset-x-0 h-[300px] bg-gradient-to-b from-indigo-100/40 via-transparent to-transparent pointer-events-none" />
-      <div className="absolute inset-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: `radial-gradient(circle at 2px 2px, #818cf8 1px, transparent 0)`, backgroundSize: '32px 32px' }} />
-      <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: `radial-gradient(circle at 10px 10px, #c084fc 1px, transparent 0)`, backgroundSize: '48px 48px' }} />
+    <div className="relative -mx-4 mt-1 h-[calc(100vh-160px)] bg-gradient-to-br from-[#1a2f18] via-[#2d5016] to-[#4a7c2c] overflow-hidden rounded-t-[32px] rounded-b-[40px] flex flex-col shadow-[0_-4px_24px_rgba(0,0,0,0.3)] border-t border-yellow-500/30">
+      {/* 神庙逃亡2风格背景 - 指定背景图 */}
+      <div className="absolute inset-0 bg-[url('https://wx1.sinaimg.cn/mw690/a72e4501ly1i93jc9jovkj20u01ur1ky.jpg')] bg-cover bg-center opacity-90 pointer-events-none" />
+      
+      {/* 渐变叠加层 - 调暗增强文字可读性 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#000]/30 via-[#000]/10 to-[#000]/40 pointer-events-none" />
+      
+      {/* 动态彩色光斑 - 节日氛围 */}
+      <motion.div 
+        className="absolute top-1/4 left-1/4 w-40 h-40 rounded-full bg-gradient-to-r from-red-500/30 to-orange-500/30 blur-3xl pointer-events-none"
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div 
+        className="absolute top-1/3 right-1/4 w-52 h-52 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-3xl pointer-events-none"
+        animate={{
+          x: [0, -40, 0],
+          y: [0, 20, 0],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      />
+      <motion.div 
+        className="absolute bottom-1/4 left-1/3 w-36 h-36 rounded-full bg-gradient-to-r from-yellow-500/20 to-green-500/20 blur-3xl pointer-events-none"
+        animate={{
+          x: [0, 25, 0],
+          y: [0, 30, 0],
+          opacity: [0.2, 0.35, 0.2],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+      />
+      
+      {/* 动态粒子效果 */}
+      <div className="absolute inset-0 opacity-[0.6] pointer-events-none" style={{ 
+        backgroundImage: `radial-gradient(circle at 2px 2px, #fbbf24 1px, transparent 0), 
+                          radial-gradient(circle at 15px 15px, #f87171 0.5px, transparent 0),
+                          radial-gradient(circle at 8px 25px, #60a5fa 0.5px, transparent 0)`, 
+        backgroundSize: '40px 40px, 60px 60px, 50px 50px' 
+      }} />
       
       <motion.div 
         variants={containerVariants}
@@ -39,9 +77,9 @@ export default function GameTab() {
         {/* Game Icon with Subtle Glow */}
         <motion.div variants={itemVariants} className="relative group">
           <div className="absolute inset-0 bg-orange-400/10 blur-[30px] rounded-full scale-110 group-hover:bg-orange-400/20 transition-all duration-700" />
-          <div className="relative w-24 h-24 rounded-[28px] overflow-hidden border-[3px] border-white shadow-lg shadow-indigo-100/50">
+          <div className="relative w-24 h-24 rounded-[28px] overflow-hidden border-[3px] border-white shadow-lg shadow-orange-200/50">
             <img 
-              src="/temple_run_2_icon.png" 
+              src="https://image.9game.cn/s/9game/g/2021/1/28/207154297.png" 
               alt="Temple Run 2" 
               className="w-full h-full object-cover transform transition-transform duration-1000 group-hover:scale-110"
             />
@@ -50,17 +88,17 @@ export default function GameTab() {
 
         {/* Title & Specs */}
         <motion.div variants={itemVariants} className="text-center space-y-1.5">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tighter drop-shadow-sm">神庙逃亡 2</h1>
-          <p className="text-indigo-400 text-[10px] font-bold tracking-widest uppercase">Holi Festival · 跑酷闯关</p>
+          <h1 className="text-3xl font-black text-white tracking-tighter drop-shadow-lg">神庙逃亡 2</h1>
+          <p className="text-yellow-300 text-[10px] font-bold tracking-widest uppercase drop-shadow-md">Holi Festival · 跑酷闯关</p>
           
           <div className="flex items-center justify-center gap-2 pt-1 border-slate-700">
-            <div className="flex items-center gap-1 px-3 py-1 bg-white border border-indigo-50 rounded-full text-indigo-600 text-[10px] font-black shadow-sm">
+            <div className="flex items-center gap-1 px-3 py-1 bg-white/90 border border-orange-200 rounded-full text-orange-700 text-[10px] font-black shadow-md">
               <Flame className="w-3 h-3 text-orange-500" /> 动作
             </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-white border border-indigo-50 rounded-full text-indigo-600 text-[10px] font-black shadow-sm">
+            <div className="flex items-center gap-1 px-3 py-1 bg-white/90 border border-blue-200 rounded-full text-blue-700 text-[10px] font-black shadow-md">
               <Zap className="w-3 h-3 text-blue-500" /> 跑酷
             </div>
-            <div className="flex items-center gap-1 px-3 py-1 bg-white border border-indigo-50 rounded-full text-indigo-600 text-[10px] font-black shadow-sm">
+            <div className="flex items-center gap-1 px-3 py-1 bg-white/90 border border-purple-200 rounded-full text-purple-700 text-[10px] font-black shadow-md">
               <Rainbow className="w-3 h-3 text-purple-500" /> 节日
             </div>
           </div>
@@ -80,61 +118,61 @@ export default function GameTab() {
               <span className="text-lg font-black text-white tracking-wider">开始游戏</span>
             </Button>
           </div>
-          <p className="text-center text-[9px] text-slate-400 mt-3 font-bold uppercase tracking-[0.15em] opacity-80">将在浏览器中全屏运行</p>
+          <p className="text-center text-[9px] text-yellow-200 mt-3 font-bold uppercase tracking-[0.15em] opacity-90 drop-shadow-sm">将在浏览器中全屏运行</p>
         </motion.div>
 
         {/* Info Cards */}
         <div className="w-full max-w-md space-y-3 pb-8">
           {/* Brief */}
-          <motion.div variants={itemVariants} className="bg-white/60 p-4 rounded-[28px] border border-white backdrop-blur-md shadow-sm space-y-2">
+          <motion.div variants={itemVariants} className="bg-white/15 p-4 rounded-[28px] border border-white/20 backdrop-blur-md shadow-lg space-y-2">
             <div className="flex items-center gap-2 mb-0.5">
-              <div className="p-1 rounded-lg bg-orange-50">
-                <Gamepad2 className="w-4 h-4 text-orange-400" />
+              <div className="p-1 rounded-lg bg-orange-500/20">
+                <Gamepad2 className="w-4 h-4 text-orange-300" />
               </div>
-              <h3 className="text-slate-800 font-black text-[12px] uppercase tracking-wide">游戏简介</h3>
+              <h3 className="text-white font-black text-[12px] uppercase tracking-wide drop-shadow-sm">游戏简介</h3>
             </div>
-            <p className="text-slate-600 text-[11px] leading-relaxed font-medium">
+            <p className="text-white/85 text-[11px] leading-relaxed font-medium">
               经典无尽跑酷游戏。在 Holi Festival 版本中，奔驰在五彩世界，躲避障碍跳跃，享受飞驰快感！
             </p>
           </motion.div>
 
           {/* Controls - Two Rows Layout */}
-          <motion.div variants={itemVariants} className="bg-white/60 p-4 rounded-[28px] border border-white backdrop-blur-md shadow-sm space-y-3">
+          <motion.div variants={itemVariants} className="bg-white/15 p-4 rounded-[28px] border border-white/20 backdrop-blur-md shadow-lg space-y-3">
             <div className="flex items-center gap-2 mb-0.5">
-              <div className="p-1 rounded-lg bg-indigo-50">
-                <Smartphone className="w-4 h-4 text-blue-400" />
+              <div className="p-1 rounded-lg bg-blue-500/20">
+                <Smartphone className="w-4 h-4 text-blue-300" />
               </div>
-              <h3 className="text-slate-800 font-black text-[12px] uppercase tracking-wide">操作说明</h3>
+              <h3 className="text-white font-black text-[12px] uppercase tracking-wide drop-shadow-sm">操作说明</h3>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2.5 p-2.5 bg-white/50 rounded-2xl border border-indigo-50/50">
-                <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+              <div className="flex items-center gap-2.5 p-2.5 bg-white/10 rounded-2xl border border-orange-300/30">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-300">
                   <MoveUp className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] font-bold text-slate-700">上滑 — 跳跃</p>
+                <p className="text-[11px] font-bold text-white">上滑 — 跳跃</p>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 bg-white/50 rounded-2xl border border-indigo-50/50">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
+              <div className="flex items-center gap-2.5 p-2.5 bg-white/10 rounded-2xl border border-blue-300/30">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-300">
                   <MoveDown className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] font-bold text-slate-700">下滑 — 下蹲</p>
+                <p className="text-[11px] font-bold text-white">下滑 — 下蹲</p>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 bg-white/50 rounded-2xl border border-indigo-50/50">
-                <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-400">
+              <div className="flex items-center gap-2.5 p-2.5 bg-white/10 rounded-2xl border border-purple-300/30">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-300">
                   <MoveLeft className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] font-bold text-slate-700">左滑 — 左转</p>
+                <p className="text-[11px] font-bold text-white">左滑 — 左转</p>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 bg-white/50 rounded-2xl border border-indigo-50/50">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-400">
+              <div className="flex items-center gap-2.5 p-2.5 bg-white/10 rounded-2xl border border-emerald-300/30">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-300">
                   <MoveRight className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] font-bold text-slate-700">右滑 — 右转</p>
+                <p className="text-[11px] font-bold text-white">右滑 — 右转</p>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-indigo-50/30 rounded-xl border border-indigo-50/50">
-                <Hand className="w-3 h-3 text-indigo-400" />
-                <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">手势或方向键控制</span>
+            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-indigo-500/10 rounded-xl border border-indigo-300/30">
+                <Hand className="w-3 h-3 text-indigo-300" />
+                <span className="text-[9px] font-bold text-indigo-200 uppercase tracking-widest drop-shadow-sm">手势或方向键控制</span>
             </div>
           </motion.div>
         </div>

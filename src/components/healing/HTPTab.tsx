@@ -321,7 +321,7 @@ export default function HTPTab() {
             </div>
 
             {/* Canvas */}
-            <div ref={containerRef} className="relative h-[55vh] min-h-[420px] bg-white rounded-[32px] shadow-2xl shadow-indigo-900/5 border border-slate-100 overflow-hidden">
+            <div ref={containerRef} className="relative h-[42vh] min-h-[320px] bg-white rounded-[32px] shadow-2xl shadow-indigo-900/5 border border-slate-100 overflow-hidden">
                 <canvas ref={canvasRef} className="block w-full h-full relative z-10 touch-none" onMouseDown={onStart} onMouseMove={onMove} onMouseUp={onEnd} onMouseLeave={onEnd} onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} />
                 {strokes.length === 0 && !isDrawing && <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] select-none text-9xl font-black italic text-indigo-900 tracking-tighter pointer-events-none">HTP</div>}
             </div>
