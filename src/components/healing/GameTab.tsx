@@ -26,7 +26,7 @@ export default function GameTab() {
   return (
     <div className="relative -mx-4 mt-1 h-[calc(100vh-160px)] bg-gradient-to-br from-[#1a2f18] via-[#2d5016] to-[#4a7c2c] overflow-hidden rounded-t-[32px] rounded-b-[40px] flex flex-col shadow-[0_-4px_24px_rgba(0,0,0,0.3)] border-t border-yellow-500/30">
       {/* 神庙逃亡2风格背景 - 指定背景图 */}
-      <div className="absolute inset-0 bg-[url('https://wx1.sinaimg.cn/mw690/a72e4501ly1i93jc9jovkj20u01ur1ky.jpg')] bg-cover bg-center opacity-90 pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://pic.rmb.bdstatic.com/bjh/down/6ezZsCB5rIXxYG5u0CZ5Mw75d4998f5ceddd152dc7de8394c61683.jpg?for=bg')] bg-cover bg-center opacity-90 pointer-events-none" />
       
       {/* 渐变叠加层 - 调暗增强文字可读性 */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#000]/30 via-[#000]/10 to-[#000]/40 pointer-events-none" />
