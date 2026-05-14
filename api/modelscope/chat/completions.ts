@@ -16,8 +16,10 @@ export default async function handler(req: any, res: any) {
     const upstream = await fetch('https://api-inference.modelscope.cn/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': req.headers['content-type'] || 'application/json'
+        'Authorization': `Bearer ${key.trim()}`,
+        'X-Modelscope-Token': key.trim(),
+        'Content-Type': req.headers['content-type'] || 'application/json',
+        'Accept': 'application/json, text/event-stream'
       },
       body
     });
