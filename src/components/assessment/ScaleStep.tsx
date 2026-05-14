@@ -162,7 +162,7 @@ const EMOJI_LIST = [
 ];
 
 // 医生默认头像
-const DOCTOR_AVATAR = 'https://www.keaitupian.cn/cjpic/frombd/1/253/56496682/3498759028.jpg';
+const DOCTOR_AVATAR = 'https://img0.baidu.com/it/u=1387904049,367428306&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500';
 
 // 模拟历史评估数据 - 包含完整的题目和对话
 const MOCK_HISTORY_ASSESSMENTS: HistoryAssessment[] = [
