@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【社会服务赛道】灵愈AI - 基于多模态AI的智能心理检测与疗愈助手</title>
+    <meta name="description" content="灵愈AI - 基于多模态AI的数字医生抑郁检测与疗愈助手。一款整合智能手环生理数据、多模态AI情绪识别（文本、语音、面部表情）、主动式AI对话评估与个性化疗愈方案的心理健康管理系统。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.15);
+            --primary-border: rgba(139, 92, 246, 0.3);
+            --secondary: #14b8a6;
+            --secondary-glow: rgba(20, 184, 166, 0.15);
+            --accent: #ec4899;
+            --bg-dark: #0a0915;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.05);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-light: #ffffff;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.1) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header Styles */
+        header {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(10, 9, 21, 0.7);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-light);
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--text-light) 30%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .track-badge-container {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .track-badge {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 1px solid var(--primary-border);
+            color: #d8b4fe;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
+        }
+
+        .track-badge.charity {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            color: #99f6e4;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0 4rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 10%, #c084fc 50%, #2dd4bf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 4rem;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            color: var(--text-light);
+            border: none;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(139, 92, 246, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .hero-image-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px var(--primary-glow);
+            position: relative;
+        }
+
+        .hero-image-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 30%, transparent 60%, var(--bg-dark) 100%);
+            pointer-events: none;
+        }
+
+        .hero-image {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+            aspect-ratio: 16 / 9;
+        }
+
+        /* Info Grid Section */
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .grid-section {
+            padding: 6rem 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            margin-bottom: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.05);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .card-list {
+            list-style: none;
+        }
+
+        .card-list li {
+            margin-bottom: 1rem;
+            position: relative;
+            padding-left: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .card-list li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .card-list strong {
+            color: var(--text-light);
+        }
+
+        .highlight-text {
+            color: #d8b4fe;
+            font-weight: 600;
+        }
+
+        /* Target Users Grid */
+        .user-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .user-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .user-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .user-card:hover {
+            border-color: rgba(20, 184, 166, 0.3);
+            box-shadow: 0 10px 25px rgba(20, 184, 166, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .user-tag {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .user-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .user-meta {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1rem;
+        }
+
+        .user-painpoint {
+            font-size: 0.95rem;
+        }
+
+        .user-painpoint strong {
+            color: #fda4af;
+        }
+
+        /* Interactive Showcase Section */
+        .showcase-section {
+            background-color: rgba(139, 92, 246, 0.02);
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+            padding: 6rem 0;
+        }
+
+        .showcase-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--text-light);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .tab-content.active {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .showcase-desc h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .showcase-desc p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .feature-bullets {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .feature-bullets li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-bullets li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        /* Interactive Widgets */
+        .widget-box {
+            background: rgba(10, 9, 21, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 2rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 15px 35px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        /* Widget 1: 3D Breathing Trainer */
+        .breath-ring-outer {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, rgba(20, 184, 166, 0.02) 70%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .breath-ring-middle {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(20, 184, 166, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 4s ease-in-out;
+        }
+
+        .breath-ring-inner {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 4s ease-in-out;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Breathing Animation Classes */
+        .breathing-inhale .breath-ring-inner {
+            transform: scale(1.6);
+            box-shadow: 0 0 50px rgba(20, 184, 166, 0.8);
+            background: linear-gradient(135deg, var(--secondary) 0%, #2dd4bf 100%);
+        }
+        .breathing-inhale .breath-ring-middle {
+            transform: scale(1.2);
+            border-color: rgba(20, 184, 166, 0.6);
+        }
+
+        .breathing-hold .breath-ring-inner {
+            box-shadow: 0 0 60px rgba(236, 72, 153, 0.8);
+            background: linear-gradient(135deg, var(--accent) 0%, #f472b6 100%);
+        }
+
+        .breathing-exhale .breath-ring-inner {
+            transform: scale(1.0);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.4);
+            background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+        }
+        .breathing-exhale .breath-ring-middle {
+            transform: scale(1.0);
+        }
+
+        .breath-control {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .breath-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            width: 100%;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .breath-text-guide {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-light);
+            min-height: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .breath-timer {
+            font-family: monospace;
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Widget 2: Band Simulator */
+        .band-panel {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .band-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 0.75rem;
+        }
+
+        .band-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .metric-icon {
+            font-size: 1.75rem;
+        }
+
+        .metric-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .metric-value.heart-rate-val {
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+
+        .heart-pulse {
+            animation: heart-beat 0.8s infinite alternate ease-in-out;
+            display: inline-block;
+            color: var(--danger);
+        }
+
+        .stress-slider-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-top: auto;
+        }
+
+        .slider-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .slider-input {
+            width: 100%;
+            accent-color: var(--primary);
+            cursor: pointer;
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        .band-ai-box {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px dashed var(--primary-border);
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .band-ai-title {
+            font-weight: 600;
+            color: #c084fc;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Widget 3: AI Chat Simulator */
+        .chat-box {
+            width: 100%;
+            height: 380px;
+            display: flex;
+            flex-direction: column;
+            background: rgba(5, 4, 10, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: rgba(255,255,255,0.02);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .ai-indicator-pulse {
+            width: 6px;
+            height: 6px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            line-height: 1.4;
+        }
+
+        .chat-message.user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-message.ai {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+        }
+
+        .multimodal-telemetry {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--secondary);
+            border-top: 1px dashed rgba(20, 184, 166, 0.3);
+            padding-top: 0.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .chat-inputs-simulation {
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.01);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .chat-inputs-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .chat-option-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-opt-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            flex: 1;
+        }
+
+        .chat-opt-btn:hover {
+            background: var(--primary-glow);
+            border-color: var(--primary);
+            color: var(--text-light);
+        }
+
+        .chat-opt-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.3));
+            }
+            50% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.8));
+            }
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+                box-shadow: 0 0 8px var(--success);
+            }
+            100% {
+                transform: scale(0.9);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes heart-beat {
+            to {
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Core Values Cards */
+        .value-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .value-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .value-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.02) 0%, rgba(20, 184, 166, 0.02) 100%);
+            border: 1px solid var(--card-border);
+            padding: 2.5rem;
+            border-radius: 16px;
+        }
+
+        .value-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Tech Badges */
+        .tech-section {
+            padding: 4rem 0;
+            border-top: 1px solid var(--card-border);
+            text-align: center;
+        }
+
+        .tech-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .tech-badges-container {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            padding: 0.5rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        .tech-badge:hover {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background: #05040a;
+            padding: 3rem 0;
+            border-top: 1px solid var(--card-border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+        }
+
+        .footer-logo {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="#" class="logo-area">
+                <span class="logo-icon">🧠</span>
+                <span class="logo-text">灵愈AI</span>
+            </a>
+            <div class="track-badge-container">
+                <span class="track-badge">🏆 社会服务赛道</span>
+                <span class="track-badge charity">🌿 社会公益</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title">基于多模态AI的智能心理检测与疗愈助手</h1>
+            <p class="hero-subtitle">整合智能手环生理数据、主动式AI对话评估与微表情多模态情绪识别，打造零压力的心理抑郁自我早筛与疗愈避风港。</p>
+            <div class="hero-buttons">
+                <a href="#showcase" class="btn btn-primary">⚡ 交互式创意演示</a>
+                <a href="https://k.playe.top/" target="_blank" class="btn btn-secondary">🌐 在线体验完整产品</a>
+            </div>
+            
+            <div class="hero-image-wrapper">
+                <img src="./images/mindcareai_hero.png" alt="灵愈AI 核心概念图 - 数字化大脑与智能健康监控" class="hero-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Info Details -->
+    <section class="grid-section" id="intro">
+        <div class="container">
+            <h2 class="section-title">创意核心与动机</h2>
+            
+            <div class="info-grid">
+                <!-- Card 1: Want to Solve -->
+                <div class="card">
+                    <span class="card-header-icon">🔍</span>
+                    <h3 class="card-title">我们想要解决的痛点需求</h3>
+                    <ul class="card-list">
+                        <li><strong>心理健康污名化</strong>：多数心理亚健康及轻中度抑郁患者存在<span class="highlight-text">“就医耻感”</span>，不愿、不敢前往心理诊所，导致错过最佳干预窗口。</li>
+                        <li><strong>诊疗费用昂贵</strong>：传统心理咨询和评估成本极高，普通人难以承担长期、高频的连续性检测。</li>
+                        <li><strong>生理与心理数据脱节</strong>：诊断高度依赖主观量表，缺乏日常生活生理指标（如连续心率变异度、血氧、睡眠）的客观量化支持。</li>
+                        <li><strong>出院康复无后续</strong>：重度患者出院或离诊后，医生难以进行低成本的日常随访，容易出现干预真空。</li>
+                    </ul>
+                </div>
+
+                <!-- Card 2: Motivation & Concept -->
+                <div class="card">
+                    <span class="card-header-icon">💡</span>
+                    <h3 class="card-title">灵感来源与产品形态</h3>
+                    <ul class="card-list">
+                        <li><strong>灵感来源</strong>：观察到身边承受巨大压力的职场好友和临考学生，在经历轻度抑郁倾向时无处倾诉、害怕确诊的现状。我们希望结合<span class="highlight-text">大模型技术</span>与<span class="highlight-text">可穿戴设备</span>，做一个随时随地、像呼吸一样自然且完全隐私的智能帮手。</li>
+                        <li><strong>产品定位</strong>：一款面向普通人与专业医生的<span class="highlight-text">多端多模态心理评估与自疗系统</span>。通过Web/小程序/APP/手环，闭环完成“日常监测-主动评估-即时疗愈”全流程。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Target Users -->
+            <h2 class="section-title">核心目标用户群体</h2>
+            <div class="user-cards-grid">
+                <!-- User 1 -->
+                <div class="user-card">
+                    <span class="user-tag">高压群体</span>
+                    <h4 class="user-name">职场白领 & 考研学生</h4>
+                    <p class="user-meta">高压、常态化失眠、情绪焦虑</p>
+                    <p class="user-painpoint"><strong>痛点：</strong> 长期处于亚健康状态却自知不足，担心传统就医暴露隐私影响工作，需要<span class="highlight-text">极高隐私性、低成本</span>的自筛与放松途径。</p>
+                </div>
+                <!-- User 2 -->
+                <div class="user-card">
+                    <span class="user-tag">弱势关怀</span>
+                    <h4 class="user-name">产后妈妈 & 银发群体</h4>
+                    <p class="user-meta">荷尔蒙剧变或社会隔离、情绪波动大</p>
+                    <p class="user-painpoint"><strong>痛点：</strong> 情绪异常极易被家人忽视，需要结合<span class="highlight-text">智能手环生理预警</span>的主动共情倾听与关怀。</p>
+                </div>
+                <!-- User 3 -->
+                <div class="user-card">
+                    <span class="user-tag">医生端赋能</span>
+                    <h4 class="user-name">专业心理咨询师与医生</h4>
+                    <p class="user-meta">需要连续化患者体征及量表趋势</p>
+                    <p class="user-painpoint"><strong>痛点：</strong> 离开诊室无法得知患者状况，人工随访效率低下，需要<span class="highlight-text">高危自动预警</span>与连续生理数据看板辅助诊断。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Showcase Playground -->
+    <section class="showcase-section" id="showcase">
+        <div class="container">
+            <h2 class="section-title">核心功能创意实机演示</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 3rem; margin-top: -1.5rem;">点击下方切换卡片，亲自操作感受我们的创意交互逻辑</p>
+
+            <div class="showcase-tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'breath-tab')">🧘 3D 呼吸冥想引导</button>
+                <button class="tab-btn" onclick="switchTab(event, 'band-tab')">⌚ 智能手环生理联动</button>
+                <button class="tab-btn" onclick="switchTab(event, 'chat-tab')">🤖 多模态 AI 量表对话</button>
+            </div>
+
+            <!-- Tab 1: Breath -->
+            <div id="breath-tab" class="tab-content active">
+                <div class="showcase-desc">
+                    <h3><span>🧘</span> 3D 呼吸动画引导</h3>
+                    <p>为在高压或焦虑状态下的用户设计的沉浸式调息系统。通过多层次波纹动画指导吸气、憋气和呼气，帮助快速平复心率与交感神经系统。</p>
+                    <ul class="feature-bullets">
+                        <li><strong>视觉随息律动</strong>：大小同心圆随呼吸节奏缩放，提供舒适的呼吸频率。</li>
+                        <li><strong>多种呼吸模式</strong>：支持4-7-8安神模式、4-4均衡模式等，可自由定制。</li>
+                        <li><strong>实时冥想数据统计</strong>：配合舒缓白噪音，自动记录每日冥想时长。</li>
+                    </ul>
+                </div>
+                <div class="widget-box">
+                    <div class="breath-text-guide" id="breath-guide-txt">点击下方“开始练习”开启放松</div>
+                    <div class="breath-timer" id="breath-timer-val">00:00</div>
+                    <div class="breath-ring-outer">
+                        <div class="breath-ring-middle" id="breath-ring-mid">
+                            <div class="breath-ring-inner" id="breath-ring-in">
+                                呼吸
+                            </div>
+                        </div>
+                    </div>
+                    <div class="breath-control">
+                        <select class="breath-select" id="breath-mode-select">
+                            <option value="4-7-8">4-7-8 经典安神模式 (吸4-憋7-呼8)</option>
+                            <option value="4-4">4-4 箱式均衡模式 (吸4-憋4-呼4-憋4)</option>
+                        </select>
+                        <button class="btn btn-primary" id="breath-control-btn" onclick="toggleBreathing()">开始练习</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Band -->
+            <div id="band-tab" class="tab-content">
+                <div class="showcase-desc">
+                    <h3><span>⌚</span> 智能手环生理联动</h3>
+                    <p>将可穿戴设备数据（心率、血氧、温度、压力）接入心理评估模型，弥补传统主观评测数据缺失的短板，实现异常生理指标自动提醒。</p>
+                    <ul class="feature-bullets">
+                        <li><strong>心率变异性(HRV)分析</strong>：实时计算自主神经系统活性，判定压力等级。</li>
+                        <li><strong>无感高压预警</strong>：当手环检测到心率突增且无运动特征时，主动推送压力调适。</li>
+                        <li><strong>数据赋能临床</strong>：数据可安全同步至医生端，帮助医生更全面了解患者日常生活。</li>
+                    </ul>
+                </div>
+                <div class="widget-box">
+                    <div class="band-panel">
+                        <div class="band-header">
+                            <span style="font-weight:600; color:var(--text-light);">手环数据模拟舱</span>
+                            <div class="band-status">
+                                <div class="status-dot"></div>
+                                <span id="band-status-text">已连接 (模拟模式)</span>
+                            </div>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <span class="metric-icon">❤️</span>
+                                <div class="metric-info">
+                                    <span class="metric-label">心率</span>
+                                    <span class="metric-value heart-rate-val"><span id="metric-hr">72</span> <small style="font-size:0.75rem; color:var(--text-muted);">bpm</small> <span class="heart-pulse">♥</span></span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-icon">⚡</span>
+                                <div class="metric-info">
+                                    <span class="metric-label">压力指数</span>
+                                    <span class="metric-value" id="metric-stress">34</span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-icon">🫁</span>
+                                <div class="metric-info">
+                                    <span class="metric-label">血氧饱和度</span>
+                                    <span class="metric-value"><span id="metric-bo">98</span> <small style="font-size:0.75rem; color:var(--text-muted);">%</small></span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-icon">📈</span>
+                                <div class="metric-info">
+                                    <span class="metric-label">HRV (心率变异性)</span>
+                                    <span class="metric-value"><span id="metric-hrv">65</span> <small style="font-size:0.75rem; color:var(--text-muted);">ms</small></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stress-slider-container">
+                            <div class="slider-label-row">
+                                <span>拉动滑块模拟用户压力升高：</span>
+                                <span id="slider-val" style="font-weight:700; color:var(--secondary);">正常 (34)</span>
+                            </div>
+                            <input type="range" min="10" max="95" value="34" class="slider-input" id="stress-slider" oninput="updateStressMetrics(this.value)">
+                        </div>
+                        <div class="band-ai-box" id="band-ai-recommendation">
+                            <div class="band-ai-title">🤖 AI 实时健康评估</div>
+                            <p id="band-ai-text">当前生理指标表现优异，HRV良好，代表植物神经调节能力强，处于放松舒适状态。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Chat -->
+            <div id="chat-tab" class="tab-content">
+                <div class="showcase-desc">
+                    <h3><span>🤖</span> 多模态 AI 量表对话</h3>
+                    <p>改变死板的选择题形式，将PHQ-9抑郁、HAMD-17等量表融入与AI温和的日常对话中。在用户零防备的情况下获取情绪表达和客观的多模态特征。</p>
+                    <ul class="feature-bullets">
+                        <li><strong>微表情与语音融合</strong>：在经授权的前端对话中，利用多模态能力检测语调与微表情。</li>
+                        <li><strong>火山引擎大模型驱动</strong>：千亿参数豆包大模型，共情对话，理解隐藏的消极情感。</li>
+                        <li><strong>断点保存与随访恢复</strong>：对话支持进度自动保存，避免情绪打断。</li>
+                    </ul>
+                </div>
+                <div class="widget-box">
+                    <div class="chat-box">
+                        <div class="chat-header">
+                            <div class="ai-indicator-pulse"></div>
+                            <span>灵愈AI-陪伴评估助手</span>
+                        </div>
+                        <div class="chat-messages" id="chat-messages-container">
+                            <div class="chat-message ai">
+                                你好，我是灵愈AI心理助手。最近这几天过得怎么样？有没有觉得身体或精神上特别容易疲惫？
+                                <div class="multimodal-telemetry">
+                                    <span>🎤 正在等待输入语音/文本...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-inputs-simulation">
+                            <div class="chat-inputs-title">模拟输入选项：</div>
+                            <div class="chat-option-btns">
+                                <button class="chat-opt-btn" onclick="sendSimulatedChat('感觉还可以，就是有点累，睡一觉就能缓过来。', 'normal')">😊 表达正常疲惫</button>
+                                <button class="chat-opt-btn" onclick="sendSimulatedChat('最近每天都睡不好，工作一团糟，感觉自己好没用。', 'anxious')">😢 表达重度焦虑/无价值感</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Social & Business Value -->
+    <section class="grid-section">
+        <div class="container">
+            <h2 class="section-title">社会价值与现实意义</h2>
+            <div class="value-grid">
+                <div class="value-card">
+                    <h3 class="value-title"><span style="color:var(--secondary)">🌿</span> 广泛的社会公益价值</h3>
+                    <p style="color: var(--text-muted); font-size:1rem; line-height: 1.7;">
+                        我国抑郁症患者已达数千万，但就医率不足两成。灵愈AI将抑郁自筛的门槛降为零。通过<span class="highlight-text">无感、匿名、极低成本</span>的心理健康评估，能够从庞大的日常群体中，高准确率地筛选出潜在的轻度及重度抑郁人群。通过及时的引导干预和医生对接，实现“防微杜渐”，降低因为重度抑郁导致的家庭悲剧与社会悲剧，具有极其深远的社会关怀与人道主义公益价值。
+                    </p>
+                </div>
+                <div class="value-card">
+                    <h3 class="value-title"><span style="color:var(--primary)">🚀</span> 医疗效率与商业价值</h3>
+                    <p style="color: var(--text-muted); font-size:1rem; line-height: 1.7;">
+                        通过打通“智能可穿戴硬件”和“医生后台管理系统”，灵愈AI实现了真正意义上的<span class="highlight-text">闭环式数字疗愈随访</span>。这不仅极大地节约了实体医疗体系中紧张的心理医生人力资源（一位医生可通过看板监管数百位康复期患者，告别传统电话或线下回访），还使得心理医院、康复疗养院能够采购该系统实现病程精细化管理，具备巨大的B端/C端服务拓展潜力和商业应用空间。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Badges Section -->
+    <section class="tech-section">
+        <div class="container">
+            <h3 class="tech-title">技术栈与AI支撑平台</h3>
+            <div class="tech-badges-container">
+                <span class="tech-badge">火山引擎豆包大模型 (共情对话)</span>
+                <span class="tech-badge">魔搭多模态大模型 (表情识别)</span>
+                <span class="tech-badge">硅基流动语音识别 (声纹情绪)</span>
+                <span class="tech-badge">React & TypeScript</span>
+                <span class="tech-badge">Supabase BaaS 架构</span>
+                <span class="tech-badge">WebRTC 智能录音与音频处理</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-logo">🧠 灵愈AI (MindCareAI)</div>
+            <p>基于多模态大模型的智能心理检测与疗愈助手</p>
+            <p style="font-size:0.8rem; opacity: 0.6;">&copy; 2026 灵愈AI 项目开发组。All Rights Reserved. 报名赛道：社会服务赛道 | 附加选项：社会公益</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Logic JavaScript -->
+    <script>
+        // Tab switching
+        function switchTab(evt, tabId) {
+            const tabcontents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontents.length; i++) {
+                tabcontents[i].classList.remove("active");
+            }
+            const tablinks = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabId).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Breathing widget variables
+        let breathingInterval = null;
+        let isBreathing = false;
+        let seconds = 0;
+        let breathStateTimer = 0;
+        let currentBreathPhase = 'idle'; // inhale, hold, exhale
+
+        function toggleBreathing() {
+            const btn = document.getElementById("breath-control-btn");
+            const ringIn = document.getElementById("breath-ring-in");
+            const ringMid = document.getElementById("breath-ring-mid");
+            const guideText = document.getElementById("breath-guide-txt");
+            const timerVal = document.getElementById("breath-timer-val");
+            const mode = document.getElementById("breath-mode-select").value;
+
+            if (isBreathing) {
+                // Stop breathing
+                clearInterval(breathingInterval);
+                isBreathing = false;
+                btn.innerText = "开始练习";
+                btn.style.background = "";
+                ringIn.className = "breath-ring-inner";
+                ringMid.className = "breath-ring-middle";
+                ringIn.innerText = "呼吸";
+                guideText.innerText = "练习结束，感觉好点了吗？";
+                seconds = 0;
+                timerVal.innerText = "00:00";
+            } else {
+                // Start breathing
+                isBreathing = true;
+                btn.innerText = "结束练习";
+                btn.style.background = "linear-gradient(135deg, var(--danger) 0%, #b91c1c 100%)";
+                
+                seconds = 0;
+                breathStateTimer = 0;
+                
+                // Breath patterns
+                // 4-7-8 pattern: Inhale 4s, Hold 7s, Exhale 8s
+                // 4-4 pattern: Inhale 4s, Hold 4s, Exhale 4s, Hold 4s
+
+                runBreathingCycle(mode);
+                
+                breathingInterval = setInterval(() => {
+                    seconds++;
+                    let mins = Math.floor(seconds / 60);
+                    let secs = seconds % 60;
+                    timerVal.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    
+                    breathStateTimer++;
+                    evaluateBreathingState(mode);
+                }, 1000);
+            }
+        }
+
+        function evaluateBreathingState(mode) {
+            const guideText = document.getElementById("breath-guide-txt");
+            const ringIn = document.getElementById("breath-ring-in");
+            
+            if (mode === "4-7-8") {
+                if (currentBreathPhase === 'inhale' && breathStateTimer >= 4) {
+                    // Switch to hold
+                    currentBreathPhase = 'hold';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-hold";
+                    ringIn.innerText = "屏息";
+                    guideText.innerText = "憋气 7 秒，平静心神...";
+                } else if (currentBreathPhase === 'hold' && breathStateTimer >= 7) {
+                    // Switch to exhale
+                    currentBreathPhase = 'exhale';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-exhale";
+                    ringIn.innerText = "呼气";
+                    guideText.innerText = "缓慢呼气 8 秒，吐出浊气...";
+                } else if (currentBreathPhase === 'exhale' && breathStateTimer >= 8) {
+                    // Loop back to inhale
+                    currentBreathPhase = 'inhale';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-inhale";
+                    ringIn.innerText = "吸气";
+                    guideText.innerText = "深深吸气 4 秒，感受能量...";
+                }
+            } else if (mode === "4-4") {
+                // 4-4 box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s
+                if (currentBreathPhase === 'inhale' && breathStateTimer >= 4) {
+                    currentBreathPhase = 'hold';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-hold";
+                    ringIn.innerText = "屏息";
+                    guideText.innerText = "憋气 4 秒...";
+                } else if (currentBreathPhase === 'hold' && breathStateTimer >= 4) {
+                    currentBreathPhase = 'exhale';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-exhale";
+                    ringIn.innerText = "呼气";
+                    guideText.innerText = "呼气 4 秒...";
+                } else if (currentBreathPhase === 'exhale' && breathStateTimer >= 4) {
+                    currentBreathPhase = 'hold2';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-exhale"; // keep size small
+                    ringIn.innerText = "屏息";
+                    guideText.innerText = "空肺屏息 4 秒...";
+                } else if (currentBreathPhase === 'hold2' && breathStateTimer >= 4) {
+                    currentBreathPhase = 'inhale';
+                    breathStateTimer = 0;
+                    document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-inhale";
+                    ringIn.innerText = "吸气";
+                    guideText.innerText = "吸气 4 秒...";
+                }
+            }
+        }
+
+        function runBreathingCycle(mode) {
+            const ringIn = document.getElementById("breath-ring-in");
+            const guideText = document.getElementById("breath-guide-txt");
+            
+            currentBreathPhase = 'inhale';
+            document.querySelector('.breath-ring-outer').className = "breath-ring-outer breathing-inhale";
+            ringIn.innerText = "吸气";
+            guideText.innerText = "深深吸气 4 秒，感受能量...";
+        }
+
+        // Band Simulator
+        function updateStressMetrics(val) {
+            const stressVal = document.getElementById("metric-stress");
+            const hrVal = document.getElementById("metric-hr");
+            const hrvVal = document.getElementById("metric-hrv");
+            const boVal = document.getElementById("metric-bo");
+            const sliderText = document.getElementById("slider-val");
+            const aiText = document.getElementById("band-ai-text");
+            const pulse = document.querySelector(".heart-pulse");
+            
+            stressVal.innerText = val;
+            
+            if (val < 40) {
+                // Low stress
+                sliderText.innerText = `低压力 (${val})`;
+                sliderText.style.color = "var(--success)";
+                hrVal.innerText = Math.floor(70 + (val/10));
+                hrvVal.innerText = Math.floor(75 - (val/3));
+                boVal.innerText = Math.floor(98);
+                pulse.style.animationDuration = "0.8s";
+                aiText.innerHTML = "当前生理指标表现优秀。HRV保持高水平，表示您的<span class='highlight-text'>自主神经反应性良好</span>，处于放松和专注状态。";
+            } else if (val >= 40 && val < 70) {
+                // Medium stress
+                sliderText.innerText = `中度压力 (${val})`;
+                sliderText.style.color = "var(--warning)";
+                hrVal.innerText = Math.floor(80 + (val/5));
+                hrvVal.innerText = Math.floor(55 - (val/5));
+                boVal.innerText = Math.floor(97);
+                pulse.style.animationDuration = "0.5s";
+                aiText.innerHTML = "生理指标提示<span style='color:var(--warning)'>交感神经系统偏向活跃</span>。HRV略有下降，说明目前身体有轻微应激反应。建议适当闭目养神或进行短暂深呼吸。";
+            } else {
+                // High stress
+                sliderText.innerText = `重度警戒 (${val})`;
+                sliderText.style.color = "var(--danger)";
+                hrVal.innerText = Math.floor(95 + (val/15));
+                hrvVal.innerText = Math.floor(32 - (val/12));
+                boVal.innerText = Math.floor(95);
+                pulse.style.animationDuration = "0.3s";
+                aiText.innerHTML = "🚨 <span style='color:var(--danger); font-weight:700;'>生理高压红色警报！</span>监测到HRV急剧滑落，心率突破临界值。AI诊断您可能正经历急性焦虑或恐慌状态，系统建议<span style='color:var(--accent); font-weight:700;'>立即启用 3D 呼吸冥想放松</span>以调节交感神经活性。";
+            }
+        }
+
+        // Chat Simulator
+        function sendSimulatedChat(text, type) {
+            const container = document.getElementById("chat-messages-container");
+            const buttons = document.querySelectorAll(".chat-opt-btn");
+            
+            // Disable buttons
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Add user message
+            const userMsg = document.createElement("div");
+            userMsg.className = "chat-message user";
+            userMsg.innerText = text;
+            container.appendChild(userMsg);
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+            
+            // Add typing indicator
+            const typingIndicator = document.createElement("div");
+            typingIndicator.className = "chat-message ai";
+            typingIndicator.id = "temp-typing";
+            typingIndicator.innerHTML = "正在分析情绪并组织语言...";
+            container.appendChild(typingIndicator);
+            container.scrollTop = container.scrollHeight;
+            
+            setTimeout(() => {
+                // Remove typing indicator
+                document.getElementById("temp-typing").remove();
+                
+                // Construct AI Response based on selection
+                const aiMsg = document.createElement("div");
+                aiMsg.className = "chat-message ai";
+                
+                if (type === 'normal') {
+                    aiMsg.innerHTML = "听得出来，你是在身体上感觉有些疲倦。睡眠确实是调节精神的最好方式。今晚试着关掉手机屏幕，听一首我们推荐的轻音乐。如果明天起来还是觉得累，再来找我聊聊哦。";
+                    aiMsg.innerHTML += `
+                        <div class="multimodal-telemetry">
+                            <span>🎭 面部识别：无异常微表情 (平静度 88%)</span>
+                            <span>🎙️ 语音特征：语速语调在正常心境范围内</span>
+                            <span>📝 文本分析：轻度生理疲劳倾向，风险等级：极低</span>
+                        </div>
+                    `;
+                } else {
+                    aiMsg.innerHTML = "我很能理解这种‘工作乱糟糟’、‘什么都做不好’的无力感。在巨大的压力下，我们的大脑经常会欺骗我们，让我们把短期的挫折归结为自我的无能。这并不是你的错。这几天，你的 PHQ-9 心理疲惫度指标达到了中偏高风险，你的智能手环昨晚也记录到了多次深睡眠不足的情况。请一定要对自己温柔一点。我们先花 2 分钟做个深呼吸冥想，把注意力从这些想法里抽离出来，好吗？";
+                    aiMsg.innerHTML += `
+                        <div class="multimodal-telemetry">
+                            <span>🚨 面部识别：微表情分析显示焦虑感 82%，眼神回避</span>
+                            <span>🎙️ 语音特征：语速变慢，尾音压抑，能量值显著下降 (低落度 74%)</span>
+                            <span>📝 文本分析：中度认知扭曲及自我否定情绪，风险等级：中度风险 (建议适时干预)</span>
+                        </div>
+                    `;
+                }
+                
+                container.appendChild(aiMsg);
+                container.scrollTop = container.scrollHeight;
+                
+                // Re-enable buttons after a delay
+                setTimeout(() => {
+                    buttons.forEach(btn => btn.disabled = false);
+                }, 1000);
+                
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
