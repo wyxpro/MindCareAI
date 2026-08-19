@@ -1354,6 +1354,11 @@
                 >核心功能</a
               >
               <a
+                href="#video-demo"
+                class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
+                >视频演示</a
+              >
+              <a
                 href="#testimonials"
                 class="text-gray-700 hover:text-purple-600 transition-colors duration-300 font-medium"
                 >用户评价</a
@@ -1435,6 +1440,11 @@
               href="#functions"
               class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
               >核心功能</a
+            >
+            <a
+              href="#video-demo"
+              class="block py-2 text-gray-700 hover:text-purple-600 transition-colors"
+              >视频演示</a
             >
             <a
               href="#testimonials"
@@ -2122,6 +2132,180 @@
         </div>
       </section>
 
+      <!-- 视频演示组件 -->
+      <section
+        class="py-20 bg-gradient-to-b from-white via-purple-50/40 to-purple-50 relative overflow-hidden"
+        id="video-demo"
+      >
+        <!-- 背景炫彩光感 -->
+        <div
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-purple-400/20 via-indigo-400/20 to-pink-400/20 rounded-full blur-[100px] pointer-events-none"
+        ></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+          <div class="text-center mb-12" data-aos="fade-up">
+            <span
+              class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-purple-100/90 border border-purple-200 text-purple-700 text-sm font-semibold mb-4 shadow-sm"
+            >
+              <svg
+                class="w-4 h-4 text-purple-600 animate-pulse"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"
+                ></path>
+              </svg>
+              <span>视频演示 · 沉浸体验</span>
+            </span>
+            <h2 class="text-4xl md:text-5xl font-bold gradient-text mb-4">
+              一分钟了解 灵愈AI
+            </h2>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+              全方位演示智能心理评估、AI对话疗愈、情绪监测与专业量表分析核心流程
+            </p>
+          </div>
+
+          <!-- 视频播放卡片容器 -->
+          <div
+            class="max-w-4xl mx-auto rounded-3xl p-3 md:p-5 bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-pink-500/20 backdrop-blur-xl border border-white/70 shadow-2xl transition-all duration-500 hover:shadow-purple-500/20"
+            data-aos="zoom-in"
+            data-aos-delay="100"
+          >
+            <div
+              class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video group shadow-inner"
+            >
+              <!-- 视频主元素 -->
+              <video
+                id="demo-video-player"
+                class="w-full h-full object-cover rounded-2xl"
+                controls
+                playsinline
+                preload="metadata"
+                poster="/sh.png"
+              >
+                <source src="/灵愈AI%20v2.mp4" type="video/mp4" />
+                <source src="/灵愈AI v2.mp4" type="video/mp4" />
+                您的浏览器不支持视频播放。
+              </video>
+
+              <!-- 自定义初始覆盖层与播放按钮 -->
+              <div
+                id="video-cover-overlay"
+                class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer transition-all duration-500 group-hover:bg-slate-900/20"
+                onclick="playDemoVideo()"
+              >
+                <!-- 呼吸感发光播放按钮 -->
+                <div class="relative mb-5 flex items-center justify-center">
+                  <div
+                    class="absolute w-24 h-24 bg-purple-500/40 rounded-full animate-ping pointer-events-none"
+                  ></div>
+                  <div
+                    class="w-20 h-20 bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 rounded-full flex items-center justify-center shadow-xl shadow-purple-500/40 transform group-hover:scale-110 transition-all duration-300 border-2 border-white/40"
+                  >
+                    <svg
+                      class="w-9 h-9 text-white ml-1.5 filter drop-shadow"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"
+                      ></path>
+                    </svg>
+                  </div>
+                </div>
+                <span
+                  class="text-white text-lg font-semibold tracking-wider bg-slate-900/60 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-md group-hover:bg-purple-600/80 transition-all"
+                >
+                  点击播放演示视频
+                </span>
+                <span class="text-purple-200/90 text-xs mt-2.5 font-medium">
+                  高清视频演示 · 支持全屏观看
+                </span>
+              </div>
+            </div>
+
+            <!-- 视频下方亮点属性标签 -->
+            <div
+              class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-2 px-1 text-center"
+            >
+              <div
+                class="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-white/70 backdrop-blur-md border border-purple-100/80 text-gray-700 text-sm font-medium shadow-sm hover:border-purple-300 transition-all"
+              >
+                <svg
+                  class="w-4 h-4 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  ></path>
+                </svg>
+                <span>24/7 智能AI陪伴</span>
+              </div>
+              <div
+                class="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-white/70 backdrop-blur-md border border-purple-100/80 text-gray-700 text-sm font-medium shadow-sm hover:border-purple-300 transition-all"
+              >
+                <svg
+                  class="w-4 h-4 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <span>多模态心理评估</span>
+              </div>
+              <div
+                class="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-white/70 backdrop-blur-md border border-purple-100/80 text-gray-700 text-sm font-medium shadow-sm hover:border-purple-300 transition-all"
+              >
+                <svg
+                  class="w-4 h-4 text-pink-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  ></path>
+                </svg>
+                <span>情绪实时监测疏导</span>
+              </div>
+              <div
+                class="flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-white/70 backdrop-blur-md border border-purple-100/80 text-gray-700 text-sm font-medium shadow-sm hover:border-purple-300 transition-all"
+              >
+                <svg
+                  class="w-4 h-4 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  ></path>
+                </svg>
+                <span>数据隐私安全加密</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 用户评价 -->
       <section
         class="py-20 bg-gradient-to-br from-purple-50 to-pink-50"
@@ -2481,6 +2665,13 @@
                       href="#functions"
                       class="hover:text-purple-400 transition-colors"
                       >核心功能</a
+                    >
+                  </li>
+                  <li>
+                    <a
+                      href="#video-demo"
+                      class="hover:text-purple-400 transition-colors"
+                      >视频演示</a
                     >
                   </li>
                   <li>
@@ -3568,6 +3759,35 @@
         window.addEventListener("hashchange", syncView);
         syncView();
       })();
+
+      function playDemoVideo() {
+        const video = document.getElementById("demo-video-player");
+        const overlay = document.getElementById("video-cover-overlay");
+        if (video) {
+          if (overlay) overlay.style.display = "none";
+          video.play().catch(function (e) {
+            console.log("Play interrupted or autoplay prevented:", e);
+          });
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const video = document.getElementById("demo-video-player");
+        const overlay = document.getElementById("video-cover-overlay");
+        if (video && overlay) {
+          video.addEventListener("play", function () {
+            overlay.style.display = "none";
+          });
+          video.addEventListener("pause", function () {
+            if (video.currentTime === 0 || video.ended) {
+              overlay.style.display = "flex";
+            }
+          });
+          video.addEventListener("ended", function () {
+            overlay.style.display = "flex";
+          });
+        }
+      });
     </script>
   </body>
 </html>
